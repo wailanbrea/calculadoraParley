@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sportsbook Monitor Deportivo</title>
+  <link rel="stylesheet" href="assets/css/line-board.css">
+</head>
+<body>
+  <!-- Encabezado general con Reloj -->
+  <header class="board-header">
+    <div class="header-brand">MONITOR DEPORTIVO</div>
+    <div class="header-clock" id="board-clock">00:00:00 PM</div>
+  </header>
+
+  <!-- Contenedor General de la Hoz de Líneas -->
+  <div id="wraps" class="line-board">
+    <div id="lineas">
+      <!-- 1. MLB (Full Width Table) -->
+      <section id="section-mlb" class="section-container"></section>
+
+      <!-- 2. Bases Alcanzadas (3 Column Layout) -->
+      <section id="section-bases-alcanzadas" class="section-container"></section>
+
+      <!-- Spacer -->
+      <div class="section-spacer"></div>
+
+      <!-- 3. MLB Periodos (2 Column Layout) -->
+      <section id="section-mlb-periodos" class="section-container"></section>
+
+      <!-- Spacer -->
+      <div class="section-spacer"></div>
+
+      <!-- 4. Baseball (Full Width Table) -->
+      <section id="section-baseball" class="section-container"></section>
+
+      <!-- Spacer -->
+      <div class="section-spacer"></div>
+
+      <!-- 5. WNBA (Full Width Table) -->
+      <section id="section-wnba" class="section-container"></section>
+
+      <!-- Spacer -->
+      <div class="section-spacer"></div>
+
+      <!-- 6. Soccer (2 Column Layout) -->
+      <section id="section-soccer" class="section-container"></section>
+
+      <!-- Spacer -->
+      <div class="section-spacer"></div>
+
+      <!-- 7. Propuestas MLB (Full Width Table) -->
+      <section id="section-propuestas" class="section-container"></section>
+    </div>
+  </div>
+
+  <!-- Script principal de lógica y datos -->
+  <script src="assets/js/line-board.js"></script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
+
+/* Reset general y variables */
+:root {
+  --bg-general: #0c0f17;
+  --bg-header: #202020;
+  --bg-row-blue: #073b5c;
+  --bg-row-grey: #161c28;
+  --color-red: #ff2a2a;
+  --color-green: #08fb1b;
+  --color-text-main: #ffffff;
+  --color-text-sub: #cbd5e1;
+  --border-color: #1c1c1c;
+  --font-board: 'Roboto Condensed', Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-board);
+}
+
+body {
+  background-color: var(--bg-general);
+  color: var(--color-text-main);
+  padding: 10px;
+  overflow-x: hidden;
+}
+
+/* Header principal */
+.board-header {
+  background-color: var(--bg-header);
+  border-bottom: 2px solid var(--border-color);
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.header-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.header-clock {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--color-green);
+  font-family: monospace;
+}
+
+/* Contenedor general */
+.line-board {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.section-container {
+  margin-bottom: 10px;
+}
+
+.section-spacer {
+  height: 20px;
+  width: 100%;
+  clear: both;
+}
+
+/* Títulos y Encabezados */
+.section-title {
+  font-size: 1.35em;
+  font-weight: bold;
+  color: var(--color-red);
+  text-align: left;
+  padding: 6px 10px;
+  text-transform: uppercase;
+}
+
+/* Estilo de Tablas */
+.section-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-general);
+  border: 1px solid var(--border-color);
+  table-layout: auto;
+}
+
+/* Cabeceras de tabla */
+.section-table tr.primera th {
+  background-color: #121212;
+  color: var(--color-red);
+  font-size: 1.3em;
+  text-align: left;
+  padding: 6px 10px;
+  font-weight: bold;
+  border: 1px solid var(--border-color);
+}
+
+.section-table tr.primera th.borde {
+  border-right: 2px solid #555;
+}
+
+.section-table tr.segunda th {
+  background-color: var(--bg-header);
+  color: var(--color-text-sub);
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 5px 3px;
+  border: 1px solid var(--border-color);
+}
+
+.section-table tr.segunda th.liga {
+  text-align: left;
+  padding-left: 10px;
+}
+
+.section-table tr.segunda th.team {
+  text-align: left;
+}
+
+.section-table tr.segunda th.borde {
+  border-right: 2px solid #555;
+}
+
+/* Celdas y Filas */
+.section-table td {
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  padding: 4px 6px;
+  vertical-align: middle;
+  text-align: center;
+  font-weight: bold;
+  line-height: 1.35;
+}
+
+.section-table td.liga {
+  text-align: left;
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
+.section-table td.team {
+  text-align: left;
+}
+
+/* Alternancia de filas */
+.section-table tr.row-grey {
+  background-color: var(--bg-row-grey) !important;
+}
+
+.section-table tr.row-blue {
+  background-color: var(--bg-row-blue) !important;
+}
+
+/* Clases de utilidad */
+.team-cell {
+  color: var(--color-text-main);
+  text-align: left;
+}
+
+.highlight-team {
+  color: var(--color-green);
+  font-weight: bold;
+}
+
+.odds-cell {
+  font-family: monospace, sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.alt-cell {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.compact-cell {
+  padding: 2px 4px !important;
+  font-size: 0.8rem !important;
+}
+
+/* Estructura dividida de columnas */
+.split-container-3 {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.split-3 {
+  flex: 1;
+  min-width: 30%;
+  box-sizing: border-box;
+}
+
+.split-container-2 {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.split-2 {
+  flex: 1;
+  min-width: 45%;
+  box-sizing: border-box;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .split-3 {
+    min-width: 48%;
+  }
+  .split-2 {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .split-3 {
+    min-width: 100%;
+  }
+  .section-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Clases de discrepancia */
+.cell-discrepancy {
+  background-color: rgba(239, 68, 68, 0.35) !important;
+  color: #fca5a5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.7) !important;
+  border-radius: 3px;
+}
+
+.cell-discrepancy-calc {
+  font-size: 0.72rem;
+  display: block;
+  color: #fda4af;
+  font-style: italic;
+  font-weight: normal;
+}
