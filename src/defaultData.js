@@ -155,7 +155,6 @@ export const defaultTercioPrecios = [
   { total: 5.5, tipoH: "O", lineaH: "-115", tercio: 3.5, tipoT: "U", lineaT: "-120" },
   { total: 5.5, tipoH: "PK", lineaH: "-110", tercio: 3.0, tipoT: "O", lineaT: "-150" },
   { total: 5.5, tipoH: "PK", lineaH: "-110", tercio: 3.5, tipoT: "U", lineaT: "-130" },
-  { total: 5.5, tipoH: "U", lineaH: "-115", tercio: 3.0, tipoT: "O", lineaT: "-140" },
   { total: 5.5, tipoH: "U", lineaH: "-115", tercio: 3.5, tipoT: "U", lineaT: "-135" },
   { total: 5.5, tipoH: "U", lineaH: "-120", tercio: 3.0, tipoT: "O", lineaT: "-135" },
   { total: 5.5, tipoH: "U", lineaH: "-120", tercio: 3.5, tipoT: "U", lineaT: "-140" },
