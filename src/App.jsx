@@ -17,9 +17,34 @@ import {
 export default function App() {
   const [activePage, setActivePage] = useState('dashboard');
   const [config, setConfig] = useState(null);
-
   // --- Carga Inicial de Configuraciones ---
   useEffect(() => {
+    // Intentar obtener la configuración del servidor
+    fetch('./api.php?action=get')
+      .then(res => {
+        if (!res.ok) throw new Error("Error de red o archivo ausente");
+        return res.json();
+      })
+      .then(serverData => {
+        if (serverData && typeof serverData === 'object' && serverData.preciosTercio) {
+          // Rellenar reglas de runline si faltan en la versión del servidor
+          if (!serverData.mlbRunlineRules || serverData.mlbRunlineRules.length < defaultMlbRunlineRules.length) {
+            serverData.mlbRunlineRules = defaultMlbRunlineRules;
+          }
+          console.log("Configuración cargada desde el servidor.");
+          setConfig(serverData);
+          localStorage.setItem('parley_calc_config', JSON.stringify(serverData));
+        } else {
+          loadLocalOrBackup();
+        }
+      })
+      .catch(err => {
+        console.warn("No se pudo cargar del servidor, usando local/respaldo:", err.message);
+        loadLocalOrBackup();
+      });
+  }, []);
+
+  const loadLocalOrBackup = () => {
     const local = localStorage.getItem('parley_calc_config');
     if (local) {
       try {
@@ -30,13 +55,13 @@ export default function App() {
         }
         setConfig(parsed);
       } catch (e) {
-        console.error("Error cargando la configuración local", e);
+        console.error("Error cargando configuración local", e);
         loadDefaultConfig();
       }
     } else {
       loadDefaultConfig();
     }
-  }, []);
+  };
 
   const loadDefaultConfig = () => {
     const defaultConfig = {
@@ -54,9 +79,28 @@ export default function App() {
   // --- Guardar Configuración ---
   const handleSaveConfig = (newConfig) => {
     setConfig(newConfig);
+    // 1. Respaldar localmente
     localStorage.setItem('parley_calc_config', JSON.stringify(newConfig));
-  };
 
+    // 2. Guardar en el servidor de forma compartida
+    fetch('./api.php?action=save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newConfig)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Error al escribir configuración en servidor");
+        return res.json();
+      })
+      .then(data => {
+        console.log("Configuración guardada y sincronizada en el servidor:", data);
+      })
+      .catch(err => {
+        console.error("Fallo al sincronizar reglas con el servidor:", err.message);
+      });
+  };
   if (!config) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#060813', color: '#f8fafc' }}>
