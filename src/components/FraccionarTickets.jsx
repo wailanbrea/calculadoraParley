@@ -195,30 +195,14 @@ export default function FraccionarTickets() {
 
                 {/* Vista 1: Resumen */}
                 {!mostrarDetalle ? (
-                  <div className="calc-results-panel" style={{ gridTemplateColumns: '1fr', gap: '1rem' }}>
-                    <div className="result-card" style={{ background: 'rgba(255,255,255,0.015)' }}>
-                      <div className="result-card-title">🎟️ Tickets Necesarios</div>
-                      <div className="result-card-value" style={{ fontSize: '2rem' }}>{resumen.tickets}</div>
+                  <div className="calc-results-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+                    <div className="result-card">
+                      <div className="result-card-title">Monto a Apostar</div>
+                      <div className="result-card-value" style={{ fontSize: '1.5rem', color: 'var(--primary)' }}>{formatCurrency(resumen.totalApostado)}</div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div className="result-card">
-                        <div className="result-card-title">Monto por Ticket</div>
-                        <div className="result-card-value" style={{ fontSize: '1.3rem' }}>{formatCurrency(resumen.montoPorTicket)}</div>
-                      </div>
-                      <div className="result-card">
-                        <div className="result-card-title">Ganancia Mostrada p/Ticket</div>
-                        <div className="result-card-value" style={{ fontSize: '1.3rem' }}>{formatCurrency(resumen.gananciaPorTicket)}</div>
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div className="result-card">
-                        <div className="result-card-title">Total a Apostar</div>
-                        <div className="result-card-value" style={{ fontSize: '1.3rem', color: 'var(--text-main)' }}>{formatCurrency(resumen.totalApostado)}</div>
-                      </div>
-                      <div className="result-card">
-                        <div className="result-card-title">Meta de Ganancia</div>
-                        <div className="result-card-value" style={{ fontSize: '1.3rem', color: 'var(--color-ok)' }}>{formatCurrency(gananciaDeseada)}</div>
-                      </div>
+                    <div className="result-card">
+                      <div className="result-card-title">Total (Apostar + Ganar)</div>
+                      <div className="result-card-value" style={{ fontSize: '1.5rem', color: 'var(--color-ok)' }}>{formatCurrency(resumen.totalApostado + parseFloat(gananciaDeseada))}</div>
                     </div>
                   </div>
                 ) : (

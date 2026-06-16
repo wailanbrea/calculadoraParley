@@ -249,7 +249,7 @@ export function calcularTercioMl(mlVisitH, mlCasaH, config) {
     favT = -dogAbs;
     const dogVal = dogAbs - rules.dogSpread;
     dogT = dogVal > 0 ? dogVal : dogVal; // Conserva el signo en el formato final
-    tercioFavSide = dogHSide;
+    tercioFavSide = favHSide;
   }
 
   const fmt = (n) => (n > 0 ? `+${n}` : `${n}`);
