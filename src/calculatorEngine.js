@@ -249,6 +249,7 @@ export function calcularTercioMl(mlVisitH, mlCasaH, config) {
     favT = -dogAbs;
     const dogVal = dogAbs - rules.dogSpread;
     dogT = dogVal > 0 ? dogVal : dogVal; // Conserva el signo en el formato final
+    // Forzado: favorito original de H se mantiene como favorito (macho) en el tercio
     tercioFavSide = favHSide;
   }
 
