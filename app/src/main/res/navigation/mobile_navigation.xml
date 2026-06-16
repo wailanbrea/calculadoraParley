@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.calculadoraparley.ui.calculadora.CalculadoraFragment"
+        android:label="@string/title_calculadora"
+        tools:layout="@layout/fragment_calculadora" />
+
+    <fragment
+        android:id="@+id/navigation_dashboard"
+        android:name="com.example.calculadoraparley.ui.tickets.TicketsFragment"
+        android:label="@string/title_tickets"
+        tools:layout="@layout/fragment_tickets" />
+
+    <fragment
+        android:id="@+id/navigation_notifications"
+        android:name="com.example.calculadoraparley.ui.notifications.NotificationsFragment"
+        android:label="@string/title_extra"
+        tools:layout="@layout/fragment_notifications" />
+    <fragment
+        android:id="@+id/navigation_mlb_analisis"
+        android:name="com.example.calculadoraparley.ui.analisis.MlbAnalisisFragment"
+        android:label="Analizar MLB"
+        tools:layout="@layout/fragment_mlb_analisis" />
+
+</navigation>

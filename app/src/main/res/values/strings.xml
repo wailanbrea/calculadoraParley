@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">CalculadoraParley</string>
+    <string name="title_calculadora">Calculadora Parley By Brea</string>
+    <string name="title_tickets">Tickets</string>
+    <string name="title_extra">Extra</string>
+
+    <string name="error_total_invalid">Total inválido</string>
+    <string name="error_not_found_sino">No encontrado SI/NO</string>
+    <string name="precio_si">Precio SI: %1$d</string>
+    <string name="precio_no">Precio NO: %1$d</string>
+    <string name="error_linea_h_invalid">Línea H inválida</string>
+    <string name="error_not_found_pa">No encontrado PA</string>
+    <string name="pa_si">PA-: %1$d</string>
+    <string name="pa_no">PA+: %1$d</string>
+    <string name="error_tercio_invalid">Datos de Tercio inválidos</string>
+    <string name="error_not_found_tercio">No encontrado Tercio</string>
+    <string name="error_campos_faltantes">Por favor completa todos los campos</string>
+    <string name="error_not_found_solo">Rango de ML no soportado</string>
+
+
+</resources>
