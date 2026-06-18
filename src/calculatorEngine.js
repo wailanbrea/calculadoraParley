@@ -711,12 +711,10 @@ export function getOverallState(game) {
 
 
       const match = options.find(opt => {
-
-
-        return Math.abs(fSi - opt.precioSi) <= 5 && Math.abs(fNo - opt.precioNo) <= 5;
-
-
-      });
+      const matchSi = Math.abs(fSi - opt.precioSi) <= 5 || Math.abs(Math.abs(fSi) - Math.abs(opt.precioSi)) <= 5;
+      const matchNo = Math.abs(fNo - opt.precioNo) <= 5 || Math.abs(Math.abs(fNo) - Math.abs(opt.precioNo)) <= 5;
+      return matchSi && matchNo;
+    });
 
 
       sinoMismatch = !match;

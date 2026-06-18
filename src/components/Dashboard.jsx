@@ -138,7 +138,9 @@ function renderSinoCellGroup(game) {
     const fNoVal = parseNo(fNo) * signNo(fNo);
     const oSiVal = parseInt(optSi, 10);
     const oNoVal = parseInt(optNo, 10);
-    return Math.abs(fSiVal - oSiVal) <= 5 && Math.abs(fNoVal - oNoVal) <= 5;
+    const matchSi = Math.abs(fSiVal - oSiVal) <= 5 || Math.abs(Math.abs(fSiVal) - Math.abs(oSiVal)) <= 5;
+    const matchNo = Math.abs(fNoVal - oNoVal) <= 5 || Math.abs(Math.abs(fNoVal) - Math.abs(oNoVal)) <= 5;
+    return matchSi && matchNo;
   };
 
   const validOption = options.find(opt => isMatch(feedSi, feedNo, opt.precioSi, opt.precioNo));
