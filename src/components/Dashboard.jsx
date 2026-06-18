@@ -8,7 +8,8 @@ import {
   parseJuiceFromCombined,
   isTercioOuMatch as isTercioOuOptionMatch,
   findMatchingTercioOuOption,
-  parseMl
+  parseMl,
+  buscarSiNoOpciones
 } from '../calculatorEngine';
 import ManualCalculator from './ManualCalculator';
 
@@ -110,6 +111,71 @@ function renderRunlineCell(feedVal, calcVal, refLine = null) {
     );
   }
   return feedVal;
+}
+
+
+function renderSinoCellGroup(game) {
+  const feedSi = game.feed.sino[0];
+  const feedNo = game.feed.sino[1];
+
+  if (feedSi === undefined || feedSi === null || feedSi === "" || feedSi === "--") {
+    return <>--<br />--</>;
+  }
+
+  const options = game.calc.sinoOptions || [];
+  if (options.length === 0) {
+    return <>{feedSi}<br />{feedNo}</>;
+  }
+
+  // Verificar si hay match con alguna de las opciones
+  const parseSi = (v) => parseInt(v.toString().replace(/[+-]/g, ""), 10) || 0;
+  const parseNo = (v) => parseInt(v.toString().replace(/[+-]/g, ""), 10) || 0;
+  const signSi = (v) => v.toString().startsWith("-") ? -1 : 1;
+  const signNo = (v) => v.toString().startsWith("-") ? -1 : 1;
+
+  const isMatch = (fSi, fNo, optSi, optNo) => {
+    const fSiVal = parseSi(fSi) * signSi(fSi);
+    const fNoVal = parseNo(fNo) * signNo(fNo);
+    const oSiVal = parseInt(optSi, 10);
+    const oNoVal = parseInt(optNo, 10);
+    return Math.abs(fSiVal - oSiVal) <= 5 && Math.abs(fNoVal - oNoVal) <= 5;
+  };
+
+  const validOption = options.find(opt => isMatch(feedSi, feedNo, opt.precioSi, opt.precioNo));
+  const formatFmt = (n) => (n > 0 ? `+${n}` : `${n}`);
+
+  if (validOption) {
+    const primaryOpt = options[0];
+    if (primaryOpt && (primaryOpt.precioSi !== validOption.precioSi || primaryOpt.precioNo !== validOption.precioNo)) {
+      // Coincide con la otra opción (naranja)
+      const otherOptionStr = `SI ${formatFmt(primaryOpt.precioSi)} / NO ${formatFmt(primaryOpt.precioNo)}`;
+      return (
+        <div className="cell-valid-alternative">
+          {feedSi}
+          <br />
+          {feedNo}
+          <span className="cell-valid-alternative-calc">(Otra opción: ${otherOptionStr})</span>
+        </div>
+      );
+    }
+    // Coincide con la primaria
+    return <>{feedSi}<br />{feedNo}</>;
+  }
+
+  // Mismatch
+  const primaryOpt = options[0];
+  const calcSi = formatFmt(primaryOpt.precioSi);
+  const calcNo = formatFmt(primaryOpt.precioNo);
+  const ref = game.feed.total ? ` con Tot ${game.feed.total}` : "";
+
+  return (
+    <div className="cell-discrepancy">
+      {feedSi}
+      <br />
+      {feedNo}
+      <span className="cell-discrepancy-calc">(Calc: SI ${calcSi} / NO ${calcNo}${ref})</span>
+    </div>
+  );
 }
 
 function renderTercioOuCell(game) {
@@ -447,8 +513,7 @@ export default function Dashboard({
 
                         const rlTotalCell = renderTercioOuCell(game);
 
-                        const sinoSiCell = renderCell(game.feed.sino[0], game.calc.sino ? game.calc.sino[0] : null, true, `Tot ${game.feed.total}`);
-                        const sinoNoCell = renderCell(game.feed.sino[1], game.calc.sino ? game.calc.sino[1] : null, true, `Tot ${game.feed.total}`);
+                        
 
                         return (
                           <tr key={game.id} className="row-grey">
@@ -461,7 +526,7 @@ export default function Dashboard({
                             </td>
                             <td className="odds-cell">{mlVCell}<br />{mlCCell}</td>
                             <td className="alt-cell odds-cell">{rlTotalCell || "--"}<br />&nbsp;</td>
-                            <td className="odds-cell">{sinoSiCell}<br />{sinoNoCell}</td>
+                            <td className="odds-cell">{renderSinoCellGroup(game)}</td>
                             <td><br /></td>
                           </tr>
                         );
@@ -497,8 +562,7 @@ export default function Dashboard({
 
                         const rlTotalCell = renderTercioOuCell(game);
 
-                        const sinoSiCell = renderCell(game.feed.sino[0], game.calc.sino ? game.calc.sino[0] : null, true, `Tot ${game.feed.total}`);
-                        const sinoNoCell = renderCell(game.feed.sino[1], game.calc.sino ? game.calc.sino[1] : null, true, `Tot ${game.feed.total}`);
+                        
 
                         return (
                           <tr key={game.id} className="row-blue">
@@ -511,7 +575,7 @@ export default function Dashboard({
                             </td>
                             <td className="odds-cell">{mlVCell}<br />{mlCCell}</td>
                             <td className="alt-cell odds-cell">{rlTotalCell || "--"}<br />&nbsp;</td>
-                            <td className="odds-cell">{sinoSiCell}<br />{sinoNoCell}</td>
+                            <td className="odds-cell">{renderSinoCellGroup(game)}</td>
                             <td><br /></td>
                           </tr>
                         );

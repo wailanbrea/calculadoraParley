@@ -173,6 +173,50 @@ export function buscarSiNo(total, tipo, linea, config) {
 }
 
 // 3. PA
+
+// 2b. SI/NO Opciones
+export function buscarSiNoOpciones(total, tipo, linea, config) {
+  const t = canonHalf(cleanDouble(total));
+  const tp = tipo ? tipo.toString().trim().toUpperCase() : "";
+  const ln = normalizeJuice(linea);
+
+  if (!t || !tp || !ln) return [];
+
+  const precios = config.preciosSiNo || [];
+
+  // Intento de búsqueda exacta
+  const exactas = precios.filter(
+    p => Math.abs(p.total - t) < 0.001 && p.tipo.toUpperCase() === tp && normalizeJuice(p.linea) === ln
+  );
+  if (exactas.length > 0) {
+    return exactas.map(p => ({ precioSi: p.precioSi, precioNo: p.precioNo }));
+  }
+
+  // Búsqueda flexible
+  const targetNum = parseInt(ln.replace(/[+-]/g, ""), 10) || 0;
+  const candidatos = precios.filter(
+    p => Math.abs(p.total - t) < 0.001 && p.tipo.toUpperCase() === tp
+  );
+
+  if (candidatos.length === 0) return [];
+
+  let minDiff = Infinity;
+  candidatos.forEach(c => {
+    const cNum = parseInt(normalizeJuice(c.linea).replace(/[+-]/g, ""), 10) || 0;
+    const diff = Math.abs(cNum - targetNum);
+    if (diff < minDiff) {
+      minDiff = diff;
+    }
+  });
+
+  const filtrados = candidatos.filter(c => {
+    const cNum = parseInt(normalizeJuice(c.linea).replace(/[+-]/g, ""), 10) || 0;
+    return Math.abs(cNum - targetNum) === minDiff;
+  });
+
+  return filtrados.map(p => ({ precioSi: p.precioSi, precioNo: p.precioNo }));
+}
+
 export function buscarPa(linea, side, config) {
   const ln = normalizeJuice(linea);
   const sd = side ? side.toString().trim().toLowerCase() : "";
@@ -558,6 +602,7 @@ export function parseMlbJsonNuevo(jsonString, config) {
         solo: [soloCalc.visitante, soloCalc.casa],
         soloRule: soloCalc.rule,
         sino: sinoCalc ? [sinoCalc.precioSi, sinoCalc.precioNo] : null,
+        sinoOptions: sinoOptions,
         pa: paVisitFinalCalc !== null ? [paVisitFinalCalc, paCasaFinalCalc] : null,
         paLineaUsada: [paLineaVisitUse, paLineaCasaUse],
         paFavSide: favoritoMitad,
@@ -645,11 +690,54 @@ export function getOverallState(game) {
   const soloAnyMismatch = (fSoloV !== null && fSoloV !== cSoloV) || (fSoloC !== null && fSoloC !== cSoloC);
 
   // 2. SI/NO
+
+
   const fSi = parseSignedIntLoose(game.feed.sino[0]);
+
+
   const fNo = parseSignedIntLoose(game.feed.sino[1]);
-  const cSi = game.calc.sino ? game.calc.sino[0] : null;
-  const cNo = game.calc.sino ? game.calc.sino[1] : null;
-  const sinoMismatch = (fSi !== null && fSi !== cSi) || (fNo !== null && fNo !== cNo);
+
+
+  let sinoMismatch = false;
+
+
+  if (fSi !== null && fNo !== null) {
+
+
+    const options = game.calc.sinoOptions || [];
+
+
+    if (options.length > 0) {
+
+
+      const match = options.find(opt => {
+
+
+        return Math.abs(fSi - opt.precioSi) <= 5 && Math.abs(fNo - opt.precioNo) <= 5;
+
+
+      });
+
+
+      sinoMismatch = !match;
+
+
+    } else {
+
+
+      sinoMismatch = true;
+
+
+    }
+
+
+  } else if (fSi !== null || fNo !== null) {
+
+
+    sinoMismatch = true;
+
+
+  }
 
   // 3. PA
   const fPaV = parseSignedIntLoose(game.feed.pa[0]);
