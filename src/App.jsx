@@ -14,9 +14,35 @@ import {
   defaultMlbRunlineRules
 } from './defaultData';
 
+function tercioRuleKey(rule) {
+  return [
+    Number(rule.total),
+    String(rule.tipoH || '').toUpperCase(),
+    String(rule.lineaH || ''),
+    Number(rule.tercio),
+    String(rule.tipoT || '').toUpperCase(),
+    String(rule.lineaT || '')
+  ].join('|');
+}
+
+function mergeMissingDefaultTercioRules(configData) {
+  if (!Array.isArray(configData?.preciosTercio)) return configData;
+  const existing = new Set(configData.preciosTercio.map(tercioRuleKey));
+  defaultTercioPrecios.forEach(rule => {
+    const key = tercioRuleKey(rule);
+    if (!existing.has(key)) {
+      configData.preciosTercio.push(rule);
+      existing.add(key);
+    }
+  });
+  return configData;
+}
+
 export default function App() {
   const [activePage, setActivePage] = useState('dashboard');
   const [config, setConfig] = useState(null);
+  const [dashboardGames, setDashboardGames] = useState([]);
+  const [dashboardExpandedGames, setDashboardExpandedGames] = useState({});
   // --- Carga Inicial de Configuraciones ---
   useEffect(() => {
     // Intentar obtener la configuración del servidor
@@ -31,6 +57,8 @@ export default function App() {
           if (!serverData.mlbRunlineRules || serverData.mlbRunlineRules.length < defaultMlbRunlineRules.length) {
             serverData.mlbRunlineRules = defaultMlbRunlineRules;
           }
+          mergeMissingDefaultTercioRules(serverData);
+
           console.log("Configuración cargada desde el servidor.");
           setConfig(serverData);
           localStorage.setItem('parley_calc_config', JSON.stringify(serverData));
@@ -53,6 +81,9 @@ export default function App() {
           parsed.mlbRunlineRules = defaultMlbRunlineRules;
           localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
         }
+        mergeMissingDefaultTercioRules(parsed);
+        localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
+
         setConfig(parsed);
       } catch (e) {
         console.error("Error cargando configuración local", e);
@@ -115,7 +146,13 @@ export default function App() {
       
       <main className="main-content">
         {activePage === 'dashboard' && (
-          <Dashboard config={config} />
+          <Dashboard
+            config={config}
+            parsedGames={dashboardGames}
+            setParsedGames={setDashboardGames}
+            expandedGames={dashboardExpandedGames}
+            setExpandedGames={setDashboardExpandedGames}
+          />
         )}
 
         {activePage === 'parley' && (
@@ -127,7 +164,7 @@ export default function App() {
         )}
         
         {activePage === 'settings' && (
-          <Settings config={config} onSaveConfig={handleSaveConfig} />
+          <Settings config={config} onSaveConfig={handleSaveConfig} dashboardGames={dashboardGames} />
         )}
       </main>
     </div>

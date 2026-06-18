@@ -60,21 +60,26 @@ export function calcularSolo(totalStr, mlCasaStr, mlVisitStr, config) {
   const esEmpate = mlCasa === mlVisit;
   let adjustment = 0.0;
   let esCasaFav = false;
+  let usedRule = null;
 
   if (!esEmpate) {
     if (mlCasa < mlVisit) {
       // Casa es favorito (número más negativo / menor en odds americanas)
       esCasaFav = true;
-      const range = (config.casaAdjustRanges || []).find(
+      const ruleIndex = (config.casaAdjustRanges || []).findIndex(
         r => mlCasa >= Math.min(r.min, r.max) && mlCasa <= Math.max(r.min, r.max)
       );
+      const range = ruleIndex >= 0 ? config.casaAdjustRanges[ruleIndex] : null;
       adjustment = range ? range.adjust : 0.0;
+      usedRule = range ? { side: "Casa", index: ruleIndex, ml: mlCasa, min: range.min, max: range.max, adjust: range.adjust } : null;
     } else {
       // Visitante es favorito
-      const range = (config.visitAdjustRanges || []).find(
+      const ruleIndex = (config.visitAdjustRanges || []).findIndex(
         r => mlVisit >= Math.min(r.min, r.max) && mlVisit <= Math.max(r.min, r.max)
       );
+      const range = ruleIndex >= 0 ? config.visitAdjustRanges[ruleIndex] : null;
       adjustment = range ? range.adjust : 0.0;
+      usedRule = range ? { side: "Visitante", index: ruleIndex, ml: mlVisit, min: range.min, max: range.max, adjust: range.adjust } : null;
     }
   }
 
@@ -123,6 +128,7 @@ export function calcularSolo(totalStr, mlCasaStr, mlVisitStr, config) {
   return {
     casa: prettyHalf(roundedCasa),
     visitante: prettyHalf(roundedVisit),
+    rule: usedRule,
     debug: `Ajuste: ${adjustment}, Favorito: ${esCasaFav ? "Casa" : "Visitante"}`
   };
 }
@@ -183,19 +189,34 @@ export function buscarPa(linea, side, config) {
 }
 
 // 4. TERCIO (O/U de tabla)
-export function buscarTercioOu(total, tipoH, lineaH, config) {
+export function formatTercioOuOption(option) {
+  if (!option) return null;
+  return `${prettyHalf(option.tercio)} ${option.tipoT} ${option.lineaT}`;
+}
+
+export function buscarTercioOuOpciones(total, tipoH, lineaH, config) {
   const tCanon = canonHalf(cleanDouble(total));
   const tipoOk = tipoH ? tipoH.toString().trim().toUpperCase() : "";
   const lineaOk = normalizeJuice(lineaH);
 
-  if (!tCanon || !tipoOk || !lineaOk) return null;
+  if (!tCanon || !tipoOk || !lineaOk) return [];
 
   const precios = config.preciosTercio || [];
-  const match = precios.find(
+  return precios.filter(
     p => Math.abs(p.total - tCanon) < 0.001 && p.tipoH.toUpperCase() === tipoOk && normalizeJuice(p.lineaH) === lineaOk
   );
+}
 
-  return match ? { tercio: match.tercio, tipoT: match.tipoT, lineaT: match.lineaT } : null;
+export function buscarTercioOu(total, tipoH, lineaH, config) {
+  const matches = buscarTercioOuOpciones(total, tipoH, lineaH, config);
+  const match = matches[0];
+
+  return match ? { 
+    tercio: match.tercio, 
+    tipoT: match.tipoT, 
+    lineaT: match.lineaT,
+    opciones: matches.map(formatTercioOuOption).filter(Boolean)
+  } : null;
 }
 
 // 5. TERCIO (ML por regla desde ML 1H)
@@ -498,6 +519,9 @@ export function parseMlbJsonNuevo(jsonString, config) {
     // 4) TERCIO (ML y O/U)
     const tercioMlCalc = calcularTercioMl(paLineaVisitUse, paLineaCasaUse, config);
     const tercioOuCalc = (hTotal && hTipo && hLinea) ? buscarTercioOu(hTotal, hTipo, hLinea, config) : null;
+    const feedTercioOuText = tercio.total ? `${prettyHalf(tercio.total)} ${tercio.tipo || ""} ${tercio.linea || ""}` : "";
+    const tercioOuOptions = tercioOuCalc?.opciones || [];
+    const tercioOuValidOption = feedTercioOuText ? findMatchingTercioOuOption(feedTercioOuText, tercioOuOptions) : null;
 
     // 5) MLB RUN LINES (RL, SRL, RA)
     const runlinesCalc = calcularMlbRunlines(mlVisitJC, mlCasaJC, rlJC, config);
@@ -527,11 +551,12 @@ export function parseMlbJsonNuevo(jsonString, config) {
         total1H: totalMitadRaw,
         // Tercio
         tercioMl: [tercio.mlVisit || "", tercio.mlCasa || ""],
-        tercioOu: tercio.total ? `${prettyHalf(tercio.total)} ${tercio.tipo || ""} ${tercio.linea || ""}` : ""
+        tercioOu: feedTercioOuText
       },
       // Cálculos del motor de acuerdo con config personalizada
       calc: {
         solo: [soloCalc.visitante, soloCalc.casa],
+        soloRule: soloCalc.rule,
         sino: sinoCalc ? [sinoCalc.precioSi, sinoCalc.precioNo] : null,
         pa: paVisitFinalCalc !== null ? [paVisitFinalCalc, paCasaFinalCalc] : null,
         paLineaUsada: [paLineaVisitUse, paLineaCasaUse],
@@ -539,6 +564,8 @@ export function parseMlbJsonNuevo(jsonString, config) {
         tercioMl: tercioMlCalc ? [tercioMlCalc.visit, tercioMlCalc.casa] : null,
         tercioFavSide: tercioMlCalc ? tercioMlCalc.favSide : null,
         tercioOu: tercioOuCalc ? `${prettyHalf(tercioOuCalc.tercio)} ${tercioOuCalc.tipoT} ${tercioOuCalc.lineaT}` : null,
+        tercioOuOptions,
+        tercioOuValidOption,
         // H del feed interpretada
         hInterpretada: hTotal ? `${prettyHalf(hTotal)} ${hTipo} ${hLinea}` : null,
         // MLB Run Lines calculados
@@ -568,6 +595,37 @@ export function parseSignedIntLoose(s) {
 function parseSignedIntAbs(s) {
   const val = parseSignedIntLoose(s);
   return val !== null ? Math.abs(val) : null;
+}
+
+export function parseTercioOuText(value) {
+  if (!value) return null;
+  const clean = value.toString()
+    .toLowerCase()
+    .replace(/Â½|½/g, ".5")
+    .replace(/\s+/g, "");
+  const match = clean.match(/^(\d+(?:\.\d+)?)(o|u|pk)([+-]?\d+)$/);
+  if (!match) return null;
+
+  return {
+    total: parseFloat(match[1]),
+    tipo: match[2],
+    linea: parseSignedIntLoose(normalizeJuice(match[3]))
+  };
+}
+
+export function isTercioOuMatch(feedOu, calcOu, lineTolerance = 5) {
+  if (!feedOu || !calcOu) return true;
+  const feed = parseTercioOuText(feedOu);
+  const calc = parseTercioOuText(calcOu);
+  if (!feed || !calc || feed.linea === null || calc.linea === null) return false;
+
+  return Math.abs(feed.total - calc.total) < 0.001 &&
+         feed.tipo === calc.tipo &&
+         Math.abs(feed.linea - calc.linea) <= lineTolerance;
+}
+
+export function findMatchingTercioOuOption(feedOu, options = [], lineTolerance = 5) {
+  return options.find(option => isTercioOuMatch(feedOu, option, lineTolerance)) || null;
 }
 
 export function mlWithinRange(feedVal, calcVal) {
@@ -613,7 +671,11 @@ export function getOverallState(game) {
 
   // Tercio O/U
   let tercioOuOk = true;
-  if (game.feed.tercioOu && game.calc.tercioOu) {
+  const tercioOuOptionsForCheck = game.calc.tercioOuOptions?.length ? game.calc.tercioOuOptions : [];
+  const tercioOuOptionMatch = game.feed.tercioOu ? findMatchingTercioOuOption(game.feed.tercioOu, tercioOuOptionsForCheck) : null;
+  if (tercioOuOptionMatch) {
+    tercioOuOk = true;
+  } else if (game.feed.tercioOu && game.calc.tercioOu) {
     const fOu = game.feed.tercioOu.toLowerCase().replace(/½/g, ".5").replace(/\s+/g, "");
     const cOu = game.calc.tercioOu.toLowerCase().replace(/½/g, ".5").replace(/\s+/g, "");
     
@@ -630,7 +692,7 @@ export function getOverallState(game) {
       
       tercioOuOk = Math.abs(fTot - cTot) < 0.001 && 
                    fTipo === cTipo && 
-                   parseSignedIntAbs(fLine) === parseSignedIntAbs(cLine);
+                   Math.abs(parseSignedIntAbs(fLine) - parseSignedIntAbs(cLine)) <= 5;
     } else {
       tercioOuOk = false;
     }

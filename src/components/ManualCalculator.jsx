@@ -298,7 +298,7 @@ function ManualCalculator({ config }) {
 
           {pa && (
             <div className="result-card">
-              <div className="result-card-title">PA (Pitcher Analysis)</div>
+              <div className="result-card-title">PA</div>
               <div className="result-card-value">
                 Sí: {pa.precioSi > 0 ? `+${pa.precioSi}` : pa.precioSi} | 
                 No: {pa.precioNo > 0 ? `+${pa.precioNo}` : pa.precioNo}

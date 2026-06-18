@@ -8,11 +8,12 @@ import {
   defaultTercioMlRules,
   defaultMlbRunlineRules
 } from '../defaultData';
+import { cleanDouble } from '../calculatorEngine';
 
 // ==========================================
 // Subcomponente: Tab SOLO
 // ==========================================
-const SoloSettingsTab = React.memo(({ casaRanges, visitRanges, onRowChange, onDeleteRow, onAddRow }) => {
+const SoloSettingsTab = React.memo(({ casaRanges, visitRanges, onRowChange, onDeleteRow, onAddRow, highlightedRules }) => {
   const [newSolo, setNewSolo] = useState({ min: '', max: '', adjust: '', isCasa: true });
 
   const handleSubmit = (e) => {
@@ -49,7 +50,7 @@ const SoloSettingsTab = React.memo(({ casaRanges, visitRanges, onRowChange, onDe
               </thead>
               <tbody>
                 {casaRanges.map((row, idx) => (
-                  <tr key={idx}>
+                  <tr key={idx} className={highlightedRules?.casa?.has(idx) ? 'settings-row-used-rule' : ''}>
                     <td><input type="number" className="table-input" key={`cmin-${idx}-${row.min}`} defaultValue={row.min} onBlur={e => onRowChange(idx, 'min', e.target.value, true)} /></td>
                     <td><input type="number" className="table-input" key={`cmax-${idx}-${row.max}`} defaultValue={row.max} onBlur={e => onRowChange(idx, 'max', e.target.value, true)} /></td>
                     <td><input type="number" step="0.1" className="table-input" key={`cadj-${idx}-${row.adjust}`} defaultValue={row.adjust} onBlur={e => onRowChange(idx, 'adjust', e.target.value, true)} /></td>
@@ -87,7 +88,7 @@ const SoloSettingsTab = React.memo(({ casaRanges, visitRanges, onRowChange, onDe
               </thead>
               <tbody>
                 {visitRanges.map((row, idx) => (
-                  <tr key={idx}>
+                  <tr key={idx} className={highlightedRules?.visitante?.has(idx) ? 'settings-row-used-rule' : ''}>
                     <td><input type="number" className="table-input" key={`vmin-${idx}-${row.min}`} defaultValue={row.min} onBlur={e => onRowChange(idx, 'min', e.target.value, false)} /></td>
                     <td><input type="number" className="table-input" key={`vmax-${idx}-${row.max}`} defaultValue={row.max} onBlur={e => onRowChange(idx, 'max', e.target.value, false)} /></td>
                     <td><input type="number" step="0.1" className="table-input" key={`vadj-${idx}-${row.adjust}`} defaultValue={row.adjust} onBlur={e => onRowChange(idx, 'adjust', e.target.value, false)} /></td>
@@ -666,8 +667,8 @@ const SingleEditCell = ({ value, onChange }) => (
   </div>
 );
 
-// Reusable Rules Table Component
-const MlbRulesTable = React.memo(({ 
+// Legacy RUN LINE table kept unused while the editable table below handles the UI.
+const LegacyMlbRulesTable = React.memo(({ 
   rulesList, 
   title, 
   totalCount, 
@@ -883,6 +884,124 @@ const MlbRulesTable = React.memo(({
                 </tr>
               );
             })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+});
+
+const MlbRulesTable = React.memo(({ 
+  rulesList, 
+  title, 
+  totalCount, 
+  onRowChange, 
+  onDeleteRow 
+}) => {
+  const updateRule = (row, field, value) => {
+    if (value === row[field]) return;
+    onRowChange(row.originalIndex, { ...row, [field]: value });
+  };
+
+  const RunlineDoubleEditCell = ({ row, topField, bottomField }) => (
+    <div className="mlb-edit-stack">
+      <input
+        type="text"
+        className="table-input"
+        key={`${row.originalIndex}-${topField}-${row[topField]}`}
+        defaultValue={row[topField] ?? ''}
+        onBlur={e => updateRule(row, topField, e.target.value)}
+      />
+      <input
+        type="text"
+        className="table-input"
+        key={`${row.originalIndex}-${bottomField}-${row[bottomField]}`}
+        defaultValue={row[bottomField] ?? ''}
+        onBlur={e => updateRule(row, bottomField, e.target.value)}
+      />
+    </div>
+  );
+
+  const RunlineSingleEditCell = ({ row, field }) => (
+    <input
+      type="text"
+      className="table-input mlb-points-input"
+      key={`${row.originalIndex}-${field}-${row[field]}`}
+      defaultValue={row[field] ?? ''}
+      onBlur={e => updateRule(row, field, e.target.value)}
+    />
+  );
+
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+        <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', textTransform: 'uppercase', margin: 0 }}>
+          {title}
+        </h3>
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          Mostrando {rulesList.length} de {totalCount} reglas
+        </span>
+      </div>
+
+      <div className="table-responsive mlb-rules-table-wrap">
+        <table className="config-table mlb-rules-table">
+          <thead>
+            <tr>
+              <th rowSpan={2} style={{ width: '80px', textAlign: 'center', verticalAlign: 'middle', borderRight: '1px solid var(--border-glass)' }}>ML</th>
+              <th colSpan={2} style={{ textAlign: 'center', backgroundColor: 'rgba(124, 58, 237, 0.04)', borderRight: '1px solid var(--border-glass)' }}>RL</th>
+              <th colSpan={2} style={{ textAlign: 'center', backgroundColor: 'rgba(124, 58, 237, 0.04)', borderRight: '1px solid var(--border-glass)' }}>RLALT</th>
+              <th colSpan={2} style={{ textAlign: 'center', backgroundColor: 'rgba(124, 58, 237, 0.04)', borderRight: '1px solid var(--border-glass)' }}>SRL</th>
+              <th colSpan={2} style={{ textAlign: 'center', backgroundColor: 'rgba(124, 58, 237, 0.04)', borderRight: '1px solid var(--border-glass)' }}>HRL</th>
+              <th rowSpan={2} className="mlb-rules-actions-col">ACCIONES</th>
+            </tr>
+            <tr>
+              <th style={{ width: '45px', textAlign: 'center' }}>PTS</th>
+              <th style={{ width: '75px', borderRight: '1px solid var(--border-glass)' }}>PRECIO</th>
+              <th style={{ width: '45px', textAlign: 'center' }}>PTS</th>
+              <th style={{ width: '75px', borderRight: '1px solid var(--border-glass)' }}>PRECIO</th>
+              <th style={{ width: '45px', textAlign: 'center' }}>PTS</th>
+              <th style={{ width: '75px', borderRight: '1px solid var(--border-glass)' }}>PRECIO</th>
+              <th style={{ width: '45px', textAlign: 'center' }}>PTS</th>
+              <th style={{ width: '75px', borderRight: '1px solid var(--border-glass)' }}>PRECIO</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rulesList.map((row) => (
+              <tr key={row.originalIndex}>
+                <td style={{ borderRight: '1px solid var(--border-glass)' }}>
+                  <RunlineDoubleEditCell row={row} topField="ml_visitante" bottomField="ml_casa" />
+                </td>
+                <td><RunlineSingleEditCell row={row} field="rl_points" /></td>
+                <td style={{ borderRight: '1px solid var(--border-glass)' }}>
+                  <RunlineDoubleEditCell row={row} topField="rl_visitante" bottomField="rl_casa" />
+                </td>
+                <td><RunlineSingleEditCell row={row} field="rlalt_points" /></td>
+                <td style={{ borderRight: '1px solid var(--border-glass)' }}>
+                  <RunlineDoubleEditCell row={row} topField="rlalt_visitante" bottomField="rlalt_casa" />
+                </td>
+                <td><RunlineSingleEditCell row={row} field="srl_points" /></td>
+                <td style={{ borderRight: '1px solid var(--border-glass)' }}>
+                  <RunlineDoubleEditCell row={row} topField="srl_visitante" bottomField="srl_casa" />
+                </td>
+                <td><RunlineSingleEditCell row={row} field="hrl_points" /></td>
+                <td style={{ borderRight: '1px solid var(--border-glass)' }}>
+                  <RunlineDoubleEditCell row={row} topField="hrl_visitante" bottomField="hrl_casa" />
+                </td>
+                <td className="mlb-rules-actions-col">
+                  <button
+                    type="button"
+                    className="action-icon-btn delete"
+                    onClick={() => {
+                      if (window.confirm('¿Seguro de eliminar esta regla?')) onDeleteRow(row.originalIndex);
+                    }}
+                    aria-label="Eliminar regla"
+                    title="Eliminar regla"
+                  >
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -1296,13 +1415,14 @@ const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onA
       </div>
 
       {/* Tablas lado a lado */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(620px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 620px), 1fr))', gap: '1.5rem', alignItems: 'start' }}>
         {/* TABLA CASA */}
-        <div className="glass-panel" style={{ padding: '1.25rem', overflow: 'hidden' }}>
+        <div className="glass-panel mlb-rules-panel" style={{ padding: '1.25rem', overflow: 'hidden' }}>
           <MlbRulesTable 
             rulesList={casaRules}
             title="TABLA CASA"
             totalCount={rules.filter(r => r.side === 'CASA').length}
+            onRowChange={onRowChange}
             editIndex={editIndex}
             editData={editData}
             setEditData={setEditData}
@@ -1315,11 +1435,12 @@ const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onA
         </div>
 
         {/* TABLA VISITANTE */}
-        <div className="glass-panel" style={{ padding: '1.25rem', overflow: 'hidden' }}>
+        <div className="glass-panel mlb-rules-panel" style={{ padding: '1.25rem', overflow: 'hidden' }}>
           <MlbRulesTable 
             rulesList={visitanteRules}
             title="TABLA VISITANTE"
             totalCount={rules.filter(r => r.side === 'VISITANTE').length}
+            onRowChange={onRowChange}
             editIndex={editIndex}
             editData={editData}
             setEditData={setEditData}
@@ -1337,7 +1458,7 @@ const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onA
 // ==========================================
 // Componente Principal: Settings
 // ==========================================
-export default function Settings({ config, onSaveConfig }) {
+export default function Settings({ config, onSaveConfig, dashboardGames = [] }) {
   const [activeTab, setActiveTab] = useState('solo');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -1376,6 +1497,26 @@ export default function Settings({ config, onSaveConfig }) {
       });
     }
   }, [config]);
+
+  const soloHighlightedRules = useMemo(() => {
+    const highlighted = { casa: new Set(), visitante: new Set() };
+    dashboardGames.forEach(game => {
+      const rule = game.calc?.soloRule;
+      if (!rule || typeof rule.index !== 'number') return;
+
+      const feedVisit = cleanDouble(game.feed?.solo?.[0]);
+      const feedCasa = cleanDouble(game.feed?.solo?.[1]);
+      const calcVisit = cleanDouble(game.calc?.solo?.[0]);
+      const calcCasa = cleanDouble(game.calc?.solo?.[1]);
+      const hasSoloMismatch = (feedVisit !== null && feedVisit !== calcVisit) ||
+                              (feedCasa !== null && feedCasa !== calcCasa);
+      if (!hasSoloMismatch) return;
+
+      if (rule.side === 'Casa') highlighted.casa.add(rule.index);
+      if (rule.side === 'Visitante') highlighted.visitante.add(rule.index);
+    });
+    return highlighted;
+  }, [dashboardGames]);
 
   // --- Manejadores CRUD SOLO ---
   const handleSoloChange = (index, field, value, isCasa) => {
@@ -1557,7 +1698,7 @@ export default function Settings({ config, onSaveConfig }) {
         <div className="settings-tabs">
           <button className={`settings-tab-btn ${activeTab === 'solo' ? 'active' : ''}`} onClick={() => setActiveTab('solo')}>SOLO</button>
           <button className={`settings-tab-btn ${activeTab === 'sino' ? 'active' : ''}`} onClick={() => setActiveTab('sino')}>SI / NO</button>
-          <button className={`settings-tab-btn ${activeTab === 'pa' ? 'active' : ''}`} onClick={() => setActiveTab('pa')}>PA (Pitcher Analysis)</button>
+          <button className={`settings-tab-btn ${activeTab === 'pa' ? 'active' : ''}`} onClick={() => setActiveTab('pa')}>PA</button>
           <button className={`settings-tab-btn ${activeTab === 'tercio' ? 'active' : ''}`} onClick={() => setActiveTab('tercio')}>TERCIO O/U</button>
           <button className={`settings-tab-btn ${activeTab === 'tercioml' ? 'active' : ''}`} onClick={() => setActiveTab('tercioml')}>TERCIO ML (Reglas)</button>
           <button className={`settings-tab-btn ${activeTab === 'runline' ? 'active' : ''}`} onClick={() => setActiveTab('runline')}>RUN LINE MLB</button>
@@ -1571,6 +1712,7 @@ export default function Settings({ config, onSaveConfig }) {
             onRowChange={handleSoloChange} 
             onDeleteRow={deleteSoloRow} 
             onAddRow={addSoloRow} 
+            highlightedRules={soloHighlightedRules}
           />
         )}
 

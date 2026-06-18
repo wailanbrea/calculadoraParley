@@ -5,7 +5,9 @@ import {
   prettyHalf,
   parseSignedIntLoose,
   mlWithinRange,
-  parseJuiceFromCombined
+  parseJuiceFromCombined,
+  isTercioOuMatch as isTercioOuOptionMatch,
+  findMatchingTercioOuOption
 } from '../calculatorEngine';
 import ManualCalculator from './ManualCalculator';
 
@@ -89,12 +91,49 @@ function renderRunlineCell(feedVal, calcVal) {
   return feedVal;
 }
 
+function renderTercioOuCell(game) {
+  if (!game.feed.tercioOu) return game.feed.tercioOu;
 
-export default function Dashboard({ config }) {
-  const [parsedGames, setParsedGames] = useState([]);
+  const options = game.calc.tercioOuOptions?.length
+    ? game.calc.tercioOuOptions
+    : (game.calc.tercioOu ? [game.calc.tercioOu] : []);
+  const validOption = game.calc.tercioOuValidOption || findMatchingTercioOuOption(game.feed.tercioOu, options);
+
+  if (validOption) {
+    if (game.calc.tercioOu && validOption !== game.calc.tercioOu) {
+      const otherOption = options.find(option => option !== validOption) || game.calc.tercioOu;
+      return (
+        <div className="cell-valid-alternative">
+          {game.feed.tercioOu}
+          <span className="cell-valid-alternative-calc">(Otra opción: {otherOption})</span>
+        </div>
+      );
+    }
+    return game.feed.tercioOu;
+  }
+
+  if (game.calc.tercioOu && !isTercioOuOptionMatch(game.feed.tercioOu, game.calc.tercioOu)) {
+    return (
+      <div className="cell-discrepancy">
+        {game.feed.tercioOu}
+        <span className="cell-discrepancy-calc">(Calc: {game.calc.tercioOu})</span>
+      </div>
+    );
+  }
+
+  return game.feed.tercioOu;
+}
+
+
+export default function Dashboard({ 
+  config, 
+  parsedGames, 
+  setParsedGames, 
+  expandedGames, 
+  setExpandedGames 
+}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [expandedGames, setExpandedGames] = useState({});
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -384,15 +423,7 @@ export default function Dashboard({ config }) {
                         const mlVCell = renderCell(game.feed.tercioMl[0], game.calc.tercioMl ? game.calc.tercioMl[0] : null, true);
                         const mlCCell = renderCell(game.feed.tercioMl[1], game.calc.tercioMl ? game.calc.tercioMl[1] : null, true);
 
-                        const isOuMismatch = game.feed.tercioOu && game.calc.tercioOu && !isTercioOuMatch(game.feed.tercioOu, game.calc.tercioOu);
-                        const rlTotalCell = isOuMismatch 
-                          ? (
-                            <div className="cell-discrepancy">
-                              {game.feed.tercioOu}
-                              <span className="cell-discrepancy-calc">(Calc: {game.calc.tercioOu})</span>
-                            </div>
-                          )
-                          : game.feed.tercioOu;
+                        const rlTotalCell = renderTercioOuCell(game);
 
                         const sinoSiCell = renderCell(game.feed.sino[0], game.calc.sino ? game.calc.sino[0] : null, true);
                         const sinoNoCell = renderCell(game.feed.sino[1], game.calc.sino ? game.calc.sino[1] : null, true);
@@ -442,15 +473,7 @@ export default function Dashboard({ config }) {
                         const mlVCell = renderCell(game.feed.tercioMl[0], game.calc.tercioMl ? game.calc.tercioMl[0] : null, true);
                         const mlCCell = renderCell(game.feed.tercioMl[1], game.calc.tercioMl ? game.calc.tercioMl[1] : null, true);
 
-                        const isOuMismatch = game.feed.tercioOu && game.calc.tercioOu && !isTercioOuMatch(game.feed.tercioOu, game.calc.tercioOu);
-                        const rlTotalCell = isOuMismatch 
-                          ? (
-                            <div className="cell-discrepancy">
-                              {game.feed.tercioOu}
-                              <span className="cell-discrepancy-calc">(Calc: {game.calc.tercioOu})</span>
-                            </div>
-                          )
-                          : game.feed.tercioOu;
+                        const rlTotalCell = renderTercioOuCell(game);
 
                         const sinoSiCell = renderCell(game.feed.sino[0], game.calc.sino ? game.calc.sino[0] : null, true);
                         const sinoNoCell = renderCell(game.feed.sino[1], game.calc.sino ? game.calc.sino[1] : null, true);

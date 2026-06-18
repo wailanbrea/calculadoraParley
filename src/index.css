@@ -779,6 +779,23 @@ body {
   background-color: #e2e8f0 !important;
 }
 
+.config-table tbody tr.settings-row-used-rule {
+  background: rgba(217, 119, 6, 0.12) !important;
+  box-shadow: inset 4px 0 0 #d97706;
+}
+
+.config-table tbody tr.settings-row-used-rule td {
+  text-decoration: underline;
+  text-decoration-color: #d97706;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.config-table tbody tr.settings-row-used-rule .table-input {
+  border-color: rgba(217, 119, 6, 0.6);
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.12);
+}
+
 .table-input {
   width: 100%;
   background: #ffffff;
@@ -824,6 +841,83 @@ body {
 .action-icon-btn.save:hover {
   background: rgba(5, 150, 105, 0.08);
   color: #047857;
+}
+
+.mlb-rules-table-wrap {
+  overflow-x: auto;
+}
+
+.mlb-rules-table {
+  width: max(100%, 920px);
+  table-layout: fixed;
+}
+
+.mlb-rules-table th,
+.mlb-rules-table td {
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
+  vertical-align: middle;
+}
+
+.mlb-edit-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.mlb-edit-stack .table-input {
+  width: 62px;
+  padding: 0.2rem;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.mlb-points-input {
+  width: 50px;
+  padding: 0.2rem;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.mlb-rules-actions-col {
+  position: sticky;
+  right: 0;
+  width: 86px;
+  min-width: 86px;
+  text-align: center;
+  vertical-align: middle;
+  background: inherit;
+  box-shadow: -8px 0 12px -12px rgba(15, 23, 42, 0.45);
+  z-index: 2;
+}
+
+.mlb-rules-table thead .mlb-rules-actions-col {
+  background: #f7f3ff;
+  z-index: 4;
+}
+
+.mlb-rules-table tbody tr:nth-child(even) .mlb-rules-actions-col {
+  background: #f1f5f9;
+}
+
+.mlb-rules-table tbody tr:nth-child(odd) .mlb-rules-actions-col {
+  background: #ffffff;
+}
+
+.mlb-rules-table tbody tr:hover .mlb-rules-actions-col {
+  background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .mlb-rules-panel {
+    min-width: 0;
+    padding: 0.75rem !important;
+  }
+
+  .mlb-rules-table {
+    width: 900px;
+  }
 }
 
 /* Add Row Form */
@@ -1050,6 +1144,22 @@ body {
   font-size: 0.72rem;
   display: block;
   color: #fda4af;
+  font-style: italic;
+  font-weight: normal;
+}
+
+.original-lines-sheet .cell-valid-alternative {
+  background-color: rgba(217, 119, 6, 0.35) !important;
+  color: #fed7aa !important;
+  border: 1px solid rgba(217, 119, 6, 0.75) !important;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.original-lines-sheet .cell-valid-alternative-calc {
+  font-size: 0.72rem;
+  display: block;
+  color: #fdba74;
   font-style: italic;
   font-weight: normal;
 }
