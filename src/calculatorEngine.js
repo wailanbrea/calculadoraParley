@@ -445,7 +445,7 @@ export function parseMlbJsonNuevo(jsonString, config) {
     // --- CÁLCULOS DEL MOTOR CON CONFIG PERSONALIZADA ---
 
     // 1) SOLO
-    const soloCalc = calcularSolo(totalJC, paLineaCasaUse, paLineaVisitUse, config);
+    const soloCalc = calcularSolo(totalJC, mlCasaJC, mlVisitJC, config);
 
     // 2) SI/NO
     let sinoCalc = null;
