@@ -4,7 +4,7 @@ header("Access-Control-Allow-Headers: Content-Type");
 header("Access-Control-Allow-Methods: GET, POST");
 header("Content-Type: application/json; charset=UTF-8");
 
-$configFile = __DIR__ . '/server_config.json';
+$configFile = dirname(__DIR__) . '/server_config.json';
 
 // Si el archivo no existe, lo inicializamos como nulo
 if (!file_exists($configFile)) {
