@@ -7,7 +7,8 @@ import {
   mlWithinRange,
   parseJuiceFromCombined,
   isTercioOuMatch as isTercioOuOptionMatch,
-  findMatchingTercioOuOption
+  findMatchingTercioOuOption,
+  parseMl
 } from '../calculatorEngine';
 import ManualCalculator from './ManualCalculator';
 
@@ -37,7 +38,23 @@ function isTercioOuMatch(fOu, cOu) {
          !isNaN(fLine) && !isNaN(cLine) && Math.abs(fLine - cLine) <= 5;
 }
 
-function renderCell(feedVal, calcVal, isMlType = false) {
+const getSoloRefLine = (game) => {
+  const mlV = parseMl(game.feed.ml[0]);
+  const mlC = parseMl(game.feed.ml[1]);
+  if (mlV === null || mlC === null) return "";
+  const favMl = mlC < mlV ? game.feed.ml[1] : game.feed.ml[0];
+  return `ML ${favMl} Tot ${game.feed.total ? game.feed.total.split(" ")[0] : ""}`;
+};
+
+const getPaRefLine = (game) => {
+  const mlV = parseMl(game.calc.paLineaUsada ? game.calc.paLineaUsada[0] : null);
+  const mlC = parseMl(game.calc.paLineaUsada ? game.calc.paLineaUsada[1] : null);
+  if (mlV === null && mlC === null) return "";
+  const favMl = (mlC !== null && (mlV === null || mlC < mlV)) ? (game.calc.paLineaUsada[1]) : (game.calc.paLineaUsada[0]);
+  return `ML 1H ${favMl}`;
+};
+
+function renderCell(feedVal, calcVal, isMlType = false, refLine = null) {
   if (feedVal === undefined || feedVal === null || feedVal === "") return "--";
   if (calcVal === undefined || calcVal === null || calcVal === "") return feedVal;
 
@@ -59,14 +76,16 @@ function renderCell(feedVal, calcVal, isMlType = false) {
     return (
       <span className="cell-discrepancy">
         {feedVal}
-        <span className="cell-discrepancy-calc">(Calc: {calcVal})</span>
+        <span className="cell-discrepancy-calc">
+          (Calc: {calcVal}{refLine ? ` con ${refLine}` : ''})
+        </span>
       </span>
     );
   }
   return feedVal;
 }
 
-function renderRunlineCell(feedVal, calcVal) {
+function renderRunlineCell(feedVal, calcVal, refLine = null) {
   if (feedVal === undefined || feedVal === null || feedVal === "" || feedVal === "--") return "--";
   if (calcVal === undefined || calcVal === null || calcVal === "" || calcVal === "--") return feedVal;
 
@@ -84,7 +103,9 @@ function renderRunlineCell(feedVal, calcVal) {
     return (
       <span className="cell-discrepancy">
         {feedVal}
-        <span className="cell-discrepancy-calc">(Calc: {calcVal})</span>
+        <span className="cell-discrepancy-calc">
+          (Calc: {calcVal}{refLine ? ` con ${refLine}` : ''})
+        </span>
       </span>
     );
   }
@@ -113,10 +134,11 @@ function renderTercioOuCell(game) {
   }
 
   if (game.calc.tercioOu && !isTercioOuOptionMatch(game.feed.tercioOu, game.calc.tercioOu)) {
+    const ref = game.feed.total1H ? ` con Tot 1H ${game.feed.total1H}` : "";
     return (
       <div className="cell-discrepancy">
         {game.feed.tercioOu}
-        <span className="cell-discrepancy-calc">(Calc: {game.calc.tercioOu})</span>
+        <span className="cell-discrepancy-calc">(Calc: {game.calc.tercioOu}{ref})</span>
       </div>
     );
   }
@@ -352,37 +374,37 @@ export default function Dashboard({
                           </td>
                           <td className="odds-cell">{game.feed.ml[0]}<br />{game.feed.ml[1]}</td>
                           <td className="alt-cell odds-cell">
-                            {renderRunlineCell(game.feed.rl[0], game.calc.rl ? game.calc.rl[0] : null)}
+                            {renderRunlineCell(game.feed.rl[0], game.calc.rl ? game.calc.rl[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
                             <br />
-                            {renderRunlineCell(game.feed.rl[1], game.calc.rl ? game.calc.rl[1] : null)}
+                            {renderRunlineCell(game.feed.rl[1], game.calc.rl ? game.calc.rl[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
                           </td>
                           <td className="odds-cell">{game.feed.total}</td>
                           <td className="alt-cell odds-cell">
-                            {renderRunlineCell(game.feed.srl[0], game.calc.srl ? game.calc.srl[0] : null)}
+                            {renderRunlineCell(game.feed.srl[0], game.calc.srl ? game.calc.srl[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
                             <br />
-                            {renderRunlineCell(game.feed.srl[1], game.calc.srl ? game.calc.srl[1] : null)}
+                            {renderRunlineCell(game.feed.srl[1], game.calc.srl ? game.calc.srl[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
                           </td>
                           <td className="odds-cell">
-                            {renderRunlineCell(game.feed.ra[0], game.calc.ra ? game.calc.ra[0] : null)}
+                            {renderRunlineCell(game.feed.ra[0], game.calc.ra ? game.calc.ra[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
                             <br />
-                            {renderRunlineCell(game.feed.ra[1], game.calc.ra ? game.calc.ra[1] : null)}
+                            {renderRunlineCell(game.feed.ra[1], game.calc.ra ? game.calc.ra[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
                           </td>
                           <td className="alt-cell odds-cell">
-                            {renderCell(game.feed.solo[0], game.calc.solo[0])}
+                            {renderCell(game.feed.solo[0], game.calc.solo[0], false, getSoloRefLine(game))}
                             <br />
-                            {renderCell(game.feed.solo[1], game.calc.solo[1])}
+                            {renderCell(game.feed.solo[1], game.calc.solo[1], false, getSoloRefLine(game))}
                           </td>
                           <td className="odds-cell">{game.feed.hce}</td>
                           <td className="alt-cell odds-cell">
-                            {renderCell(game.feed.pa[0], game.calc.pa ? game.calc.pa[0] : null, true)}
+                            {renderCell(game.feed.pa[0], game.calc.pa ? game.calc.pa[0] : null, true, getPaRefLine(game))}
                             <br />
-                            {renderCell(game.feed.pa[1], game.calc.pa ? game.calc.pa[1] : null, true)}
+                            {renderCell(game.feed.pa[1], game.calc.pa ? game.calc.pa[1] : null, true, getPaRefLine(game))}
                           </td>
                           <td className="odds-cell">{game.feed.ml1H[0]}<br />{game.feed.ml1H[1]}</td>
                           <td className="alt-cell odds-cell">
-                            {renderRunlineCell(game.feed.rl1H[0], game.calc.hrl ? game.calc.hrl[0] : null)}
+                            {renderRunlineCell(game.feed.rl1H[0], game.calc.hrl ? game.calc.hrl[0] : null, `ML 1H ${game.feed.ml1H[0]}/${game.feed.ml1H[1]}`)}
                             <br />
-                            {renderRunlineCell(game.feed.rl1H[1], game.calc.hrl ? game.calc.hrl[1] : null)}
+                            {renderRunlineCell(game.feed.rl1H[1], game.calc.hrl ? game.calc.hrl[1] : null, `ML 1H ${game.feed.ml1H[0]}/${game.feed.ml1H[1]}`)}
                           </td>
                           <td className="odds-cell">{game.feed.total1H}</td>
                           <td><br /></td>
@@ -420,13 +442,13 @@ export default function Dashboard({
                         const isVisitFav = (game.feed.ml[0] || "").startsWith("-");
                         const isCasaFav = (game.feed.ml[1] || "").startsWith("-");
 
-                        const mlVCell = renderCell(game.feed.tercioMl[0], game.calc.tercioMl ? game.calc.tercioMl[0] : null, true);
-                        const mlCCell = renderCell(game.feed.tercioMl[1], game.calc.tercioMl ? game.calc.tercioMl[1] : null, true);
+                        const mlVCell = renderCell(game.feed.tercioMl[0], game.calc.tercioMl ? game.calc.tercioMl[0] : null, true, `ML 1H ${game.feed.ml1H[0]}`);
+                        const mlCCell = renderCell(game.feed.tercioMl[1], game.calc.tercioMl ? game.calc.tercioMl[1] : null, true, `ML 1H ${game.feed.ml1H[1]}`);
 
                         const rlTotalCell = renderTercioOuCell(game);
 
-                        const sinoSiCell = renderCell(game.feed.sino[0], game.calc.sino ? game.calc.sino[0] : null, true);
-                        const sinoNoCell = renderCell(game.feed.sino[1], game.calc.sino ? game.calc.sino[1] : null, true);
+                        const sinoSiCell = renderCell(game.feed.sino[0], game.calc.sino ? game.calc.sino[0] : null, true, `Tot ${game.feed.total}`);
+                        const sinoNoCell = renderCell(game.feed.sino[1], game.calc.sino ? game.calc.sino[1] : null, true, `Tot ${game.feed.total}`);
 
                         return (
                           <tr key={game.id} className="row-grey">
@@ -470,13 +492,13 @@ export default function Dashboard({
                         const isVisitFav = (game.feed.ml[0] || "").startsWith("-");
                         const isCasaFav = (game.feed.ml[1] || "").startsWith("-");
 
-                        const mlVCell = renderCell(game.feed.tercioMl[0], game.calc.tercioMl ? game.calc.tercioMl[0] : null, true);
-                        const mlCCell = renderCell(game.feed.tercioMl[1], game.calc.tercioMl ? game.calc.tercioMl[1] : null, true);
+                        const mlVCell = renderCell(game.feed.tercioMl[0], game.calc.tercioMl ? game.calc.tercioMl[0] : null, true, `ML 1H ${game.feed.ml1H[0]}`);
+                        const mlCCell = renderCell(game.feed.tercioMl[1], game.calc.tercioMl ? game.calc.tercioMl[1] : null, true, `ML 1H ${game.feed.ml1H[1]}`);
 
                         const rlTotalCell = renderTercioOuCell(game);
 
-                        const sinoSiCell = renderCell(game.feed.sino[0], game.calc.sino ? game.calc.sino[0] : null, true);
-                        const sinoNoCell = renderCell(game.feed.sino[1], game.calc.sino ? game.calc.sino[1] : null, true);
+                        const sinoSiCell = renderCell(game.feed.sino[0], game.calc.sino ? game.calc.sino[0] : null, true, `Tot ${game.feed.total}`);
+                        const sinoNoCell = renderCell(game.feed.sino[1], game.calc.sino ? game.calc.sino[1] : null, true, `Tot ${game.feed.total}`);
 
                         return (
                           <tr key={game.id} className="row-blue">
