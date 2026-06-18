@@ -513,8 +513,10 @@ export function parseMlbJsonNuevo(jsonString, config) {
       return null;
     })();
 
+    let sinoOptions = [];
     if (sinoParams) {
-      sinoCalc = buscarSiNo(sinoParams.tot, sinoParams.tipo, sinoParams.line, config);
+      sinoOptions = buscarSiNoOpciones(sinoParams.tot, sinoParams.tipo, sinoParams.line, config);
+      sinoCalc = sinoOptions[0] || null;
     }
 
     // 3) PA
