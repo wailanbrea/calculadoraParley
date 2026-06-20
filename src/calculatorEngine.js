@@ -625,7 +625,7 @@ export function parseMlbJsonNuevo(jsonString, config) {
         hrl: runlinesCalc ? [runlinesCalc.hrl.visit, runlinesCalc.hrl.casa] : null
       }
     };
-    game.overallState = getOverallState(game);
+    game.overallState = getOverallState(game, config);
     out.push(game);
   });
 
@@ -686,60 +686,78 @@ export function mlWithinRange(feedVal, calcVal) {
   return Math.abs(f - c) <= 5;
 }
 
-export function getOverallState(game) {
+export function getMlDifference(feedVal, calcVal) {
+  const f = parseSignedIntLoose(feedVal);
+  const c = parseSignedIntLoose(calcVal);
+  if (f === null || c === null) return null;
+  return Math.abs(f - c);
+}
+
+
+export function getOverallState(game, config = null) {
+  const tercioMlMargin = config?.tercioMlRules?.tercioMlMargin ?? 10;
+  const sinoMargin = 5;
+  const paMargin = 5;
+
+  game.analysis = {
+    solo: { status: 'OK' },
+    sino: { status: 'OK', calcSi: null, calcNo: null, msg: '' },
+    pa: { status: 'OK', calcVisit: null, calcCasa: null, msg: '', swapped: false },
+    tercioMl: { status: 'OK', calcVisit: null, calcCasa: null, msg: '', swapped: false },
+    tercioOu: { status: 'OK', calcVal: null, msg: '' },
+    runlines: { status: 'OK' }
+  };
+
   // 1. SOLO
   const fSoloV = cleanDouble(game.feed.solo[0]);
   const fSoloC = cleanDouble(game.feed.solo[1]);
   const cSoloV = cleanDouble(game.calc.solo[0]);
   const cSoloC = cleanDouble(game.calc.solo[1]);
   const soloAnyMismatch = (fSoloV !== null && fSoloV !== cSoloV) || (fSoloC !== null && fSoloC !== cSoloC);
+  game.analysis.solo.status = soloAnyMismatch ? 'ERROR' : 'OK';
 
   // 2. SI/NO
-
-
   const fSi = parseSignedIntLoose(game.feed.sino[0]);
-
-
   const fNo = parseSignedIntLoose(game.feed.sino[1]);
 
-
-  let sinoMismatch = false;
-
-
   if (fSi !== null && fNo !== null) {
-
-
     const options = game.calc.sinoOptions || [];
-
-
     if (options.length > 0) {
+      let bestOpt = null;
+      let bestDiff = 9999;
+      let bestIndex = -1;
+      options.forEach((opt, idx) => {
+        const diffSi = Math.min(Math.abs(fSi - opt.precioSi), Math.abs(Math.abs(fSi) - Math.abs(opt.precioSi)));
+        const diffNo = Math.min(Math.abs(fNo - opt.precioNo), Math.abs(Math.abs(fNo) - Math.abs(opt.precioNo)));
+        const maxDiff = Math.max(diffSi, diffNo);
+        if (maxDiff < bestDiff) {
+          bestDiff = maxDiff;
+          bestOpt = opt;
+          bestIndex = idx;
+        }
+      });
 
-
-      const match = options.find(opt => {
-      const matchSi = Math.abs(fSi - opt.precioSi) <= 5 || Math.abs(Math.abs(fSi) - Math.abs(opt.precioSi)) <= 5;
-      const matchNo = Math.abs(fNo - opt.precioNo) <= 5 || Math.abs(Math.abs(fNo) - Math.abs(opt.precioNo)) <= 5;
-      return matchSi && matchNo;
-    });
-
-
-      sinoMismatch = !match;
-
-
+      if (bestOpt) {
+        game.analysis.sino.calcSi = bestOpt.precioSi;
+        game.analysis.sino.calcNo = bestOpt.precioNo;
+        if (bestDiff === 0 && bestIndex === 0) {
+          game.analysis.sino.status = 'OK';
+        } else if (bestDiff <= sinoMargin) {
+          game.analysis.sino.status = 'REVIEW';
+          if (bestIndex > 0) {
+            game.analysis.sino.msg = `Otra opción: SI ${bestOpt.precioSi > 0 ? '+' : ''}${bestOpt.precioSi} / NO ${bestOpt.precioNo > 0 ? '+' : ''}${bestOpt.precioNo}`;
+          }
+        } else {
+          game.analysis.sino.status = 'ERROR';
+        }
+      } else {
+        game.analysis.sino.status = 'ERROR';
+      }
     } else {
-
-
-      sinoMismatch = true;
-
-
+      game.analysis.sino.status = 'ERROR';
     }
-
-
   } else if (fSi !== null || fNo !== null) {
-
-
-    sinoMismatch = true;
-
-
+    game.analysis.sino.status = 'ERROR';
   }
 
   // 3. PA
@@ -747,18 +765,77 @@ export function getOverallState(game) {
   const fPaC = parseSignedIntLoose(game.feed.pa[1]);
   const cPaV = game.calc.pa ? game.calc.pa[0] : null;
   const cPaC = game.calc.pa ? game.calc.pa[1] : null;
-  const paVisitOk = fPaV === null || (cPaV !== null && Math.abs(fPaV - cPaV) <= 5);
-  const paCasaOk = fPaC === null || (cPaC !== null && Math.abs(fPaC - cPaC) <= 5);
-  const paAnyMismatch = (cPaV !== null || cPaC !== null) && (!paVisitOk || !paCasaOk);
 
-  // 4. TERCIO
+  if (fPaV !== null || fPaC !== null) {
+    if (cPaV !== null && cPaC !== null) {
+      const diffV_dir = Math.abs(fPaV - cPaV);
+      const diffC_dir = Math.abs(fPaC - cPaC);
+      const diffV_swap = Math.abs(fPaV - cPaC);
+      const diffC_swap = Math.abs(fPaC - cPaV);
+
+      const directMax = Math.max(diffV_dir, diffC_dir);
+      const swapMax = Math.max(diffV_swap, diffC_swap);
+
+      let bestDiff = directMax;
+      let isSwapped = false;
+      if (swapMax < directMax) {
+        bestDiff = swapMax;
+        isSwapped = true;
+      }
+
+      game.analysis.pa.calcVisit = isSwapped ? cPaC : cPaV;
+      game.analysis.pa.calcCasa = isSwapped ? cPaV : cPaC;
+      game.analysis.pa.swapped = isSwapped;
+
+      if (bestDiff === 0 && !isSwapped) {
+        game.analysis.pa.status = 'OK';
+      } else if (bestDiff <= paMargin) {
+        game.analysis.pa.status = 'REVIEW';
+      } else {
+        game.analysis.pa.status = 'ERROR';
+      }
+    } else {
+      game.analysis.pa.status = 'ERROR';
+    }
+  }
+
+  // 4. TERCIO ML
   const hasTercioMlJson = game.feed.tercioMl[0] !== "" && game.feed.tercioMl[1] !== "";
-  const tercioMlOk = !hasTercioMlJson || (
-    game.calc.tercioMl && (
-      (mlWithinRange(game.feed.tercioMl[0], game.calc.tercioMl[0]) && mlWithinRange(game.feed.tercioMl[1], game.calc.tercioMl[1])) ||
-      (mlWithinRange(game.feed.tercioMl[0], game.calc.tercioMl[1]) && mlWithinRange(game.feed.tercioMl[1], game.calc.tercioMl[0]))
-    )
-  );
+  if (hasTercioMlJson) {
+    const calcV = game.calc.tercioMl ? game.calc.tercioMl[0] : null;
+    const calcC = game.calc.tercioMl ? game.calc.tercioMl[1] : null;
+
+    if (calcV !== null && calcC !== null) {
+      const diffV_dir = getMlDifference(game.feed.tercioMl[0], calcV);
+      const diffC_dir = getMlDifference(game.feed.tercioMl[1], calcC);
+      const diffV_swap = getMlDifference(game.feed.tercioMl[0], calcC);
+      const diffC_swap = getMlDifference(game.feed.tercioMl[1], calcV);
+
+      const directMax = (diffV_dir !== null && diffC_dir !== null) ? Math.max(diffV_dir, diffC_dir) : 9999;
+      const swapMax = (diffV_swap !== null && diffC_swap !== null) ? Math.max(diffV_swap, diffC_swap) : 9999;
+
+      let bestDiff = directMax;
+      let isSwapped = false;
+      if (swapMax < directMax) {
+        bestDiff = swapMax;
+        isSwapped = true;
+      }
+
+      game.analysis.tercioMl.calcVisit = isSwapped ? calcC : calcV;
+      game.analysis.tercioMl.calcCasa = isSwapped ? calcV : calcC;
+      game.analysis.tercioMl.swapped = isSwapped;
+
+      if (bestDiff === 0 && !isSwapped) {
+        game.analysis.tercioMl.status = 'OK';
+      } else if (bestDiff <= tercioMlMargin) {
+        game.analysis.tercioMl.status = 'REVIEW';
+      } else {
+        game.analysis.tercioMl.status = 'ERROR';
+      }
+    } else {
+      game.analysis.tercioMl.status = 'ERROR';
+    }
+  }
 
   // Tercio O/U
   let tercioOuOk = true;
@@ -791,7 +868,7 @@ export function getOverallState(game) {
     tercioOuOk = false;
   }
 
-  const tercioHasIssue = (game.feed.tercioMl[0] !== "" || game.feed.tercioOu !== "") && !(tercioMlOk && tercioOuOk);
+  game.analysis.tercioOu.status = tercioOuOk ? 'OK' : 'REVIEW';
   const noSoportado = !game.calc.tercioOu && game.feed.total1H;
 
   // 5. Run Lines
@@ -808,9 +885,22 @@ export function getOverallState(game) {
   const hrl1Ok = game.feed.rl1H[1] === "" || (game.calc.hrl && isRunlinePriceMatch(game.feed.rl1H[1], game.calc.hrl[1]));
 
   const runlineMismatch = !rl0Ok || !rl1Ok || !srl0Ok || !srl1Ok || !ra0Ok || !ra1Ok || !hrl0Ok || !hrl1Ok;
+  game.analysis.runlines.status = runlineMismatch ? 'ERROR' : 'OK';
 
-  if (soloAnyMismatch || paAnyMismatch || sinoMismatch || runlineMismatch) return 'ERROR';
-  if (tercioHasIssue || noSoportado) return 'REVIEW';
+  if (game.analysis.solo.status === 'ERROR' || 
+      game.analysis.sino.status === 'ERROR' || 
+      game.analysis.pa.status === 'ERROR' || 
+      game.analysis.tercioMl.status === 'ERROR' || 
+      game.analysis.runlines.status === 'ERROR') {
+    return 'ERROR';
+  }
+  if (game.analysis.sino.status === 'REVIEW' || 
+      game.analysis.pa.status === 'REVIEW' || 
+      game.analysis.tercioMl.status === 'REVIEW' || 
+      game.analysis.tercioOu.status === 'REVIEW' || 
+      noSoportado) {
+    return 'REVIEW';
+  }
   return 'OK';
 }
 

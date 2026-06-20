@@ -622,10 +622,14 @@ const TercioMlSettingsTab = React.memo(({ rules, onChange }) => {
         </div>
       </div>
 
-      <div className="calc-form-grid" style={{ maxWidth: '300px' }}>
+      <div className="calc-form-grid" style={{ marginBottom: '2rem' }}>
         <div className="form-group">
           <label className="form-label">Diferencia de Spread (Regla de 30)</label>
           <input type="number" name="dogSpread" className="form-input" value={rules.dogSpread} onChange={onChange} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Margen Aceptación Tercio ML (centavos)</label>
+          <input type="number" name="tercioMlMargin" className="form-input" value={rules.tercioMlMargin ?? 10} onChange={onChange} />
         </div>
       </div>
       
@@ -1474,7 +1478,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
     rule135_favT: -120, rule135_dogT: -110,
     rule145_favT: -125, rule145_dogT: 105,
     rule150_favT: -130, rule150_dogT: 100,
-    dogSpread: 30
+    dogSpread: 30,
+    tercioMlMargin: 10
   });
 
   // --- Inicializar estados locales con config global ---
@@ -1489,11 +1494,12 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
       
       const r = config.tercioMlRules || defaultTercioMlRules;
       setTercioMlRules({
-        rule130_favT: r.rule130.favT, rule130_dogT: r.rule130.dogT,
-        rule135_favT: r.rule135.favT, rule135_dogT: r.rule135.dogT,
-        rule145_favT: r.rule145.favT, rule145_dogT: r.rule145.dogT,
-        rule150_favT: r.rule150.favT, rule150_dogT: r.rule150.dogT,
-        dogSpread: r.dogSpread
+        rule130_favT: r.rule130?.favT ?? -115, rule130_dogT: r.rule130?.dogT ?? -115,
+        rule135_favT: r.rule135?.favT ?? -120, rule135_dogT: r.rule135?.dogT ?? -110,
+        rule145_favT: r.rule145?.favT ?? -125, rule145_dogT: r.rule145?.dogT ?? 105,
+        rule150_favT: r.rule150?.favT ?? -130, rule150_dogT: r.rule150?.dogT ?? 100,
+        dogSpread: r.dogSpread ?? 30,
+        tercioMlMargin: r.tercioMlMargin ?? 10
       });
     }
   }, [config]);
@@ -1656,7 +1662,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
         rule135: { limit: 135, favT: tercioMlRules.rule135_favT, dogT: tercioMlRules.rule135_dogT },
         rule145: { limit: 145, favT: tercioMlRules.rule145_favT, dogT: tercioMlRules.rule145_dogT },
         rule150: { limit: 150, favT: tercioMlRules.rule150_favT, dogT: tercioMlRules.rule150_dogT },
-        dogSpread: tercioMlRules.dogSpread
+        dogSpread: tercioMlRules.dogSpread,
+        tercioMlMargin: tercioMlRules.tercioMlMargin
       }
     };
     onSaveConfig(newConfig);
@@ -1685,8 +1692,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
     <div className="fade-in">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Reglas</h2>
-          <p className="page-subtitle">Personaliza las reglas de SOLO, SI/NO, PA, TERCIO y RUN LINE MLB para los cálculos.</p>
+          <h2 className="page-title">Tabla</h2>
+          <p className="page-subtitle">Personaliza las tablas de SOLO, SI/NO, PA, TERCIO y RUN LINE MLB para los cálculos.</p>
         </div>
         <div>
           {saveSuccess && <span style={{ color: 'var(--color-ok)', fontWeight: 'bold', marginRight: '1rem' }}>✓ ¡Cambios guardados con éxito!</span>}

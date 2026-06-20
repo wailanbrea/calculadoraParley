@@ -55,22 +55,28 @@ const getPaRefLine = (game) => {
   return `ML 1H ${favMl}`;
 };
 
-function renderCell(feedVal, calcVal, isMlType = false, refLine = null) {
+function renderCell(feedVal, calcVal, isMlType = false, refLine = null, status = null) {
   if (feedVal === undefined || feedVal === null || feedVal === "") return "--";
   if (calcVal === undefined || calcVal === null || calcVal === "") return feedVal;
 
   let isMismatch = false;
+  let isReview = false;
 
-  if (isMlType) {
-    const fInt = parseInt(feedVal.toString().replace(/[+-]/g, ""), 10) || 0;
-    const cInt = parseInt(calcVal.toString().replace(/[+-]/g, ""), 10) || 0;
-    const fSign = feedVal.toString().startsWith("-") ? -1 : 1;
-    const cSign = calcVal.toString().startsWith("-") ? -1 : 1;
-    isMismatch = Math.abs((fInt * fSign) - (cInt * cSign)) > 5;
+  if (status !== null) {
+    isMismatch = status === 'ERROR';
+    isReview = status === 'REVIEW';
   } else {
-    const fNorm = feedVal.toString().replace(/\s+/g, "").replace(/½/g, ".5");
-    const cNorm = calcVal.toString().replace(/\s+/g, "").replace(/½/g, ".5");
-    isMismatch = fNorm !== cNorm;
+    if (isMlType) {
+      const fInt = parseInt(feedVal.toString().replace(/[+-]/g, ""), 10) || 0;
+      const cInt = parseInt(calcVal.toString().replace(/[+-]/g, ""), 10) || 0;
+      const fSign = feedVal.toString().startsWith("-") ? -1 : 1;
+      const cSign = calcVal.toString().startsWith("-") ? -1 : 1;
+      isMismatch = Math.abs((fInt * fSign) - (cInt * cSign)) > 5;
+    } else {
+      const fNorm = feedVal.toString().replace(/\s+/g, "").replace(/½/g, ".5");
+      const cNorm = calcVal.toString().replace(/\s+/g, "").replace(/½/g, ".5");
+      isMismatch = fNorm !== cNorm;
+    }
   }
 
   if (isMismatch) {
@@ -83,6 +89,18 @@ function renderCell(feedVal, calcVal, isMlType = false, refLine = null) {
       </span>
     );
   }
+
+  if (isReview) {
+    return (
+      <span className="cell-valid-alternative">
+        {feedVal}
+        <span className="cell-valid-alternative-calc">
+          (Calc: {calcVal}{refLine ? ` con ${refLine}` : ''})
+        </span>
+      </span>
+    );
+  }
+
   return feedVal;
 }
 
@@ -122,52 +140,75 @@ function renderSinoCellGroup(game) {
     return <>--<br />--</>;
   }
 
-  const options = game.calc.sinoOptions || [];
-  if (options.length === 0) {
-    return <>{feedSi}<br />{feedNo}</>;
+  const analysis = game.analysis?.sino;
+  if (!analysis) {
+    const options = game.calc.sinoOptions || [];
+    if (options.length === 0) {
+      return <>{feedSi}<br />{feedNo}</>;
+    }
+    const parseSi = (v) => parseInt(v.toString().replace(/[+-]/g, ""), 10) || 0;
+    const parseNo = (v) => parseInt(v.toString().replace(/[+-]/g, ""), 10) || 0;
+    const signSi = (v) => v.toString().startsWith("-") ? -1 : 1;
+    const signNo = (v) => v.toString().startsWith("-") ? -1 : 1;
+
+    const isMatch = (fSi, fNo, optSi, optNo) => {
+      const fSiVal = parseSi(fSi) * signSi(fSi);
+      const fNoVal = parseNo(fNo) * signNo(fNo);
+      const oSiVal = parseInt(optSi, 10);
+      const oNoVal = parseInt(optNo, 10);
+      const matchSi = Math.abs(fSiVal - oSiVal) <= 5 || Math.abs(Math.abs(fSiVal) - Math.abs(oSiVal)) <= 5;
+      const matchNo = Math.abs(fNoVal - oNoVal) <= 5 || Math.abs(Math.abs(fNoVal) - Math.abs(oNoVal)) <= 5;
+      return matchSi && matchNo;
+    };
+
+    const validOption = options.find(opt => isMatch(feedSi, feedNo, opt.precioSi, opt.precioNo));
+    const formatFmt = (n) => (n > 0 ? `+${n}` : `${n}`);
+
+    if (validOption) {
+      const primaryOpt = options[0];
+      if (primaryOpt && (primaryOpt.precioSi !== validOption.precioSi || primaryOpt.precioNo !== validOption.precioNo)) {
+        const otherOptionStr = `SI ${formatFmt(primaryOpt.precioSi)} / NO ${formatFmt(primaryOpt.precioNo)}`;
+        return (
+          <div className="cell-valid-alternative">
+            {feedSi}
+            <br />
+            {feedNo}
+            <span className="cell-valid-alternative-calc">(Otra opción: ${otherOptionStr})</span>
+          </div>
+        );
+      }
+      return <>{feedSi}<br />{feedNo}</>;
+    }
+
+    const primaryOpt = options[0];
+    const calcSi = formatFmt(primaryOpt.precioSi);
+    const calcNo = formatFmt(primaryOpt.precioNo);
+    const sinoTotalRef = game.calc.sinoTotalUsado
+      ? `Total ${prettyHalf(game.calc.sinoTotalUsado)} ${game.calc.sinoTipoUsado || ""}`.trim()
+      : "";
+    const sinoMlRef = game.calc.sinoLineaUsada ? `Línea ${game.calc.sinoLineaUsada}` : "";
+    const refParts = [sinoTotalRef, sinoMlRef].filter(Boolean).join(" / ");
+    const ref = refParts ? ` con ${refParts}` : "";
+
+    return (
+      <div className="cell-discrepancy">
+        {feedSi}
+        <br />
+        {feedNo}
+        <span className="cell-discrepancy-calc">(Calc: SI ${calcSi} / NO ${calcNo}${ref})</span>
+      </div>
+    );
   }
 
-  // Verificar si hay match con alguna de las opciones
-  const parseSi = (v) => parseInt(v.toString().replace(/[+-]/g, ""), 10) || 0;
-  const parseNo = (v) => parseInt(v.toString().replace(/[+-]/g, ""), 10) || 0;
-  const signSi = (v) => v.toString().startsWith("-") ? -1 : 1;
-  const signNo = (v) => v.toString().startsWith("-") ? -1 : 1;
-
-  const isMatch = (fSi, fNo, optSi, optNo) => {
-    const fSiVal = parseSi(fSi) * signSi(fSi);
-    const fNoVal = parseNo(fNo) * signNo(fNo);
-    const oSiVal = parseInt(optSi, 10);
-    const oNoVal = parseInt(optNo, 10);
-    const matchSi = Math.abs(fSiVal - oSiVal) <= 5 || Math.abs(Math.abs(fSiVal) - Math.abs(oSiVal)) <= 5;
-    const matchNo = Math.abs(fNoVal - oNoVal) <= 5 || Math.abs(Math.abs(fNoVal) - Math.abs(oNoVal)) <= 5;
-    return matchSi && matchNo;
-  };
-
-  const validOption = options.find(opt => isMatch(feedSi, feedNo, opt.precioSi, opt.precioNo));
   const formatFmt = (n) => (n > 0 ? `+${n}` : `${n}`);
 
-  if (validOption) {
-    const primaryOpt = options[0];
-    if (primaryOpt && (primaryOpt.precioSi !== validOption.precioSi || primaryOpt.precioNo !== validOption.precioNo)) {
-      // Coincide con la otra opción (naranja)
-      const otherOptionStr = `SI ${formatFmt(primaryOpt.precioSi)} / NO ${formatFmt(primaryOpt.precioNo)}`;
-      return (
-        <div className="cell-valid-alternative">
-          {feedSi}
-          <br />
-          {feedNo}
-          <span className="cell-valid-alternative-calc">(Otra opción: ${otherOptionStr})</span>
-        </div>
-      );
-    }
-    // Coincide con la primaria
+  if (analysis.status === 'OK') {
     return <>{feedSi}<br />{feedNo}</>;
   }
 
-  // Mismatch
-  const primaryOpt = options[0];
-  const calcSi = formatFmt(primaryOpt.precioSi);
-  const calcNo = formatFmt(primaryOpt.precioNo);
+  const calcSi = analysis.calcSi !== null ? formatFmt(analysis.calcSi) : "--";
+  const calcNo = analysis.calcNo !== null ? formatFmt(analysis.calcNo) : "--";
+
   const sinoTotalRef = game.calc.sinoTotalUsado
     ? `Total ${prettyHalf(game.calc.sinoTotalUsado)} ${game.calc.sinoTipoUsado || ""}`.trim()
     : "";
@@ -175,12 +216,27 @@ function renderSinoCellGroup(game) {
   const refParts = [sinoTotalRef, sinoMlRef].filter(Boolean).join(" / ");
   const ref = refParts ? ` con ${refParts}` : "";
 
+  if (analysis.status === 'REVIEW') {
+    return (
+      <div className="cell-valid-alternative">
+        {feedSi}
+        <br />
+        {feedNo}
+        {analysis.msg ? (
+          <span className="cell-valid-alternative-calc">({analysis.msg})</span>
+        ) : (
+          <span className="cell-valid-alternative-calc">(Calc: SI {calcSi} / NO {calcNo}{ref})</span>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="cell-discrepancy">
       {feedSi}
       <br />
       {feedNo}
-      <span className="cell-discrepancy-calc">(Calc: SI ${calcSi} / NO ${calcNo}${ref})</span>
+      <span className="cell-discrepancy-calc">(Calc: SI {calcSi} / NO {calcNo}{ref})</span>
     </div>
   );
 }
@@ -463,16 +519,16 @@ export default function Dashboard({
                             {renderRunlineCell(game.feed.ra[1], game.calc.ra ? game.calc.ra[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
                           </td>
                           <td className="alt-cell odds-cell">
-                            {renderCell(game.feed.solo[0], game.calc.solo[0], false, getSoloRefLine(game))}
-                            <br />
-                            {renderCell(game.feed.solo[1], game.calc.solo[1], false, getSoloRefLine(game))}
-                          </td>
-                          <td className="odds-cell">{game.feed.hce}</td>
-                          <td className="alt-cell odds-cell">
-                            {renderCell(game.feed.pa[0], game.calc.pa ? game.calc.pa[0] : null, true, getPaRefLine(game))}
-                            <br />
-                            {renderCell(game.feed.pa[1], game.calc.pa ? game.calc.pa[1] : null, true, getPaRefLine(game))}
-                          </td>
+                             {renderCell(game.feed.solo[0], game.calc.solo[0], false, getSoloRefLine(game), game.analysis?.solo?.status)}
+                             <br />
+                             {renderCell(game.feed.solo[1], game.calc.solo[1], false, getSoloRefLine(game), game.analysis?.solo?.status)}
+                           </td>
+                           <td className="odds-cell">{game.feed.hce}</td>
+                           <td className="alt-cell odds-cell">
+                             {renderCell(game.feed.pa[0], game.analysis?.pa?.calcVisit, true, getPaRefLine(game), game.analysis?.pa?.status)}
+                             <br />
+                             {renderCell(game.feed.pa[1], game.analysis?.pa?.calcCasa, true, getPaRefLine(game), game.analysis?.pa?.status)}
+                           </td>
                           <td className="odds-cell">{game.feed.ml1H[0]}<br />{game.feed.ml1H[1]}</td>
                           <td className="alt-cell odds-cell">
                             {renderRunlineCell(game.feed.rl1H[0], game.calc.hrl ? game.calc.hrl[0] : null, `ML 1H ${game.feed.ml1H[0]}/${game.feed.ml1H[1]}`)}

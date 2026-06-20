@@ -206,7 +206,8 @@ export const defaultTercioMlRules = {
   rule135: { limit: 135, favT: -120, dogT: -110 },
   rule145: { limit: 145, favT: -125, dogT: 105 },
   rule150: { limit: 150, favT: -130, dogT: 100 },
-  dogSpread: 30
+  dogSpread: 30,
+  tercioMlMargin: 10
 };
 
 export const defaultMlbRunlineRules = [
