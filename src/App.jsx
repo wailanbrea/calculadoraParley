@@ -25,6 +25,27 @@ function tercioRuleKey(rule) {
   ].join('|');
 }
 
+function siNoRuleKey(rule) {
+  return [
+    Number(rule.total),
+    String(rule.tipo || '').toUpperCase(),
+    String(rule.linea || '')
+  ].join('|');
+}
+
+function mergeMissingDefaultSiNoRules(configData) {
+  if (!Array.isArray(configData?.preciosSiNo)) return configData;
+  const existing = new Set(configData.preciosSiNo.map(siNoRuleKey));
+  defaultSiNoPrecios.forEach(rule => {
+    const key = siNoRuleKey(rule);
+    if (!existing.has(key)) {
+      configData.preciosSiNo.push(rule);
+      existing.add(key);
+    }
+  });
+  return configData;
+}
+
 function mergeMissingDefaultTercioRules(configData) {
   if (!Array.isArray(configData?.preciosTercio)) return configData;
   const existing = new Set(configData.preciosTercio.map(tercioRuleKey));
@@ -57,6 +78,7 @@ export default function App() {
           if (!serverData.mlbRunlineRules || serverData.mlbRunlineRules.length < defaultMlbRunlineRules.length) {
             serverData.mlbRunlineRules = defaultMlbRunlineRules;
           }
+          mergeMissingDefaultSiNoRules(serverData);
           mergeMissingDefaultTercioRules(serverData);
 
           console.log("Configuración cargada desde el servidor.");
@@ -81,6 +103,7 @@ export default function App() {
           parsed.mlbRunlineRules = defaultMlbRunlineRules;
           localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
         }
+        mergeMissingDefaultSiNoRules(parsed);
         mergeMissingDefaultTercioRules(parsed);
         localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
 

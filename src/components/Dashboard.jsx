@@ -168,7 +168,12 @@ function renderSinoCellGroup(game) {
   const primaryOpt = options[0];
   const calcSi = formatFmt(primaryOpt.precioSi);
   const calcNo = formatFmt(primaryOpt.precioNo);
-  const ref = game.feed.total ? ` con Tot ${game.feed.total}` : "";
+  const sinoTotalRef = game.calc.sinoTotalUsado
+    ? `Total ${prettyHalf(game.calc.sinoTotalUsado)} ${game.calc.sinoTipoUsado || ""}`.trim()
+    : "";
+  const sinoMlRef = game.calc.sinoLineaUsada ? `ML 1H ${game.calc.sinoLineaUsada}` : "";
+  const refParts = [sinoTotalRef, sinoMlRef].filter(Boolean).join(" / ");
+  const ref = refParts ? ` con ${refParts}` : "";
 
   return (
     <div className="cell-discrepancy">

@@ -20,6 +20,18 @@ export const defaultVisitAdjustRanges = [
 ];
 
 export const defaultSiNoPrecios = [
+  { total: 3.5, tipo: "O", linea: "-120", precioSi: 115, precioNo: -145 },
+  { total: 3.5, tipo: "O", linea: "-125", precioSi: 115, precioNo: -145 },
+  { total: 3.5, tipo: "U", linea: "-115", precioSi: 120, precioNo: -150 },
+  { total: 3.5, tipo: "U", linea: "-120", precioSi: 120, precioNo: -150 },
+  { total: 4.0, tipo: "O", linea: "-115", precioSi: 105, precioNo: -125 },
+  { total: 4.0, tipo: "U", linea: "-115", precioSi: 100, precioNo: -130 },
+  { total: 4.0, tipo: "U", linea: "-120", precioSi: 105, precioNo: -135 },
+  { total: 4.5, tipo: "O", linea: "-130", precioSi: 100, precioNo: -130 },
+  { total: 4.5, tipo: "U", linea: "-110", precioSi: 120, precioNo: -120 },
+  { total: 4.5, tipo: "U", linea: "-115", precioSi: 120, precioNo: -120 },
+  { total: 5.0, tipo: "U", linea: "-110", precioSi: 145, precioNo: 115 },
+  { total: 5.5, tipo: "U", linea: "-120", precioSi: 160, precioNo: 130 },
   { total: 6.0, tipo: "O", linea: "-120", precioSi: 140, precioNo: -170 },
   { total: 6.0, tipo: "P", linea: "-110", precioSi: 145, precioNo: -175 },
   { total: 6.0, tipo: "U", linea: "-120", precioSi: 150, precioNo: -180 },
