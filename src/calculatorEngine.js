@@ -493,35 +493,22 @@ export function parseMlbJsonNuevo(jsonString, config) {
 
     // 2) SI/NO
     let sinoCalc = null;
-    const halfCasaForSino = parseMl(paLineaCasaUse);
-    const halfVisitForSino = parseMl(paLineaVisitUse);
-    let sinoMl1HLine = null;
-    if (halfCasaForSino !== null && halfVisitForSino !== null) {
-      if (halfCasaForSino < 0 && halfVisitForSino >= 0) sinoMl1HLine = paLineaCasaUse;
-      else if (halfVisitForSino < 0 && halfCasaForSino >= 0) sinoMl1HLine = paLineaVisitUse;
-      else if (halfCasaForSino < 0 && halfVisitForSino < 0) {
-        sinoMl1HLine = Math.abs(halfCasaForSino) >= Math.abs(halfVisitForSino) ? paLineaCasaUse : paLineaVisitUse;
-      }
-    } else if (halfCasaForSino !== null && halfCasaForSino < 0) sinoMl1HLine = paLineaCasaUse;
-    else if (halfVisitForSino !== null && halfVisitForSino < 0) sinoMl1HLine = paLineaVisitUse;
-    // Extraer parametros SiNo desde el total de la mitad; si falta, usar total JC.
+    // Extraer parámetros SiNo desde total JC
     const sinoParams = (function() {
-      const sinoTotalSource = totalMitadRaw || totalJC;
-      if (!sinoTotalSource) return null;
-      const s = sinoTotalSource.toString().toLowerCase().replace(/Â½|½/g, ".5").replace(/,/g, ".").replace(/\s+/g, "");
+      if (!totalJC) return null;
+      const s = totalJC.toString().toLowerCase().replace(/Â½|½/g, ".5").replace(/,/g, ".").replace(/\s+/g, "");
       let match = s.match(/^(\d+(?:\.\d+)?)([oup])([+-]?\d+)$/);
       if (match) {
         const tot = canonHalf(parseFloat(match[1]));
         const tipo = match[2].toUpperCase();
         const l0 = match[3];
-        const totalLine = l0.startsWith("+") || l0.startsWith("-") ? l0 : `-${l0}`;
-        const line = sinoMl1HLine || totalLine;
+        const line = l0.startsWith("+") || l0.startsWith("-") ? l0 : `-${l0}`;
         return { tot, tipo, line };
       }
       match = s.match(/^(\d+(?:\.\d+)?)([+-]\d+)$/);
       if (match) {
         const tot = canonHalf(parseFloat(match[1]));
-        return { tot, tipo: "P", line: sinoMl1HLine || match[2] };
+        return { tot, tipo: "P", line: match[2] };
       }
       return null;
     })();
