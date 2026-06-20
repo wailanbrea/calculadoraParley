@@ -171,7 +171,7 @@ function renderSinoCellGroup(game) {
   const sinoTotalRef = game.calc.sinoTotalUsado
     ? `Total ${prettyHalf(game.calc.sinoTotalUsado)} ${game.calc.sinoTipoUsado || ""}`.trim()
     : "";
-  const sinoMlRef = game.calc.sinoLineaUsada ? `ML 1H ${game.calc.sinoLineaUsada}` : "";
+  const sinoMlRef = game.calc.sinoLineaUsada ? `Línea ${game.calc.sinoLineaUsada}` : "";
   const refParts = [sinoTotalRef, sinoMlRef].filter(Boolean).join(" / ");
   const ref = refParts ? ` con ${refParts}` : "";
 
