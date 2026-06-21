@@ -570,7 +570,7 @@ export function parseMlbJsonNuevo(jsonString, config) {
     const tercioOuValidOption = feedTercioOuText ? findMatchingTercioOuOption(feedTercioOuText, tercioOuOptions) : null;
 
     // 5) MLB RUN LINES (RL, SRL, RA)
-    const runlinesCalc = calcularMlbRunlines(mlVisitJC, mlCasaJC, rlJC, config);
+    const runlinesCalc = config?.enableRunlines ? calcularMlbRunlines(mlVisitJC, mlCasaJC, rlJC, config) : null;
 
     const feedSinoSi = obj.sino ? obj.sino.visit || "" : tercio.siNoSi || "";
     const feedSinoNo = obj.sino ? obj.sino.casa || "" : tercio.siNoNo || "";
@@ -903,7 +903,7 @@ export function getOverallState(game, config = null) {
   const hrl0Ok = game.feed.rl1H[0] === "" || (game.calc.hrl && isRunlinePriceMatch(game.feed.rl1H[0], game.calc.hrl[0]));
   const hrl1Ok = game.feed.rl1H[1] === "" || (game.calc.hrl && isRunlinePriceMatch(game.feed.rl1H[1], game.calc.hrl[1]));
 
-  const runlineMismatch = !rl0Ok || !rl1Ok || !srl0Ok || !srl1Ok || !ra0Ok || !ra1Ok || !hrl0Ok || !hrl1Ok;
+  const runlineMismatch = config?.enableRunlines ? (!rl0Ok || !rl1Ok || !srl0Ok || !srl1Ok || !ra0Ok || !ra1Ok || !hrl0Ok || !hrl1Ok) : false;
   game.analysis.runlines.status = runlineMismatch ? 'ERROR' : 'OK';
 
   if (game.analysis.solo.status === 'ERROR' || 

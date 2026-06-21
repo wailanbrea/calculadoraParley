@@ -1106,7 +1106,7 @@ const MlbRulesTable = React.memo(({
   );
 });
 
-const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onAddRow, onImportRules }) => {
+const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onAddRow, onImportRules, enableRunlines, onEnableRunlinesChange }) => {
   const [searchMlV, setSearchMlV] = useState('');
   const [searchMlC, setSearchMlC] = useState('');
   
@@ -1313,6 +1313,26 @@ const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onA
 
   return (
     <div>
+      {/* Control del cálculo de Run Lines */}
+      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', borderLeft: '4px solid var(--primary)' }}>
+        <div>
+          <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)', fontWeight: '600' }}>Cálculo y Visualización de RUN LINE</h4>
+          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            Habilita o deshabilita los cálculos, validaciones y columnas de Run Lines en la pantalla principal.
+          </p>
+        </div>
+        <div>
+          <button 
+            type="button" 
+            className={`btn ${enableRunlines ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ minWidth: '120px', fontWeight: 'bold' }}
+            onClick={() => onEnableRunlinesChange(!enableRunlines)}
+          >
+            {enableRunlines ? '🟢 Activado' : '⚫ Desactivado'}
+          </button>
+        </div>
+      </div>
+
       {/* Botones de acción superior e importación/exportación */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -1583,6 +1603,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
     tercioMl: 10
   });
 
+  const [enableRunlines, setEnableRunlines] = useState(false);
+
   // --- Inicializar estados locales con config global ---
   useEffect(() => {
     if (config) {
@@ -1614,6 +1636,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
           tercioMl: r.tercioMlMargin ?? 10
         });
       }
+
+      setEnableRunlines(config.enableRunlines ?? false);
     }
   }, [config]);
 
@@ -1787,7 +1811,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
         pa: margins.pa,
         tercioOu: margins.tercioOu,
         tercioMl: margins.tercioMl
-      }
+      },
+      enableRunlines: enableRunlines
     };
     onSaveConfig(newConfig);
     setSaveSuccess(true);
@@ -1804,7 +1829,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
         preciosTercio: defaultTercioPrecios,
         tercioMlRules: defaultTercioMlRules,
         mlbRunlineRules: defaultMlbRunlineRules,
-        margins: defaultMargins
+        margins: defaultMargins,
+        enableRunlines: false
       };
       onSaveConfig(defaultConfig);
       setSaveSuccess(true);
@@ -1901,6 +1927,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
             onDeleteRow={deleteMlbRunlineRow} 
             onAddRow={addMlbRunlineRow} 
             onImportRules={importMlbRunlineRules}
+            enableRunlines={enableRunlines}
+            onEnableRunlinesChange={setEnableRunlines}
           />
         )}
 

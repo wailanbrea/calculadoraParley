@@ -82,6 +82,9 @@ export default function App() {
           if (!serverData.margins) {
             serverData.margins = defaultMargins;
           }
+          if (serverData.enableRunlines === undefined) {
+            serverData.enableRunlines = false;
+          }
           mergeMissingDefaultSiNoRules(serverData);
           mergeMissingDefaultTercioRules(serverData);
 
@@ -111,6 +114,10 @@ export default function App() {
           parsed.margins = defaultMargins;
           localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
         }
+        if (parsed.enableRunlines === undefined) {
+          parsed.enableRunlines = false;
+          localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
+        }
         mergeMissingDefaultSiNoRules(parsed);
         mergeMissingDefaultTercioRules(parsed);
         localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
@@ -134,7 +141,8 @@ export default function App() {
       preciosTercio: defaultTercioPrecios,
       tercioMlRules: defaultTercioMlRules,
       mlbRunlineRules: defaultMlbRunlineRules,
-      margins: defaultMargins
+      margins: defaultMargins,
+      enableRunlines: false
     };
     setConfig(defaultConfig);
   };

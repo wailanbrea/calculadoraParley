@@ -502,22 +502,22 @@ export default function Dashboard({
                   <thead>
                     <tr className="primera">
                       <th colSpan={3} className="liga borde" style={{ color: '#ff2a2a' }}>MLB - {filteredGames.length} enfrentamientos</th>
-                      <th colSpan={8} className="borde">JUEGO COMPLETO</th>
-                      <th colSpan={3} className="borde">MITAD</th>
+                      <th colSpan={config?.enableRunlines ? 8 : 5} className="borde">JUEGO COMPLETO</th>
+                      <th colSpan={config?.enableRunlines ? 3 : 2} className="borde">MITAD</th>
                     </tr>
                     <tr className="segunda">
                       <th className="liga">Liga</th>
                       <th className="borde team" colSpan={2}>CODIGO EQUIPOS</th>
                       <th className="borde">ML</th>
-                      <th>RL</th>
+                      {config?.enableRunlines && <th>RL</th>}
                       <th>TOTAL</th>
-                      <th>SRL</th>
-                      <th>RA</th>
+                      {config?.enableRunlines && <th>SRL</th>}
+                      {config?.enableRunlines && <th>RA</th>}
                       <th>SOLO</th>
                       <th>HCE</th>
                       <th>PA</th>
                       <th className="borde">ML</th>
-                      <th>RL</th>
+                      {config?.enableRunlines && <th>RL</th>}
                       <th>TOTAL</th>
                       <th></th>
                     </tr>
@@ -539,40 +539,48 @@ export default function Dashboard({
                             {isCasaFav ? <span className="team-name-fav">{game.equipos[1]}</span> : <span className="team-name-normal">{game.equipos[1]}</span>}
                           </td>
                           <td className="odds-cell">{game.feed.ml[0]}<br />{game.feed.ml[1]}</td>
-                          <td className="alt-cell odds-cell">
-                            {renderRunlineCell(game.feed.rl[0], game.calc.rl ? game.calc.rl[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
-                            <br />
-                            {renderRunlineCell(game.feed.rl[1], game.calc.rl ? game.calc.rl[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
-                          </td>
-                          <td className="odds-cell">{game.feed.total}</td>
-                          <td className="alt-cell odds-cell">
-                            {renderRunlineCell(game.feed.srl[0], game.calc.srl ? game.calc.srl[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
-                            <br />
-                            {renderRunlineCell(game.feed.srl[1], game.calc.srl ? game.calc.srl[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
-                          </td>
-                          <td className="odds-cell">
-                            {renderRunlineCell(game.feed.ra[0], game.calc.ra ? game.calc.ra[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
-                            <br />
-                            {renderRunlineCell(game.feed.ra[1], game.calc.ra ? game.calc.ra[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
-                          </td>
-                          <td className="alt-cell odds-cell">
-                             {renderCell(game.feed.solo[0], game.calc.solo[0], false, getSoloRefLine(game), game.analysis?.solo?.status)}
-                             <br />
-                             {renderCell(game.feed.solo[1], game.calc.solo[1], false, getSoloRefLine(game), game.analysis?.solo?.status)}
-                           </td>
-                           <td className="odds-cell">{game.feed.hce}</td>
+                          {config?.enableRunlines && (
+                             <td className="alt-cell odds-cell">
+                               {renderRunlineCell(game.feed.rl[0], game.calc.rl ? game.calc.rl[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
+                               <br />
+                               {renderRunlineCell(game.feed.rl[1], game.calc.rl ? game.calc.rl[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
+                             </td>
+                           )}
+                           <td className="odds-cell">{game.feed.total}</td>
+                           {config?.enableRunlines && (
+                             <td className="alt-cell odds-cell">
+                               {renderRunlineCell(game.feed.srl[0], game.calc.srl ? game.calc.srl[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
+                               <br />
+                               {renderRunlineCell(game.feed.srl[1], game.calc.srl ? game.calc.srl[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
+                             </td>
+                           )}
+                           {config?.enableRunlines && (
+                             <td className="odds-cell">
+                               {renderRunlineCell(game.feed.ra[0], game.calc.ra ? game.calc.ra[0] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
+                               <br />
+                               {renderRunlineCell(game.feed.ra[1], game.calc.ra ? game.calc.ra[1] : null, `ML ${game.feed.ml[0]}/${game.feed.ml[1]}`)}
+                             </td>
+                           )}
                            <td className="alt-cell odds-cell">
-                             {renderCell(game.feed.pa[0], game.analysis?.pa?.calcVisit, true, getPaRefLine(game), game.analysis?.pa?.status)}
-                             <br />
-                             {renderCell(game.feed.pa[1], game.analysis?.pa?.calcCasa, true, getPaRefLine(game), game.analysis?.pa?.status)}
-                           </td>
-                          <td className="odds-cell">{game.feed.ml1H[0]}<br />{game.feed.ml1H[1]}</td>
-                          <td className="alt-cell odds-cell">
-                            {renderRunlineCell(game.feed.rl1H[0], game.calc.hrl ? game.calc.hrl[0] : null, `ML 1H ${game.feed.ml1H[0]}/${game.feed.ml1H[1]}`)}
-                            <br />
-                            {renderRunlineCell(game.feed.rl1H[1], game.calc.hrl ? game.calc.hrl[1] : null, `ML 1H ${game.feed.ml1H[0]}/${game.feed.ml1H[1]}`)}
-                          </td>
-                          <td className="odds-cell">{game.feed.total1H}</td>
+                              {renderCell(game.feed.solo[0], game.calc.solo[0], false, getSoloRefLine(game), game.analysis?.solo?.status)}
+                              <br />
+                              {renderCell(game.feed.solo[1], game.calc.solo[1], false, getSoloRefLine(game), game.analysis?.solo?.status)}
+                            </td>
+                            <td className="odds-cell">{game.feed.hce}</td>
+                            <td className="alt-cell odds-cell">
+                              {renderCell(game.feed.pa[0], game.analysis?.pa?.calcVisit, true, getPaRefLine(game), game.analysis?.pa?.status)}
+                              <br />
+                              {renderCell(game.feed.pa[1], game.analysis?.pa?.calcCasa, true, getPaRefLine(game), game.analysis?.pa?.status)}
+                            </td>
+                           <td className="odds-cell">{game.feed.ml1H[0]}<br />{game.feed.ml1H[1]}</td>
+                           {config?.enableRunlines && (
+                             <td className="alt-cell odds-cell">
+                               {renderRunlineCell(game.feed.rl1H[0], game.calc.hrl ? game.calc.hrl[0] : null, `ML 1H ${game.feed.ml1H[0]}/${game.feed.ml1H[1]}`)}
+                               <br />
+                               {renderRunlineCell(game.feed.rl1H[1], game.calc.hrl ? game.calc.hrl[1] : null, `ML 1H ${game.feed.ml1H[0]}/${game.feed.ml1H[1]}`)}
+                             </td>
+                           )}
+                           <td className="odds-cell">{game.feed.total1H}</td>
                           <td><br /></td>
                         </tr>
                       );
