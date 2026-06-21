@@ -11,7 +11,8 @@ import {
   defaultPaPrecios, 
   defaultTercioPrecios, 
   defaultTercioMlRules,
-  defaultMlbRunlineRules
+  defaultMlbRunlineRules,
+  defaultMargins
 } from './defaultData';
 
 function tercioRuleKey(rule) {
@@ -78,6 +79,9 @@ export default function App() {
           if (!serverData.mlbRunlineRules || serverData.mlbRunlineRules.length < defaultMlbRunlineRules.length) {
             serverData.mlbRunlineRules = defaultMlbRunlineRules;
           }
+          if (!serverData.margins) {
+            serverData.margins = defaultMargins;
+          }
           mergeMissingDefaultSiNoRules(serverData);
           mergeMissingDefaultTercioRules(serverData);
 
@@ -103,6 +107,10 @@ export default function App() {
           parsed.mlbRunlineRules = defaultMlbRunlineRules;
           localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
         }
+        if (!parsed.margins) {
+          parsed.margins = defaultMargins;
+          localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
+        }
         mergeMissingDefaultSiNoRules(parsed);
         mergeMissingDefaultTercioRules(parsed);
         localStorage.setItem('parley_calc_config', JSON.stringify(parsed));
@@ -125,7 +133,8 @@ export default function App() {
       preciosPa: defaultPaPrecios,
       preciosTercio: defaultTercioPrecios,
       tercioMlRules: defaultTercioMlRules,
-      mlbRunlineRules: defaultMlbRunlineRules
+      mlbRunlineRules: defaultMlbRunlineRules,
+      margins: defaultMargins
     };
     setConfig(defaultConfig);
   };

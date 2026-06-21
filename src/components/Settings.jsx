@@ -6,14 +6,15 @@ import {
   defaultPaPrecios, 
   defaultTercioPrecios, 
   defaultTercioMlRules,
-  defaultMlbRunlineRules
+  defaultMlbRunlineRules,
+  defaultMargins
 } from '../defaultData';
 import { cleanDouble } from '../calculatorEngine';
 
 // ==========================================
 // Subcomponente: Tab SOLO
 // ==========================================
-const SoloSettingsTab = React.memo(({ casaRanges, visitRanges, onRowChange, onDeleteRow, onAddRow, highlightedRules }) => {
+const SoloSettingsTab = React.memo(({ casaRanges, visitRanges, onRowChange, onDeleteRow, onAddRow, highlightedRules, margin, onMarginChange }) => {
   const [newSolo, setNewSolo] = useState({ min: '', max: '', adjust: '', isCasa: true });
 
   const handleSubmit = (e) => {
@@ -27,6 +28,29 @@ const SoloSettingsTab = React.memo(({ casaRanges, visitRanges, onRowChange, onDe
 
   return (
     <div>
+      {/* Margen de Aceptación */}
+      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', borderLeft: '4px solid var(--primary)' }}>
+        <div>
+          <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)', fontWeight: '600' }}>Margen de Aceptación SOLO</h4>
+          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            Diferencias menores o iguales a este rango se mostrarán en naranja/mamey (Revisar). Diferencias mayores se mostrarán en rojo.
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input 
+            type="number" 
+            step="0.05" 
+            className="form-input" 
+            style={{ width: '100px', textAlign: 'center', fontSize: '1rem', fontWeight: 'bold' }} 
+            value={margin} 
+            onChange={e => onMarginChange(parseFloat(e.target.value) || 0)} 
+          />
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+            carreras
+          </span>
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
         {/* Casa */}
         <div>
@@ -138,7 +162,7 @@ const SoloSettingsTab = React.memo(({ casaRanges, visitRanges, onRowChange, onDe
 // ==========================================
 // Subcomponente: Tab SI / NO
 // ==========================================
-const SiNoSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRow }) => {
+const SiNoSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRow, margin, onMarginChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [newSiNo, setNewSiNo] = useState({ total: '', tipo: 'O', linea: '', precioSi: '', precioNo: '' });
 
@@ -169,6 +193,29 @@ const SiNoSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRo
 
   return (
     <div>
+      {/* Margen de Aceptación */}
+      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', borderLeft: '4px solid var(--primary)' }}>
+        <div>
+          <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)', fontWeight: '600' }}>Margen de Aceptación SI / NO</h4>
+          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            Diferencias menores o iguales a este rango se mostrarán en naranja/mamey (Revisar). Diferencias mayores se mostrarán en rojo.
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input 
+            type="number" 
+            step="1" 
+            className="form-input" 
+            style={{ width: '100px', textAlign: 'center', fontSize: '1rem', fontWeight: 'bold' }} 
+            value={margin} 
+            onChange={e => onMarginChange(parseInt(e.target.value, 10) || 0)} 
+          />
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+            centavos (ej: 5 = 0.5 puntos)
+          </span>
+        </div>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div className="search-input-wrapper" style={{ margin: 0, maxWidth: '300px' }}>
           <svg className="search-icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -265,7 +312,7 @@ const SiNoSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRo
 // ==========================================
 // Subcomponente: Tab PA
 // ==========================================
-const PaSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRow }) => {
+const PaSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRow, margin, onMarginChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [newPa, setNewPa] = useState({ linea: '', precioSi: '', precioNo: '', side: 'Casa' });
 
@@ -303,6 +350,29 @@ const PaSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRow 
 
   return (
     <div>
+      {/* Margen de Aceptación */}
+      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', borderLeft: '4px solid var(--primary)' }}>
+        <div>
+          <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)', fontWeight: '600' }}>Margen de Aceptación PA</h4>
+          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            Diferencias menores o iguales a este rango se mostrarán en naranja/mamey (Revisar). Diferencias mayores se mostrarán en rojo.
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input 
+            type="number" 
+            step="1" 
+            className="form-input" 
+            style={{ width: '100px', textAlign: 'center', fontSize: '1rem', fontWeight: 'bold' }} 
+            value={margin} 
+            onChange={e => onMarginChange(parseInt(e.target.value, 10) || 0)} 
+          />
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+            centavos (ej: 5 = 0.5 puntos)
+          </span>
+        </div>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div className="search-input-wrapper" style={{ margin: 0, maxWidth: '300px' }}>
           <svg className="search-icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -431,7 +501,7 @@ const PaSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRow 
 // ==========================================
 // Subcomponente: Tab TERCIO
 // ==========================================
-const TercioSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRow }) => {
+const TercioSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRow, margin, onMarginChange }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [newTercio, setNewTercio] = useState({ total: '', tipoH: 'O', lineaH: '', tercio: '', tipoT: 'O', lineaT: '' });
 
@@ -466,6 +536,29 @@ const TercioSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAdd
 
   return (
     <div>
+      {/* Margen de Aceptación */}
+      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', borderLeft: '4px solid var(--primary)' }}>
+        <div>
+          <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)', fontWeight: '600' }}>Margen de Aceptación TERCIO O/U</h4>
+          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            Diferencias menores o iguales a este rango se mostrarán en naranja/mamey (Revisar). Diferencias mayores se mostrarán en rojo.
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input 
+            type="number" 
+            step="1" 
+            className="form-input" 
+            style={{ width: '100px', textAlign: 'center', fontSize: '1rem', fontWeight: 'bold' }} 
+            value={margin} 
+            onChange={e => onMarginChange(parseInt(e.target.value, 10) || 0)} 
+          />
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+            centavos (ej: 5 = 0.5 puntos)
+          </span>
+        </div>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div className="search-input-wrapper" style={{ margin: 0, maxWidth: '300px' }}>
           <svg className="search-icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1482,6 +1575,14 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
     tercioMlMargin: 10
   });
 
+  const [margins, setMargins] = useState({
+    solo: 0,
+    sino: 5,
+    pa: 5,
+    tercioOu: 5,
+    tercioMl: 10
+  });
+
   // --- Inicializar estados locales con config global ---
   useEffect(() => {
     if (config) {
@@ -1501,6 +1602,18 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
         dogSpread: r.dogSpread ?? 30,
         tercioMlMargin: r.tercioMlMargin ?? 10
       });
+
+      if (config.margins) {
+        setMargins(config.margins);
+      } else {
+        setMargins({
+          solo: config.margins?.solo ?? 0,
+          sino: config.margins?.sino ?? 5,
+          pa: config.margins?.pa ?? 5,
+          tercioOu: config.margins?.tercioOu ?? 5,
+          tercioMl: r.tercioMlMargin ?? 10
+        });
+      }
     }
   }, [config]);
 
@@ -1646,6 +1759,9 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
     const { name, value } = e.target;
     const num = parseInt(value, 10);
     setTercioMlRules(prev => ({ ...prev, [name]: isNaN(num) ? value : num }));
+    if (name === 'tercioMlMargin') {
+      setMargins(prev => ({ ...prev, tercioMl: isNaN(num) ? 10 : num }));
+    }
   };
 
   // --- Guardar y Restablecer ---
@@ -1663,7 +1779,14 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
         rule145: { limit: 145, favT: tercioMlRules.rule145_favT, dogT: tercioMlRules.rule145_dogT },
         rule150: { limit: 150, favT: tercioMlRules.rule150_favT, dogT: tercioMlRules.rule150_dogT },
         dogSpread: tercioMlRules.dogSpread,
-        tercioMlMargin: tercioMlRules.tercioMlMargin
+        tercioMlMargin: margins.tercioMl
+      },
+      margins: {
+        solo: margins.solo,
+        sino: margins.sino,
+        pa: margins.pa,
+        tercioOu: margins.tercioOu,
+        tercioMl: margins.tercioMl
       }
     };
     onSaveConfig(newConfig);
@@ -1680,7 +1803,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
         preciosPa: defaultPaPrecios,
         preciosTercio: defaultTercioPrecios,
         tercioMlRules: defaultTercioMlRules,
-        mlbRunlineRules: defaultMlbRunlineRules
+        mlbRunlineRules: defaultMlbRunlineRules,
+        margins: defaultMargins
       };
       onSaveConfig(defaultConfig);
       setSaveSuccess(true);
@@ -1720,6 +1844,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
             onDeleteRow={deleteSoloRow} 
             onAddRow={addSoloRow} 
             highlightedRules={soloHighlightedRules}
+            margin={margins.solo}
+            onMarginChange={(val) => setMargins(prev => ({ ...prev, solo: val }))}
           />
         )}
 
@@ -1730,6 +1856,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
             onRowChange={handleSiNoChange} 
             onDeleteRow={deleteSiNoRow} 
             onAddRow={addSiNoRow} 
+            margin={margins.sino}
+            onMarginChange={(val) => setMargins(prev => ({ ...prev, sino: val }))}
           />
         )}
 
@@ -1740,6 +1868,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
             onRowChange={handlePaChange} 
             onDeleteRow={deletePaRow} 
             onAddRow={addPaRow} 
+            margin={margins.pa}
+            onMarginChange={(val) => setMargins(prev => ({ ...prev, pa: val }))}
           />
         )}
 
@@ -1750,6 +1880,8 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
             onRowChange={handleTercioChange} 
             onDeleteRow={deleteTercioRow} 
             onAddRow={addTercioRow} 
+            margin={margins.tercioOu}
+            onMarginChange={(val) => setMargins(prev => ({ ...prev, tercioOu: val }))}
           />
         )}
 

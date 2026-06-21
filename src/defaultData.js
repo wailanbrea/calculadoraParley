@@ -210,6 +210,14 @@ export const defaultTercioMlRules = {
   tercioMlMargin: 10
 };
 
+export const defaultMargins = {
+  solo: 0,
+  sino: 5,
+  pa: 5,
+  tercioOu: 5,
+  tercioMl: 10
+};
+
 export const defaultMlbRunlineRules = [
   {
     "side": "CASA",

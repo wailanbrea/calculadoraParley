@@ -244,13 +244,50 @@ function renderSinoCellGroup(game) {
 function renderTercioOuCell(game) {
   if (!game.feed.tercioOu) return game.feed.tercioOu;
 
-  const options = game.calc.tercioOuOptions?.length
-    ? game.calc.tercioOuOptions
-    : (game.calc.tercioOu ? [game.calc.tercioOu] : []);
-  const validOption = game.calc.tercioOuValidOption || findMatchingTercioOuOption(game.feed.tercioOu, options);
+  const analysis = game.analysis?.tercioOu;
+  if (!analysis) {
+    const options = game.calc.tercioOuOptions?.length
+      ? game.calc.tercioOuOptions
+      : (game.calc.tercioOu ? [game.calc.tercioOu] : []);
+    const validOption = game.calc.tercioOuValidOption || findMatchingTercioOuOption(game.feed.tercioOu, options);
 
-  if (validOption) {
-    if (game.calc.tercioOu && validOption !== game.calc.tercioOu) {
+    if (validOption) {
+      if (game.calc.tercioOu && validOption !== game.calc.tercioOu) {
+        const otherOption = options.find(option => option !== validOption) || game.calc.tercioOu;
+        return (
+          <div className="cell-valid-alternative">
+            {game.feed.tercioOu}
+            <span className="cell-valid-alternative-calc">(Otra opción: {otherOption})</span>
+          </div>
+        );
+      }
+      return game.feed.tercioOu;
+    }
+
+    if (game.calc.tercioOu && !isTercioOuOptionMatch(game.feed.tercioOu, game.calc.tercioOu)) {
+      const ref = game.feed.total1H ? ` con Tot 1H ${game.feed.total1H}` : "";
+      return (
+        <div className="cell-discrepancy">
+          {game.feed.tercioOu}
+          <span className="cell-discrepancy-calc">(Calc: {game.calc.tercioOu}{ref})</span>
+        </div>
+      );
+    }
+    return game.feed.tercioOu;
+  }
+
+  const ref = game.feed.total1H ? ` con Tot 1H ${game.feed.total1H}` : "";
+
+  if (analysis.status === 'OK') {
+    return game.feed.tercioOu;
+  }
+
+  if (analysis.status === 'REVIEW') {
+    const options = game.calc.tercioOuOptions?.length
+      ? game.calc.tercioOuOptions
+      : (game.calc.tercioOu ? [game.calc.tercioOu] : []);
+    const validOption = findMatchingTercioOuOption(game.feed.tercioOu, options);
+    if (validOption && game.calc.tercioOu && validOption !== game.calc.tercioOu) {
       const otherOption = options.find(option => option !== validOption) || game.calc.tercioOu;
       return (
         <div className="cell-valid-alternative">
@@ -259,20 +296,20 @@ function renderTercioOuCell(game) {
         </div>
       );
     }
-    return game.feed.tercioOu;
-  }
-
-  if (game.calc.tercioOu && !isTercioOuOptionMatch(game.feed.tercioOu, game.calc.tercioOu)) {
-    const ref = game.feed.total1H ? ` con Tot 1H ${game.feed.total1H}` : "";
     return (
-      <div className="cell-discrepancy">
+      <div className="cell-valid-alternative">
         {game.feed.tercioOu}
-        <span className="cell-discrepancy-calc">(Calc: {game.calc.tercioOu}{ref})</span>
+        <span className="cell-valid-alternative-calc">(Calc: {game.calc.tercioOu || '--'}{ref})</span>
       </div>
     );
   }
 
-  return game.feed.tercioOu;
+  return (
+    <div className="cell-discrepancy">
+      {game.feed.tercioOu}
+      <span className="cell-discrepancy-calc">(Calc: {game.calc.tercioOu || '--'}{ref})</span>
+    </div>
+  );
 }
 
 

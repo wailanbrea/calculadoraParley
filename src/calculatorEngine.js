@@ -695,9 +695,11 @@ export function getMlDifference(feedVal, calcVal) {
 
 
 export function getOverallState(game, config = null) {
-  const tercioMlMargin = config?.tercioMlRules?.tercioMlMargin ?? 10;
-  const sinoMargin = 5;
-  const paMargin = 5;
+  const soloMargin = config?.margins?.solo ?? 0;
+  const sinoMargin = config?.margins?.sino ?? 5;
+  const paMargin = config?.margins?.pa ?? 5;
+  const tercioOuMargin = config?.margins?.tercioOu ?? 5;
+  const tercioMlMargin = config?.margins?.tercioMl ?? config?.tercioMlRules?.tercioMlMargin ?? 10;
 
   game.analysis = {
     solo: { status: 'OK' },
@@ -713,8 +715,18 @@ export function getOverallState(game, config = null) {
   const fSoloC = cleanDouble(game.feed.solo[1]);
   const cSoloV = cleanDouble(game.calc.solo[0]);
   const cSoloC = cleanDouble(game.calc.solo[1]);
-  const soloAnyMismatch = (fSoloV !== null && fSoloV !== cSoloV) || (fSoloC !== null && fSoloC !== cSoloC);
-  game.analysis.solo.status = soloAnyMismatch ? 'ERROR' : 'OK';
+  
+  const diffV = (fSoloV !== null && cSoloV !== null) ? Math.abs(fSoloV - cSoloV) : (fSoloV !== null || cSoloV !== null ? 9999 : 0);
+  const diffC = (fSoloC !== null && cSoloC !== null) ? Math.abs(fSoloC - cSoloC) : (fSoloC !== null || cSoloC !== null ? 9999 : 0);
+  const maxSoloDiff = Math.max(diffV, diffC);
+
+  if (maxSoloDiff === 0) {
+    game.analysis.solo.status = 'OK';
+  } else if (maxSoloDiff <= soloMargin) {
+    game.analysis.solo.status = 'REVIEW';
+  } else {
+    game.analysis.solo.status = 'ERROR';
+  }
 
   // 2. SI/NO
   const fSi = parseSignedIntLoose(game.feed.sino[0]);
@@ -838,11 +850,11 @@ export function getOverallState(game, config = null) {
   }
 
   // Tercio O/U
-  let tercioOuOk = true;
+  let tercioOuStatus = 'OK';
   const tercioOuOptionsForCheck = game.calc.tercioOuOptions?.length ? game.calc.tercioOuOptions : [];
-  const tercioOuOptionMatch = game.feed.tercioOu ? findMatchingTercioOuOption(game.feed.tercioOu, tercioOuOptionsForCheck) : null;
+  const tercioOuOptionMatch = game.feed.tercioOu ? findMatchingTercioOuOption(game.feed.tercioOu, tercioOuOptionsForCheck, tercioOuMargin) : null;
   if (tercioOuOptionMatch) {
-    tercioOuOk = true;
+    tercioOuStatus = 'OK';
   } else if (game.feed.tercioOu && game.calc.tercioOu) {
     const fOu = game.feed.tercioOu.toLowerCase().replace(/½/g, ".5").replace(/\s+/g, "");
     const cOu = game.calc.tercioOu.toLowerCase().replace(/½/g, ".5").replace(/\s+/g, "");
@@ -858,17 +870,24 @@ export function getOverallState(game, config = null) {
       const fLine = fM[3];
       const cLine = cM[3];
       
-      tercioOuOk = Math.abs(fTot - cTot) < 0.001 && 
-                   fTipo === cTipo && 
-                   Math.abs(parseSignedIntAbs(fLine) - parseSignedIntAbs(cLine)) <= 5;
+      const totMatch = Math.abs(fTot - cTot) < 0.001 && fTipo === cTipo;
+      const lineDiff = Math.abs(parseSignedIntAbs(fLine) - parseSignedIntAbs(cLine));
+      
+      if (totMatch && lineDiff === 0) {
+        tercioOuStatus = 'OK';
+      } else if (totMatch && lineDiff <= tercioOuMargin) {
+        tercioOuStatus = 'REVIEW';
+      } else {
+        tercioOuStatus = 'ERROR';
+      }
     } else {
-      tercioOuOk = false;
+      tercioOuStatus = 'ERROR';
     }
   } else if (game.feed.tercioOu && !game.calc.tercioOu) {
-    tercioOuOk = false;
+    tercioOuStatus = 'ERROR';
   }
 
-  game.analysis.tercioOu.status = tercioOuOk ? 'OK' : 'REVIEW';
+  game.analysis.tercioOu.status = tercioOuStatus;
   const noSoportado = !game.calc.tercioOu && game.feed.total1H;
 
   // 5. Run Lines
@@ -891,6 +910,7 @@ export function getOverallState(game, config = null) {
       game.analysis.sino.status === 'ERROR' || 
       game.analysis.pa.status === 'ERROR' || 
       game.analysis.tercioMl.status === 'ERROR' || 
+      game.analysis.tercioOu.status === 'ERROR' || 
       game.analysis.runlines.status === 'ERROR') {
     return 'ERROR';
   }
