@@ -56,8 +56,21 @@ const getPaRefLine = (game) => {
 };
 
 function renderCell(feedVal, calcVal, isMlType = false, refLine = null, status = null) {
-  if (feedVal === undefined || feedVal === null || feedVal === "") return "--";
-  if (calcVal === undefined || calcVal === null || calcVal === "") return feedVal;
+  const isFeedEmpty = feedVal === undefined || feedVal === null || feedVal === "" || feedVal === "--";
+  const isCalcEmpty = calcVal === undefined || calcVal === null || calcVal === "" || calcVal === "--";
+
+  if (isFeedEmpty) {
+    if (!isCalcEmpty) {
+      return (
+        <span className="cell-empty-calc-value" style={{ color: '#00d2ff', fontWeight: 'bold' }}>
+          {calcVal}
+        </span>
+      );
+    }
+    return "--";
+  }
+
+  if (isCalcEmpty) return feedVal;
 
   let isMismatch = false;
   let isReview = false;
@@ -105,8 +118,21 @@ function renderCell(feedVal, calcVal, isMlType = false, refLine = null, status =
 }
 
 function renderRunlineCell(feedVal, calcVal, refLine = null) {
-  if (feedVal === undefined || feedVal === null || feedVal === "" || feedVal === "--") return "--";
-  if (calcVal === undefined || calcVal === null || calcVal === "" || calcVal === "--") return feedVal;
+  const isFeedEmpty = feedVal === undefined || feedVal === null || feedVal === "" || feedVal === "--";
+  const isCalcEmpty = calcVal === undefined || calcVal === null || calcVal === "" || calcVal === "--";
+
+  if (isFeedEmpty) {
+    if (!isCalcEmpty) {
+      return (
+        <span className="cell-empty-calc-value" style={{ color: '#00d2ff', fontWeight: 'bold' }}>
+          {calcVal}
+        </span>
+      );
+    }
+    return "--";
+  }
+
+  if (isCalcEmpty) return feedVal;
 
   const fJuice = parseJuiceFromCombined(feedVal);
   const cJuice = parseJuiceFromCombined(calcVal);
@@ -136,7 +162,23 @@ function renderSinoCellGroup(game) {
   const feedSi = game.feed.sino[0];
   const feedNo = game.feed.sino[1];
 
-  if (feedSi === undefined || feedSi === null || feedSi === "" || feedSi === "--") {
+  const isFeedSiEmpty = feedSi === undefined || feedSi === null || feedSi === "" || feedSi === "--";
+  const isFeedNoEmpty = feedNo === undefined || feedNo === null || feedNo === "" || feedNo === "--";
+
+  if (isFeedSiEmpty || isFeedNoEmpty) {
+    const calcSi = game.analysis?.sino?.calcSi ?? (game.calc.sinoOptions && game.calc.sinoOptions[0] ? game.calc.sinoOptions[0].precioSi : null);
+    const calcNo = game.analysis?.sino?.calcNo ?? (game.calc.sinoOptions && game.calc.sinoOptions[0] ? game.calc.sinoOptions[0].precioNo : null);
+    
+    if (calcSi !== null && calcNo !== null) {
+      const formatFmt = (n) => (n > 0 ? `+${n}` : `${n}`);
+      return (
+        <div style={{ color: '#00d2ff', fontWeight: 'bold' }}>
+          {formatFmt(calcSi)}
+          <br />
+          {formatFmt(calcNo)}
+        </div>
+      );
+    }
     return <>--<br />--</>;
   }
 
@@ -242,7 +284,19 @@ function renderSinoCellGroup(game) {
 }
 
 function renderTercioOuCell(game) {
-  if (!game.feed.tercioOu) return game.feed.tercioOu;
+  const isFeedEmpty = !game.feed.tercioOu || game.feed.tercioOu === "--";
+  const isCalcEmpty = !game.calc.tercioOu || game.calc.tercioOu === "--";
+
+  if (isFeedEmpty) {
+    if (!isCalcEmpty) {
+      return (
+        <span className="cell-empty-calc-value" style={{ color: '#00d2ff', fontWeight: 'bold' }}>
+          {game.calc.tercioOu}
+        </span>
+      );
+    }
+    return "--";
+  }
 
   const analysis = game.analysis?.tercioOu;
   if (!analysis) {

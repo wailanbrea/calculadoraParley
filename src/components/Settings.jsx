@@ -169,9 +169,22 @@ const SiNoSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAddRo
   const filteredPrecios = useMemo(() => {
     return precios.map((row, index) => ({ ...row, originalIndex: index }))
       .filter(row => {
-        const query = searchQuery.toLowerCase();
-        return row.total.toString().includes(query) || 
-               row.tipo.toLowerCase().includes(query) || 
+        const query = searchQuery.trim().toLowerCase();
+        if (!query) return true;
+
+        const isNumeric = /^[+-]?\d+(\.\d+)?$/.test(query);
+        if (isNumeric) {
+          const numQuery = parseFloat(query);
+          if (Math.abs(numQuery) < 30) {
+            return row.total === numQuery;
+          } else {
+            return row.linea.toLowerCase().includes(query) || 
+                   row.precioSi.toString() === query || 
+                   row.precioNo.toString() === query;
+          }
+        }
+
+        return row.tipo.toLowerCase().includes(query) || 
                row.linea.toLowerCase().includes(query);
       });
   }, [precios, searchQuery]);
@@ -508,11 +521,22 @@ const TercioSettingsTab = React.memo(({ precios, onRowChange, onDeleteRow, onAdd
   const filteredPrecios = useMemo(() => {
     return precios.map((row, index) => ({ ...row, originalIndex: index }))
       .filter(row => {
-        const query = searchQuery.toLowerCase();
-        return row.total.toString().includes(query) || 
-               row.tipoH.toLowerCase().includes(query) || 
+        const query = searchQuery.trim().toLowerCase();
+        if (!query) return true;
+
+        const isNumeric = /^[+-]?\d+(\.\d+)?$/.test(query);
+        if (isNumeric) {
+          const numQuery = parseFloat(query);
+          if (Math.abs(numQuery) < 30) {
+            return row.total === numQuery || row.tercio === numQuery;
+          } else {
+            return row.lineaH.toLowerCase().includes(query) || 
+                   row.lineaT.toLowerCase().includes(query);
+          }
+        }
+
+        return row.tipoH.toLowerCase().includes(query) || 
                row.lineaH.toLowerCase().includes(query) ||
-               row.tercio.toString().includes(query) || 
                row.tipoT.toLowerCase().includes(query) ||
                row.lineaT.toLowerCase().includes(query);
       });
@@ -1174,7 +1198,8 @@ const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onA
         if (searchMlV && !r.ml_visitante.includes(searchMlV)) return false;
         if (searchMlC && !r.ml_casa.includes(searchMlC)) return false;
         return true;
-      });
+      })
+      .sort((a, b) => (parseInt(a.ml_casa, 10) || 0) - (parseInt(b.ml_casa, 10) || 0));
   }, [rules, searchMlV, searchMlC]);
 
   const visitanteRules = useMemo(() => {
@@ -1185,7 +1210,8 @@ const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onA
         if (searchMlV && !r.ml_visitante.includes(searchMlV)) return false;
         if (searchMlC && !r.ml_casa.includes(searchMlC)) return false;
         return true;
-      });
+      })
+      .sort((a, b) => (parseInt(a.ml_visitante, 10) || 0) - (parseInt(b.ml_visitante, 10) || 0));
   }, [rules, searchMlV, searchMlC]);
   
   const handleEdit = (row) => {
@@ -1608,11 +1634,11 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
   // --- Inicializar estados locales con config global ---
   useEffect(() => {
     if (config) {
-      setCasaRanges(config.casaAdjustRanges || []);
-      setVisitRanges(config.visitAdjustRanges || []);
-      setSiNoPrecios(config.preciosSiNo || []);
-      setPaPrecios(config.preciosPa || []);
-      setTercioPrecios(config.preciosTercio || []);
+      setCasaRanges((config.casaAdjustRanges || []).slice().sort((a, b) => a.min - b.min));
+      setVisitRanges((config.visitAdjustRanges || []).slice().sort((a, b) => a.min - b.min));
+      setSiNoPrecios((config.preciosSiNo || []).slice().sort((a, b) => a.total - b.total));
+      setPaPrecios((config.preciosPa || []).slice().sort((a, b) => (parseInt(a.linea, 10) || 0) - (parseInt(b.linea, 10) || 0)));
+      setTercioPrecios((config.preciosTercio || []).slice().sort((a, b) => a.total - b.total));
       setMlbRunlineRules(config.mlbRunlineRules || []);
       
       const r = config.tercioMlRules || defaultTercioMlRules;
@@ -1679,9 +1705,9 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
 
   const addSoloRow = (row, isCasa) => {
     if (isCasa) {
-      setCasaRanges(prev => [...prev, row].sort((a,b) => b.min - a.min));
+      setCasaRanges(prev => [...prev, row].sort((a,b) => a.min - b.min));
     } else {
-      setVisitRanges(prev => [...prev, row].sort((a,b) => b.min - a.min));
+      setVisitRanges(prev => [...prev, row].sort((a,b) => a.min - b.min));
     }
   };
 
@@ -1704,7 +1730,7 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
   };
 
   const addSiNoRow = (row) => {
-    setSiNoPrecios(prev => [...prev, row]);
+    setSiNoPrecios(prev => [...prev, row].sort((a, b) => a.total - b.total));
   };
 
   // --- Manejadores CRUD PA ---
@@ -1726,7 +1752,7 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
   };
 
   const addPaRow = (row) => {
-    setPaPrecios(prev => [...prev, row]);
+    setPaPrecios(prev => [...prev, row].sort((a, b) => (parseInt(a.linea, 10) || 0) - (parseInt(b.linea, 10) || 0)));
   };
 
   // --- Manejadores CRUD TERCIO ---
@@ -1748,7 +1774,7 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
   };
 
   const addTercioRow = (row) => {
-    setTercioPrecios(prev => [...prev, row]);
+    setTercioPrecios(prev => [...prev, row].sort((a, b) => a.total - b.total));
   };
 
   // --- Manejadores CRUD RUN LINE ---
@@ -1791,12 +1817,19 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
   // --- Guardar y Restablecer ---
   const handleSaveAll = () => {
     const newConfig = {
-      casaAdjustRanges: casaRanges,
-      visitAdjustRanges: visitRanges,
-      preciosSiNo: siNoPrecios,
-      preciosPa: paPrecios,
-      preciosTercio: tercioPrecios,
-      mlbRunlineRules: mlbRunlineRules,
+      casaAdjustRanges: casaRanges.slice().sort((a, b) => a.min - b.min),
+      visitAdjustRanges: visitRanges.slice().sort((a, b) => a.min - b.min),
+      preciosSiNo: siNoPrecios.slice().sort((a, b) => a.total - b.total),
+      preciosPa: paPrecios.slice().sort((a, b) => (parseInt(a.linea, 10) || 0) - (parseInt(b.linea, 10) || 0)),
+      preciosTercio: tercioPrecios.slice().sort((a, b) => a.total - b.total),
+      mlbRunlineRules: mlbRunlineRules.slice().sort((a, b) => {
+        if (a.side !== b.side) {
+          return a.side.localeCompare(b.side);
+        }
+        const valA = a.side === 'CASA' ? (parseInt(a.ml_casa, 10) || 0) : (parseInt(a.ml_visitante, 10) || 0);
+        const valB = b.side === 'CASA' ? (parseInt(b.ml_casa, 10) || 0) : (parseInt(b.ml_visitante, 10) || 0);
+        return valA - valB;
+      }),
       tercioMlRules: {
         rule130: { limit: 130, favT: tercioMlRules.rule130_favT, dogT: tercioMlRules.rule130_dogT },
         rule135: { limit: 135, favT: tercioMlRules.rule135_favT, dogT: tercioMlRules.rule135_dogT },
