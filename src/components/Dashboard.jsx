@@ -366,6 +366,153 @@ function renderTercioOuCell(game) {
   );
 }
 
+// --- Helpers for Juancito Sport HTML parsing ---
+function parseOuFromText(text) {
+  if (!text) return null;
+  const cleaned = text.replace(/½/g, '.5').replace(/,/g, '.').replace(/\s+/g, '');
+  const m = cleaned.match(/^(\d+(?:\.\d+)?)([ouOU])([+-]?\d+)$/);
+  if (!m) return null;
+  return {
+    total: parseFloat(m[1]),
+    tipo: m[2].toUpperCase(),
+    linea: m[3].startsWith('+') || m[3].startsWith('-') ? m[3] : `-${m[3]}`
+  };
+}
+
+function parseJuancitoSportHtml(htmlString) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+  const tables = doc.querySelectorAll('table');
+  const jc = [];
+  const tercio = [];
+
+  const getText = (el) => el ? el.textContent.trim() : '';
+  
+  const getLines = (td) => {
+    if (!td) return [];
+    const html = td.innerHTML || '';
+    return html.split(/<br\s*\/?>/i).map(line => {
+      const temp = document.createElement('div');
+      temp.innerHTML = line;
+      return temp.textContent.trim();
+    }).filter(Boolean);
+  };
+
+  const esTablaMlbJC = (headerText) => {
+    const text = (headerText || '').toUpperCase();
+    return text.includes('MLB') && (text.includes('ENFRENTAMIENTOS') || text.includes('JUEGO COMPLETO'));
+  };
+
+  const esTablaBaseballMixto = (headerText) => {
+    const text = (headerText || '').toUpperCase();
+    return text.includes('BASEBALL') && (text.includes('ENFRENTAMIENTOS') || text.includes('JUEGO COMPLETO'));
+  };
+
+  const esTablaMlbTercio = (headerText) => {
+    const text = (headerText || '').toUpperCase();
+    return (text.includes('MLB PERIODOS') || text.includes('1ER TERCIO'));
+  };
+
+  const extraerJuegoCompleto = (row) => {
+    const tds = row.querySelectorAll('td');
+    if (tds.length < 11) return null;
+
+    const hora = getText(tds[0]);
+    const codes = getLines(tds[1]);
+    const teams = getLines(tds[2]);
+    const ml = getLines(tds[3]);
+    const rl = getLines(tds[4]);
+    const total = getText(tds[5]);
+    const srl = tds[6] ? getLines(tds[6]) : [];
+    const ra = tds[7] ? getLines(tds[7]) : [];
+    const solo = tds[8] ? getLines(tds[8]) : [];
+    const hce = tds[9] ? getText(tds[9]) : '';
+    const pa = tds[10] ? getLines(tds[10]) : [];
+
+    // Mitad
+    const mitadMl = tds[11] ? getLines(tds[11]) : [];
+    const mitadRl = tds[12] ? getLines(tds[12]) : [];
+    const mitadTotal = tds[13] ? getText(tds[13]) : '';
+
+    return {
+      tipo: "mlb",
+      hora,
+      codigos: { visit: codes[0] || "", casa: codes[1] || "" },
+      equipos: { visit: teams[0] || "", casa: teams[1] || "" },
+      jc: {
+        ml: { visit: ml[0] || "", casa: ml[1] || "" },
+        rl: rl,
+        total,
+        srl: srl,
+        ra: ra,
+        solo: { visit: solo[0] || "", casa: solo[1] || "" },
+        hce,
+        pa: { visit: pa[0] || "", casa: pa[1] || "" }
+      },
+      mitad: {
+        ml: { visit: mitadMl[0] || "", casa: mitadMl[1] || "" },
+        rl: mitadRl,
+        total: mitadTotal
+      }
+    };
+  };
+
+  const extraerTercio = (row) => {
+    const tds = row.querySelectorAll('td');
+    if (tds.length < 6) return null;
+
+    const hora = getText(tds[0]);
+    const teams = getLines(tds[2]);
+    const ml = getLines(tds[3]);
+    const rlTotal = tds[4] ? getLines(tds[4]) : [];
+    const siNo = tds[5] ? getLines(tds[5]) : [];
+
+    return {
+      tipo: "tercio",
+      hora,
+      equipos: { visit: teams[0] || "", casa: teams[1] || "" },
+      ml: { visit: ml[0] || "", casa: ml[1] || "" },
+      rl_total: rlTotal,
+      si_no: { si: siNo[0] || "", no: siNo[1] || "" }
+    };
+  };
+
+  const extraerTercioDeBaseball = extraerTercio;
+
+  const dedupPrefer = (arr) => {
+    const seen = new Set();
+    const result = [];
+    for (const game of arr) {
+      const key = `${game.tipo}|${game.hora}|${(game.equipos.visit || '').split(' ')[0]}|${(game.equipos.casa || '').split(' ')[0]}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(game);
+      }
+    }
+    return result;
+  };
+
+  tables.forEach(table => {
+    const rows = table.querySelectorAll('tr');
+    if (rows.length < 2) return;
+    const headerText = rows[0].textContent || '';
+
+    if (esTablaMlbJC(headerText) || esTablaBaseballMixto(headerText)) {
+      for (let i = 2; i < rows.length; i++) {
+        const game = extraerJuegoCompleto(rows[i]);
+        if (game) jc.push(game);
+      }
+    } else if (esTablaMlbTercio(headerText)) {
+      for (let i = 2; i < rows.length; i++) {
+        const game = extraerTercio(rows[i]);
+        if (game) tercio.push(game);
+      }
+    }
+  });
+
+  return dedupPrefer(jc.concat(tercio));
+}
+
 
 export default function Dashboard({ 
   config, 
@@ -377,9 +524,57 @@ export default function Dashboard({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [feedMessage, setFeedMessage] = useState(null);
   const fileInputRef = useRef(null);
 
-  // --- Lógica del Importador JSON ---
+  // --- Cargar feed desde el servidor ---
+  const loadFeedFromServer = (showSuccessAlert = false) => {
+    fetch('./api.php?action=get_feed')
+      .then(res => {
+        if (!res.ok) throw new Error("No se pudo conectar al servidor");
+        return res.json();
+      })
+      .then(data => {
+        if (data && Array.isArray(data.games)) {
+          if (data.games.length > 0) {
+            const games = parseMlbJsonNuevo(JSON.stringify(data.games), config);
+            setParsedGames(games);
+            
+            // Expandir automáticamente juegos que no estén en estado OK
+            const newExpanded = {};
+            games.forEach((game) => {
+              if (game.overallState !== 'OK') {
+                newExpanded[game.id] = true;
+              }
+            });
+            setExpandedGames(newExpanded);
+            
+            setFeedMessage("Feed del servidor cargado");
+            setTimeout(() => setFeedMessage(null), 5000);
+            if (showSuccessAlert) {
+              alert(`Sincronización exitosa: ${data.games.length} juegos cargados.`);
+            }
+          } else {
+            if (showSuccessAlert) {
+              alert("Sincronización exitosa: El servidor no tiene juegos en el feed.");
+            }
+          }
+        }
+      })
+      .catch(err => {
+        console.error("Error al cargar feed del servidor:", err);
+        if (showSuccessAlert) {
+          alert("Error al sincronizar: " + err.message);
+        }
+      });
+  };
+
+  // Carga inicial al montar el componente
+  useEffect(() => {
+    loadFeedFromServer();
+  }, [config]);
+
+  // --- Lógica del Importador JSON/HTML ---
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -394,7 +589,30 @@ export default function Dashboard({
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target.result;
-      const games = parseMlbJsonNuevo(content, config);
+      let games = [];
+      const trimmed = content.trim();
+      
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        games = parseMlbJsonNuevo(content, config);
+      } else {
+        // Intentar parsear como HTML de Juancito Sport
+        try {
+          const parsedHtmlGames = parseJuancitoSportHtml(content);
+          if (parsedHtmlGames.length > 0) {
+            games = parseMlbJsonNuevo(JSON.stringify(parsedHtmlGames), config);
+            setFeedMessage("HTML parseado y cargado correctamente");
+            setTimeout(() => setFeedMessage(null), 5000);
+          } else {
+            alert("No se encontraron tablas de juegos compatibles en el archivo HTML.");
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error al parsear el archivo HTML: " + err.message);
+          return;
+        }
+      }
+      
       setParsedGames(games);
       
       // Expandir automáticamente juegos que no estén en estado OK
@@ -491,25 +709,74 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* Seccion 1: Cargador JSON */}
-      <section className="glass-panel" style={{ marginBottom: '2.5rem' }}>
+      {feedMessage && (
+        <div style={{
+          background: 'rgba(0, 210, 255, 0.15)',
+          border: '1px solid rgba(0, 210, 255, 0.3)',
+          color: '#00d2ff',
+          padding: '0.75rem 1.25rem',
+          borderRadius: '8px',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontWeight: '500',
+          animation: 'fadeIn 0.3s ease'
+        }}>
+          <span style={{ fontSize: '1.2rem' }}>⚡</span>
+          {feedMessage}
+        </div>
+      )}
+
+      {/* Seccion 1: Cargador JSON/HTML */}
+      <section className="glass-panel" style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div 
           className={`upload-zone ${isDragOver ? 'dragover' : ''}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={triggerFileSelect}
+          style={{ cursor: 'pointer' }}
         >
           <span className="upload-icon">📂</span>
-          <p className="upload-text">Arrastra el feed JSON de MLB aquí o haz clic para subirlo</p>
-          <p className="upload-subtext">Soporta formatos exportados con juegos completos y tercio.</p>
+          <p className="upload-text">Arrastra el feed de MLB (JSON o HTML de Juancito Sport) aquí o haz clic para subirlo</p>
+          <p className="upload-subtext">Soporta archivos .json, .txt y .html con juegos completos y tercio.</p>
           <input 
             type="file" 
             ref={fileInputRef} 
             onChange={handleFileChange} 
-            accept=".json" 
+            accept=".json,.txt,.html" 
             style={{ display: 'none' }}
           />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem' }}>
+          <button 
+            onClick={(e) => { e.stopPropagation(); loadFeedFromServer(true); }}
+            className="filter-btn active"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              padding: '0.75rem 2rem', 
+              fontWeight: '600', 
+              borderRadius: '8px',
+              border: '1px solid rgba(0, 210, 255, 0.4)',
+              background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.2) 0%, rgba(0, 210, 255, 0.05) 100%)',
+              color: '#ffffff',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 210, 255, 0.4)';
+              e.currentTarget.style.borderColor = '#00d2ff';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = 'rgba(0, 210, 255, 0.4)';
+            }}
+          >
+            <span>🔄</span> Sincronizar Servidor
+          </button>
         </div>
       </section>
 

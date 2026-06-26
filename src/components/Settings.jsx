@@ -1598,6 +1598,292 @@ const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onA
     </div>
   );
 });
+function AutoImportSettingsTab() {
+  const [token, setToken] = React.useState(localStorage.getItem('calcparley_import_token') || 'calcparley_import_token_secure_9876');
+  const [showToken, setShowToken] = React.useState(false);
+
+  const saveToken = () => {
+    localStorage.setItem('calcparley_import_token', token);
+    alert('Token guardado localmente en este navegador.');
+  };
+
+  // Generate Bookmarklet
+  const bookmarkletCode = `javascript:(function(){
+    let token = localStorage.getItem('calcparley_import_token') || '${token}';
+    const serverUrl = 'https://calcparley.bsolutions.dev/api.php';
+    
+    function getText(el) { return el ? el.textContent.trim() : ''; }
+    
+    function getLines(td) {
+      if (!td) return [];
+      const html = td.innerHTML || '';
+      return html.split(/<br\\s*\\/?>/i).map(line => {
+        const temp = document.createElement('div');
+        temp.innerHTML = line;
+        return temp.textContent.trim();
+      }).filter(Boolean);
+    }
+    
+    function parseOuFromText(text) {
+      if (!text) return null;
+      const cleaned = text.replace(/½/g, '.5').replace(/,/g, '.').replace(/\\s+/g, '');
+      const m = cleaned.match(/^(\\d+(?:\\.\\d+)?)([ouOU])([+-]?\\d+)$/);
+      if (!m) return null;
+      return {
+        total: parseFloat(m[1]),
+        tipo: m[2].toUpperCase(),
+        linea: m[3].startsWith('+') || m[3].startsWith('-') ? m[3] : \`-\${m[3]}\`
+      };
+    }
+    
+    function esTablaMlbJC(headerText) {
+      const text = (headerText || '').toUpperCase();
+      return text.includes('MLB') && (text.includes('ENFRENTAMIENTOS') || text.includes('JUEGO COMPLETO'));
+    }
+    
+    function esTablaBaseballMixto(headerText) {
+      const text = (headerText || '').toUpperCase();
+      return text.includes('BASEBALL') && (text.includes('ENFRENTAMIENTOS') || text.includes('JUEGO COMPLETO'));
+    }
+    
+    function esTablaMlbTercio(headerText) {
+      const text = (headerText || '').toUpperCase();
+      return (text.includes('MLB PERIODOS') || text.includes('1ER TERCIO'));
+    }
+    
+    function extraerJuegoCompleto(row) {
+      const tds = row.querySelectorAll('td');
+      if (tds.length < 11) return null;
+      
+      const hora = getText(tds[0]);
+      const codes = getLines(tds[1]);
+      const teams = getLines(tds[2]);
+      const ml = getLines(tds[3]);
+      const rl = getLines(tds[4]);
+      const total = getText(tds[5]);
+      const srl = tds[6] ? getLines(tds[6]) : [];
+      const ra = tds[7] ? getLines(tds[7]) : [];
+      const solo = tds[8] ? getLines(tds[8]) : [];
+      const hce = tds[9] ? getText(tds[9]) : '';
+      const pa = tds[10] ? getLines(tds[10]) : [];
+      
+      const mitadMl = tds[11] ? getLines(tds[11]) : [];
+      const mitadRl = tds[12] ? getLines(tds[12]) : [];
+      const mitadTotal = tds[13] ? getText(tds[13]) : '';
+      
+      return {
+        tipo: 'mlb',
+        hora,
+        codigos: { visit: codes[0] || '', casa: codes[1] || '' },
+        equipos: { visit: teams[0] || '', casa: teams[1] || '' },
+        jc: {
+          ml: { visit: ml[0] || '', casa: ml[1] || '' },
+          rl: rl,
+          total,
+          srl: srl,
+          ra: ra,
+          solo: { visit: solo[0] || '', casa: solo[1] || '' },
+          hce,
+          pa: { visit: pa[0] || '', casa: pa[1] || '' }
+        },
+        mitad: {
+          ml: { visit: mitadMl[0] || '', casa: mitadMl[1] || '' },
+          rl: mitadRl,
+          total: mitadTotal
+        }
+      };
+    }
+    
+    function extraerTercio(row) {
+      const tds = row.querySelectorAll('td');
+      if (tds.length < 6) return null;
+      
+      const hora = getText(tds[0]);
+      const teams = getLines(tds[2]);
+      const ml = getLines(tds[3]);
+      const rlTotal = tds[4] ? getLines(tds[4]) : [];
+      const siNo = tds[5] ? getLines(tds[5]) : [];
+      
+      return {
+        tipo: 'tercio',
+        hora,
+        equipos: { visit: teams[0] || '', casa: teams[1] || '' },
+        ml: { visit: ml[0] || '', casa: ml[1] || '' },
+        rl_total: rlTotal,
+        si_no: { si: siNo[0] || '', no: siNo[1] || '' }
+      };
+    }
+    
+    const extraerTercioDeBaseball = extraerTercio;
+    
+    function dedupPrefer(arr) {
+      const seen = new Set();
+      const result = [];
+      for (const game of arr) {
+        const key = \`\${game.tipo}|\${game.hora}|\${(game.equipos.visit || '').split(' ')[0]}|\${(game.equipos.casa || '').split(' ')[0]}\`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(game);
+        }
+      }
+      return result;
+    }
+    
+    const tables = document.querySelectorAll('table');
+    const jc = [];
+    const tercio = [];
+    
+    tables.forEach(table => {
+      const rows = table.querySelectorAll('tr');
+      if (rows.length < 2) return;
+      const headerText = rows[0].textContent || '';
+      
+      if (esTablaMlbJC(headerText) || esTablaBaseballMixto(headerText)) {
+        for (let i = 2; i < rows.length; i++) {
+          const game = extraerJuegoCompleto(rows[i]);
+          if (game) jc.push(game);
+        }
+      } else if (esTablaMlbTercio(headerText)) {
+        for (let i = 2; i < rows.length; i++) {
+          const game = extraerTercio(rows[i]);
+          if (game) tercio.push(game);
+        }
+      }
+    });
+    
+    const todos = dedupPrefer(jc.concat(tercio));
+    
+    if (todos.length === 0) {
+      alert('No se encontraron tablas de juegos compatibles de Juancito Sport.');
+      return;
+    }
+    
+    fetch(serverUrl + '?action=save_feed', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CalcParley-Import-Token': token
+      },
+      body: JSON.stringify({
+        source: 'juancito_sport',
+        source_url: location.href,
+        captured_at: new Date().toISOString(),
+        count: todos.length,
+        jc_count: jc.length,
+        tercio_count: tercio.length,
+        games: todos
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Error al enviar los datos al servidor (Status: ' + res.status + ')');
+      return res.json();
+    })
+    .then(data => {
+      alert('Exitoso: ' + todos.length + ' juegos enviados a CalcParley.');
+      window.open('https://calcparley.bsolutions.dev/', '_blank');
+    })
+    .catch(err => {
+      alert('Fallo al importar: ' + err.message);
+      console.error(err);
+    });
+  })();`;
+
+  const compressedBookmarklet = bookmarkletCode.replace(/\s+/g, ' ').trim();
+
+  return (
+    <div className="tab-pane fade-in">
+      <div className="section-header" style={{ borderBottom: '1px solid rgba(0, 210, 255, 0.1)', paddingBottom: '1rem', marginBottom: '2rem' }}>
+        <h3 className="section-title">⚡ Carga Automática (1-Clic)</h3>
+        <p className="section-subtitle">Configura el token de seguridad e instala el bookmarklet en tu navegador.</p>
+      </div>
+
+      <div className="glass-panel" style={{ marginBottom: '2rem', padding: '2rem' }}>
+        <h4 style={{ color: '#00d2ff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span>🔑</span> Token de Importación de CalcParley
+        </h4>
+        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          Este token autoriza las peticiones de importación desde la página de Juancito Sport a este servidor.
+        </p>
+        
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input 
+              type={showToken ? "text" : "password"} 
+              value={token}
+              onChange={e => setToken(e.target.value)}
+              className="table-input"
+              style={{ paddingRight: '3rem', width: '100%', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid rgba(0, 210, 255, 0.2)' }}
+            />
+            <button 
+              type="button"
+              onClick={() => setShowToken(!showToken)}
+              style={{
+                position: 'absolute',
+                right: '1rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer'
+              }}
+            >
+              {showToken ? "👁️" : "🕶️"}
+            </button>
+          </div>
+          <button onClick={saveToken} className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}>
+            Guardar Token
+          </button>
+        </div>
+      </div>
+
+      <div className="glass-panel" style={{ padding: '2rem' }}>
+        <h4 style={{ color: '#00d2ff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span>📌</span> Instalar Marcador de 1-Clic
+        </h4>
+        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          Arrastra el siguiente botón a la barra de marcadores de tu navegador. Cuando estés en la página de Juancito Sport, haz clic en el marcador para enviar los datos automáticamente.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', background: 'rgba(15, 23, 42, 0.5)', padding: '2rem', borderRadius: '8px', border: '1px dashed rgba(0, 210, 255, 0.2)' }}>
+          <a 
+            href={compressedBookmarklet}
+            onClick={(e) => { e.preventDefault(); alert('Arrastra este botón a tu barra de marcadores (Bookmarks Bar), no hagas clic aquí.'); }}
+            className="filter-btn active"
+            style={{
+              padding: '1rem 3rem',
+              fontSize: '1.1rem',
+              fontWeight: '700',
+              borderRadius: '50px',
+              border: '2px solid #00d2ff',
+              background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.3) 0%, rgba(0, 210, 255, 0.1) 100%)',
+              color: '#ffffff',
+              cursor: 'grab',
+              boxShadow: '0 0 20px rgba(0, 210, 255, 0.3)',
+              display: 'inline-block',
+              textDecoration: 'none'
+            }}
+          >
+            🚀 Importar a CalcParley
+          </a>
+          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>💡 Arrastra este botón hacia tu barra de favoritos/marcadores (Ctrl+Shift+B para mostrarla)</span>
+        </div>
+
+        <div style={{ marginTop: '2rem' }}>
+          <h5 style={{ color: '#ffffff', marginBottom: '0.75rem' }}>Instrucciones Paso a Paso:</h5>
+          <ol style={{ color: '#94a3b8', fontSize: '0.9rem', paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <li>Asegúrate de mostrar la Barra de Marcadores en tu navegador (Ctrl+Shift+B).</li>
+            <li>Arrastra el botón azul **🚀 Importar a CalcParley** hacia la barra de marcadores.</li>
+            <li>Abre la página interna de Juancito Sport: **http://172.20.0.251:8080/juancitosport4assignment/...**</li>
+            <li>Haz clic en el marcador **🚀 Importar a CalcParley** en tu barra.</li>
+            <li>Los juegos se parsearán, se enviarán a este servidor y se abrirá la aplicación con los cálculos actualizados.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ==========================================
 // Componente Principal: Settings
 // ==========================================
@@ -1892,6 +2178,7 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
           <button className={`settings-tab-btn ${activeTab === 'tercio' ? 'active' : ''}`} onClick={() => setActiveTab('tercio')}>TERCIO O/U</button>
           <button className={`settings-tab-btn ${activeTab === 'tercioml' ? 'active' : ''}`} onClick={() => setActiveTab('tercioml')}>TERCIO ML (Reglas)</button>
           <button className={`settings-tab-btn ${activeTab === 'runline' ? 'active' : ''}`} onClick={() => setActiveTab('runline')}>RUN LINE MLB</button>
+          <button className={`settings-tab-btn ${activeTab === 'auto' ? 'active' : ''}`} onClick={() => setActiveTab('auto')}>⚡ Carga 1-Clic</button>
         </div>
 
         {/* Tab 1: SOLO */}
@@ -1963,6 +2250,10 @@ export default function Settings({ config, onSaveConfig, dashboardGames = [] }) 
             enableRunlines={enableRunlines}
             onEnableRunlinesChange={setEnableRunlines}
           />
+        )}
+
+        {activeTab === 'auto' && (
+          <AutoImportSettingsTab />
         )}
 
         {/* Barra de Acciones Globales */}
