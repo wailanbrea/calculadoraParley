@@ -63,7 +63,7 @@ function renderCell(feedVal, calcVal, isMlType = false, refLine = null, status =
     if (!isCalcEmpty) {
       return (
         <span className="cell-empty-calc-value" style={{ color: '#00d2ff', fontWeight: 'bold' }}>
-          {calcVal}
+          {calcVal} <span style={{ fontSize: '0.8rem', fontWeight: 'normal', opacity: 0.85 }}>(Vacío)</span>
         </span>
       );
     }
@@ -173,9 +173,9 @@ function renderSinoCellGroup(game) {
       const formatFmt = (n) => (n > 0 ? `+${n}` : `${n}`);
       return (
         <div style={{ color: '#00d2ff', fontWeight: 'bold' }}>
-          {formatFmt(calcSi)}
+          {formatFmt(calcSi)} <span style={{ fontSize: '0.8rem', fontWeight: 'normal', opacity: 0.85 }}>(Vacío)</span>
           <br />
-          {formatFmt(calcNo)}
+          {formatFmt(calcNo)} <span style={{ fontSize: '0.8rem', fontWeight: 'normal', opacity: 0.85 }}>(Vacío)</span>
         </div>
       );
     }
@@ -291,7 +291,7 @@ function renderTercioOuCell(game) {
     if (!isCalcEmpty) {
       return (
         <span className="cell-empty-calc-value" style={{ color: '#00d2ff', fontWeight: 'bold' }}>
-          {game.calc.tercioOu}
+          {game.calc.tercioOu} <span style={{ fontSize: '0.8rem', fontWeight: 'normal', opacity: 0.85 }}>(Vacío)</span>
         </span>
       );
     }
