@@ -1629,16 +1629,12 @@ function AutoImportSettingsTab() {
       }).filter(Boolean);
     }
     
-    function parseOuFromText(text) {
-      if (!text) return null;
-      const cleaned = text.replace(/½/g, '.5').replace(/,/g, '.').replace(/\\s+/g, '');
-      const m = cleaned.match(/^(\\d+(?:\\.\\d+)?)([ouOU])([+-]?\\d+)$/);
-      if (!m) return null;
-      return {
-        total: parseFloat(m[1]),
-        tipo: m[2].toUpperCase(),
-        linea: m[3].startsWith('+') || m[3].startsWith('-') ? m[3] : \`-\${m[3]}\`
-      };
+    function isAmericanOdd(s) { return /[+-]\\d{3}\\b/.test(s); }
+    function esCodigoMLB(a, b) { return /^4\\d{3}$/.test(a || '') && /^4\\d{3}$/.test(b || ''); }
+    
+    function filaDatos(tr, minTds = 8) {
+      return tr.matches('tr.grey, tr:not([class]), tr[class=""]') &&
+        tr.querySelectorAll('td').length > minTds;
     }
     
     function esTablaMlbJC(headerText) {
@@ -1647,7 +1643,8 @@ function AutoImportSettingsTab() {
     }
     
     function esTablaBaseballMixto(headerText) {
-      return false;
+      const text = (headerText || '').toUpperCase();
+      return text.includes('BASEBALL') && text.includes('ENFRENTAMIENTOS');
     }
     
     function esTablaMlbTercio(headerText) {
@@ -1655,13 +1652,9 @@ function AutoImportSettingsTab() {
       return (text.includes('MLB PERIODOS') || text.includes('1ER TERCIO'));
     }
     
-    function extraerJuegoCompleto(row) {
-      const tds = row.querySelectorAll('td');
-      if (tds.length < 11) return null;
-      
-      const hora = getText(tds[0]);
-      const horaUpper = hora.toUpperCase();
-      if (
+    function filtrarHoraMinorLigas(hora) {
+      const horaUpper = (hora || '').toUpperCase();
+      return (
         horaUpper.includes('MILB') || 
         horaUpper.includes('AAA') || 
         horaUpper.includes('JAPAN') || 
@@ -1669,80 +1662,125 @@ function AutoImportSettingsTab() {
         horaUpper.includes('KOREA') || 
         horaUpper.includes('COREA') || 
         horaUpper.includes('COLLEGE')
-      ) {
-        return null;
-      }
-      const codes = getLines(tds[1]);
-      const teams = getLines(tds[2]);
-      const ml = getLines(tds[3]);
-      const rl = getLines(tds[4]);
-      const total = getText(tds[5]);
-      const srl = tds[6] ? getLines(tds[6]) : [];
-      const ra = tds[7] ? getLines(tds[7]) : [];
-      const solo = tds[8] ? getLines(tds[8]) : [];
-      const hce = tds[9] ? getText(tds[9]) : '';
-      const pa = tds[10] ? getLines(tds[10]) : [];
-      
-      const mitadMl = tds[11] ? getLines(tds[11]) : [];
-      const mitadRl = tds[12] ? getLines(tds[12]) : [];
-      const mitadTotal = tds[13] ? getText(tds[13]) : '';
-      
-      return {
-        tipo: 'mlb',
-        hora,
-        codigos: { visit: codes[0] || '', casa: codes[1] || '' },
-        equipos: { visit: teams[0] || '', casa: teams[1] || '' },
-        jc: {
-          ml: { visit: ml[0] || '', casa: ml[1] || '' },
-          rl: rl,
-          total,
-          srl: srl,
-          ra: ra,
-          solo: { visit: solo[0] || '', casa: solo[1] || '' },
-          hce,
-          pa: { visit: pa[0] || '', casa: pa[1] || '' }
-        },
-        mitad: {
-          ml: { visit: mitadMl[0] || '', casa: mitadMl[1] || '' },
-          rl: mitadRl,
-          total: mitadTotal
-        }
-      };
+      );
     }
     
-    function extraerTercio(row) {
-      const tds = row.querySelectorAll('td');
-      if (tds.length < 6) return null;
-      
-      const hora = getText(tds[0]);
-      const horaUpper = hora.toUpperCase();
-      if (
-        horaUpper.includes('MILB') || 
-        horaUpper.includes('AAA') || 
-        horaUpper.includes('JAPAN') || 
-        horaUpper.includes('JAPON') || 
-        horaUpper.includes('KOREA') || 
-        horaUpper.includes('COREA') || 
-        horaUpper.includes('COLLEGE')
-      ) {
-        return null;
+    function extraerJuegoCompleto(tabla, soloMLBPorCodigo = false) {
+      const rows = Array.from(tabla.querySelectorAll('tr')).filter(tr => filaDatos(tr, 8));
+      const out = [];
+      for (const r of rows) {
+        const c = r.querySelectorAll('td');
+        if (c.length < 14) continue;
+        
+        const hora = getText(c[0]);
+        if (filtrarHoraMinorLigas(hora)) continue;
+        
+        const cods = getLines(c[1]);
+        const equipos = getLines(c[2]);
+        const mlJC = getLines(c[3]);
+        const rlJC = getLines(c[4]);
+        const totalJC = getText(c[5]);
+        const srl = getLines(c[6]);
+        const ra = getLines(c[7]);
+        const solo = getLines(c[8]);
+        const hce = getText(c[9]);
+        const pa = getLines(c[10]);
+        const mlH = getLines(c[11]);
+        const rlH = getLines(c[12]);
+        const totalH = getText(c[13]);
+        
+        if (soloMLBPorCodigo && !esCodigoMLB(cods[0], cods[1])) continue;
+        
+        const mlOk = mlJC.length === 2 && mlJC.every(isAmericanOdd);
+        if (!mlOk || equipos.length !== 2) continue;
+        
+        out.push({
+          tipo: 'mlb',
+          hora,
+          codigos: { visit: cods[0] || '', casa: cods[1] || '' },
+          equipos: { visit: equipos[0], casa: equipos[1] },
+          jc: {
+            ml: { visit: mlJC[0], casa: mlJC[1] },
+            rl: rlJC,
+            total: totalJC,
+            srl, ra,
+            solo: { visit: solo[0] || '', casa: solo[1] || '' },
+            hce,
+            pa: { visit: pa[0] || '', casa: pa[1] || '' }
+          },
+          mitad: {
+            ml: { visit: mlH[0] || '', casa: mlH[1] || '' },
+            rl: rlH,
+            total: totalH
+          }
+        });
       }
-      const teams = getLines(tds[2]);
-      const ml = getLines(tds[3]);
-      const rlTotal = tds[4] ? getLines(tds[4]) : [];
-      const siNo = tds[5] ? getLines(tds[5]) : [];
-      
-      return {
-        tipo: 'tercio',
-        hora,
-        equipos: { visit: teams[0] || '', casa: teams[1] || '' },
-        ml: { visit: ml[0] || '', casa: ml[1] || '' },
-        rl_total: rlTotal,
-        si_no: { si: siNo[0] || '', no: siNo[1] || '' }
-      };
+      return out;
     }
     
-    const extraerTercioDeBaseball = extraerTercio;
+    function extraerTercio(tabla) {
+      const rows = Array.from(tabla.querySelectorAll('tr')).filter(tr => filaDatos(tr, 4));
+      const out = [];
+      for (const r of rows) {
+        const c = r.querySelectorAll('td');
+        if (c.length < 6) continue;
+        
+        const hora = getText(c[0]);
+        if (filtrarHoraMinorLigas(hora)) continue;
+        
+        const cods = getLines(c[1]);
+        const equipos = getLines(c[2]);
+        const ml = getLines(c[3]);
+        const rlTotLs = getLines(c[4]);
+        const sino = getLines(c[5]);
+        
+        if (equipos.length !== 2 || ml.length !== 2 || !ml.every(isAmericanOdd)) continue;
+        
+        out.push({
+          tipo: 'tercio',
+          hora,
+          codigos: { visit: cods[0] || '', casa: cods[1] || '' },
+          equipos: { visit: equipos[0], casa: equipos[1] },
+          ml: { visit: ml[0], casa: ml[1] },
+          rl_total: rlTotLs,
+          si_no: { si: sino[0] || '', no: sino[1] || '' }
+        });
+      }
+      return out;
+    }
+    
+    function extraerTercioDeBaseball(tabla) {
+      const rows = Array.from(tabla.querySelectorAll('tr')).filter(tr => filaDatos(tr, 16));
+      const out = [];
+      for (const r of rows) {
+        const c = r.querySelectorAll('td');
+        if (c.length < 17) continue;
+        
+        const hora = getText(c[0]);
+        if (filtrarHoraMinorLigas(hora)) continue;
+        
+        const cods = getLines(c[1]);
+        const equipos = getLines(c[2]);
+        if (!esCodigoMLB(cods[0], cods[1])) continue;
+        
+        const mlT = getLines(c[14]);
+        const rlTotT = getLines(c[15]);
+        const sinoT = getLines(c[16]);
+        
+        if (equipos.length !== 2 || mlT.length !== 2 || !mlT.every(isAmericanOdd)) continue;
+        
+        out.push({
+          tipo: 'tercio',
+          hora,
+          codigos: { visit: cods[0] || '', casa: cods[1] || '' },
+          equipos: { visit: equipos[0], casa: equipos[1] },
+          ml: { visit: mlT[0], casa: mlT[1] },
+          rl_total: rlTotT,
+          si_no: { si: sinoT[0] || '', no: sinoT[1] || '' }
+        });
+      }
+      return out;
+    }
     
     function dedupPrefer(arr) {
       const seen = new Set();
@@ -1758,24 +1796,21 @@ function AutoImportSettingsTab() {
     }
     
     const tables = document.querySelectorAll('table');
-    const jc = [];
-    const tercio = [];
+    let jc = [];
+    let tercio = [];
     
     tables.forEach(table => {
       const rows = table.querySelectorAll('tr');
       if (rows.length < 2) return;
       const headerText = rows[0].textContent || '';
       
-      if (esTablaMlbJC(headerText) || esTablaBaseballMixto(headerText)) {
-        for (let i = 2; i < rows.length; i++) {
-          const game = extraerJuegoCompleto(rows[i]);
-          if (game) jc.push(game);
-        }
+      if (esTablaMlbJC(headerText)) {
+        jc = jc.concat(extraerJuegoCompleto(table, false));
+      } else if (esTablaBaseballMixto(headerText)) {
+        jc = jc.concat(extraerJuegoCompleto(table, true));
+        tercio = tercio.concat(extraerTercioDeBaseball(table));
       } else if (esTablaMlbTercio(headerText)) {
-        for (let i = 2; i < rows.length; i++) {
-          const game = extraerTercio(rows[i]);
-          if (game) tercio.push(game);
-        }
+        tercio = tercio.concat(extraerTercio(table));
       }
     });
     
