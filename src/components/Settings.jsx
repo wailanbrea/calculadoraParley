@@ -1601,6 +1601,7 @@ const MlbRunlineSettingsTab = React.memo(({ rules, onRowChange, onDeleteRow, onA
 function AutoImportSettingsTab() {
   const [token, setToken] = React.useState(localStorage.getItem('calcparley_import_token') || 'calcparley_import_token_secure_9876');
   const [showToken, setShowToken] = React.useState(false);
+  const bookmarkletRef = React.useRef(null);
 
   const saveToken = () => {
     localStorage.setItem('calcparley_import_token', token);
@@ -1799,6 +1800,12 @@ function AutoImportSettingsTab() {
       .trim()
   );
 
+  React.useEffect(() => {
+    if (bookmarkletRef.current) {
+      bookmarkletRef.current.href = compressedBookmarklet;
+    }
+  }, [compressedBookmarklet]);
+
   return (
     <div className="tab-pane fade-in">
       <div className="section-header" style={{ borderBottom: '1px solid rgba(0, 210, 255, 0.1)', paddingBottom: '1rem', marginBottom: '2rem' }}>
@@ -1856,7 +1863,7 @@ function AutoImportSettingsTab() {
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', background: 'rgba(15, 23, 42, 0.5)', padding: '2rem', borderRadius: '8px', border: '1px dashed rgba(0, 210, 255, 0.2)' }}>
           <a 
-            href={compressedBookmarklet}
+            ref={bookmarkletRef}
             onClick={(e) => { e.preventDefault(); alert('Arrastra este botón a tu barra de marcadores (Bookmarks Bar), no hagas clic aquí.'); }}
             className="filter-btn active"
             style={{
