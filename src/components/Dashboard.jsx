@@ -550,10 +550,14 @@ export default function Dashboard({
   const [isDragOver, setIsDragOver] = useState(false);
   const [feedMessage, setFeedMessage] = useState(null);
   const fileInputRef = useRef(null);
+  const lastFeedSignatureRef = useRef(null);
 
   // --- Cargar feed desde el servidor ---
-  const loadFeedFromServer = (showSuccessAlert = false) => {
-    fetch('./api.php?action=get_feed')
+  const loadFeedFromServer = (showSuccessAlert = false, options = {}) => {
+    const consume = options.consume !== false;
+    const silentIfEmpty = options.silentIfEmpty === true;
+
+    fetch(`./api.php?action=get_feed&consume=${consume ? '1' : '0'}&_=${Date.now()}`, { cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error("No se pudo conectar al servidor");
         return res.json();
@@ -561,6 +565,12 @@ export default function Dashboard({
       .then(data => {
         if (data && Array.isArray(data.games)) {
           if (data.games.length > 0) {
+            const signature = `${data.captured_at || ''}|${data.count || data.games.length}`;
+            if (!showSuccessAlert && signature === lastFeedSignatureRef.current) {
+              return;
+            }
+            lastFeedSignatureRef.current = signature;
+
             const games = parseMlbJsonNuevo(JSON.stringify(data.games), config);
             setParsedGames(games);
             
@@ -573,14 +583,18 @@ export default function Dashboard({
             });
             setExpandedGames(newExpanded);
             
-            setFeedMessage("Feed del servidor cargado");
+            const capturedAt = data.captured_at ? new Date(data.captured_at).toLocaleString() : null;
+            setFeedMessage(capturedAt ? `Feed del servidor cargado (${capturedAt})` : "Feed del servidor cargado");
             setTimeout(() => setFeedMessage(null), 5000);
             if (showSuccessAlert) {
-              alert(`Sincronización exitosa: ${data.games.length} juegos cargados.`);
+              alert(`Sincronización exitosa: ${data.games.length} juegos cargados.${capturedAt ? `\nCapturado: ${capturedAt}` : ''}`);
             }
           } else {
             if (showSuccessAlert) {
               alert("Sincronización exitosa: El servidor no tiene juegos en el feed.");
+            } else if (!silentIfEmpty) {
+              setFeedMessage("No hay feed nuevo pendiente");
+              setTimeout(() => setFeedMessage(null), 5000);
             }
           }
         }
@@ -593,9 +607,12 @@ export default function Dashboard({
       });
   };
 
-  // Carga inicial al montar el componente
+  // Escucha feeds nuevos enviados por el bookmarklet; cada feed se consume una sola vez.
   useEffect(() => {
-    loadFeedFromServer();
+    const pollFeed = () => loadFeedFromServer(false, { consume: true, silentIfEmpty: true });
+    pollFeed();
+    const intervalId = setInterval(pollFeed, 3000);
+    return () => clearInterval(intervalId);
   }, [config]);
 
   // --- Lógica del Importador JSON/HTML ---

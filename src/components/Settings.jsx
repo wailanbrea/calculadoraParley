@@ -1647,7 +1647,6 @@ function AutoImportSettingsTab() {
     }
     
     function esTablaBaseballMixto(headerText) {
-      // Retornamos false para omitir tablas de "BASEBALL" genéricas que contienen College u otras ligas que no son MLB
       return false;
     }
     
@@ -1817,7 +1816,10 @@ function AutoImportSettingsTab() {
     });
   })();`;
 
-  const compressedBookmarklet = bookmarkletCode.replace(/\s+/g, ' ').trim();
+  const compressedBookmarklet = bookmarkletCode
+    .replace(/^\s*\/\/.*$/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
   React.useEffect(() => {
     if (bookmarkletRef.current) {
