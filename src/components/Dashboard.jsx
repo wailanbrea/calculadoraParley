@@ -404,8 +404,8 @@ function parseJuancitoSportHtml(htmlString) {
   };
 
   const esTablaBaseballMixto = (headerText) => {
-    const text = (headerText || '').toUpperCase();
-    return text.includes('BASEBALL') && (text.includes('ENFRENTAMIENTOS') || text.includes('JUEGO COMPLETO'));
+    // Retornamos false para omitir tablas de "BASEBALL" genéricas que contienen College u otras ligas que no son MLB
+    return false;
   };
 
   const esTablaMlbTercio = (headerText) => {
