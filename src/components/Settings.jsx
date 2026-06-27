@@ -1793,12 +1793,7 @@ function AutoImportSettingsTab() {
     });
   })();`;
 
-  const compressedBookmarklet = 'javascript:' + encodeURIComponent(
-    bookmarkletCode
-      .replace(/^javascript:/, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-  );
+  const compressedBookmarklet = bookmarkletCode.replace(/\s+/g, ' ').trim();
 
   React.useEffect(() => {
     if (bookmarkletRef.current) {
