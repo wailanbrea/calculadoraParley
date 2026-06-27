@@ -1792,7 +1792,12 @@ function AutoImportSettingsTab() {
     });
   })();`;
 
-  const compressedBookmarklet = bookmarkletCode.replace(/\s+/g, ' ').trim();
+  const compressedBookmarklet = 'javascript:' + encodeURIComponent(
+    bookmarkletCode
+      .replace(/^javascript:/, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 
   return (
     <div className="tab-pane fade-in">
