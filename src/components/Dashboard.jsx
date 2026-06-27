@@ -418,6 +418,18 @@ function parseJuancitoSportHtml(htmlString) {
     if (tds.length < 11) return null;
 
     const hora = getText(tds[0]);
+    const horaUpper = hora.toUpperCase();
+    if (
+      horaUpper.includes('MILB') || 
+      horaUpper.includes('AAA') || 
+      horaUpper.includes('JAPAN') || 
+      horaUpper.includes('JAPON') || 
+      horaUpper.includes('KOREA') || 
+      horaUpper.includes('COREA') || 
+      horaUpper.includes('COLLEGE')
+    ) {
+      return null;
+    }
     const codes = getLines(tds[1]);
     const teams = getLines(tds[2]);
     const ml = getLines(tds[3]);
@@ -462,6 +474,18 @@ function parseJuancitoSportHtml(htmlString) {
     if (tds.length < 6) return null;
 
     const hora = getText(tds[0]);
+    const horaUpper = hora.toUpperCase();
+    if (
+      horaUpper.includes('MILB') || 
+      horaUpper.includes('AAA') || 
+      horaUpper.includes('JAPAN') || 
+      horaUpper.includes('JAPON') || 
+      horaUpper.includes('KOREA') || 
+      horaUpper.includes('COREA') || 
+      horaUpper.includes('COLLEGE')
+    ) {
+      return null;
+    }
     const teams = getLines(tds[2]);
     const ml = getLines(tds[3]);
     const rlTotal = tds[4] ? getLines(tds[4]) : [];
