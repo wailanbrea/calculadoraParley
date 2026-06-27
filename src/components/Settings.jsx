@@ -1607,10 +1607,14 @@ function AutoImportSettingsTab() {
     alert('Token guardado localmente en este navegador.');
   };
 
+  // Construir URLs dinámicas para el bookmarklet basadas en la ubicación actual
+  const apiTargetUrl = new URL('./api.php', window.location.href).href;
+  const redirectUrl = window.location.href;
+
   // Generate Bookmarklet
   const bookmarkletCode = `javascript:(function(){
     let token = localStorage.getItem('calcparley_import_token') || '${token}';
-    const serverUrl = 'https://calcparley.bsolutions.dev/api.php';
+    const serverUrl = '${apiTargetUrl}';
     
     function getText(el) { return el ? el.textContent.trim() : ''; }
     
@@ -1780,7 +1784,7 @@ function AutoImportSettingsTab() {
     })
     .then(data => {
       alert('Exitoso: ' + todos.length + ' juegos enviados a CalcParley.');
-      window.open('https://calcparley.bsolutions.dev/', '_blank');
+      window.open('${redirectUrl}', '_blank');
     })
     .catch(err => {
       alert('Fallo al importar: ' + err.message);
