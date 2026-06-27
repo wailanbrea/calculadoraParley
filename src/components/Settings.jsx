@@ -1614,7 +1614,7 @@ function AutoImportSettingsTab() {
 
   // Generate Bookmarklet
   const bookmarkletCode = `javascript:(function(){
-    let token = localStorage.getItem('calcparley_import_token') || '${token}';
+    const token = '${token}';
     const serverUrl = '${apiTargetUrl}';
     
     function getText(el) { return el ? el.textContent.trim() : ''; }
