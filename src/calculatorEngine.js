@@ -484,7 +484,18 @@ export function parseMlbJsonNuevo(jsonString, config) {
 
     // Emparejar con 'tercio'
     const key = tercioKey(eqVisit, eqCasa, hora);
-    const tercio = tercioMap[key] || {};
+    let tercio = tercioMap[key];
+    if (!tercio) {
+      // Si la hora difiere por unos minutos, emparejamos buscando por nombres de equipos
+      const keyPrefix = `${normTeam(eqVisit)}|${normTeam(eqCasa)}`;
+      const foundKey = Object.keys(tercioMap).find(k => k.startsWith(keyPrefix));
+      if (foundKey) {
+        tercio = tercioMap[foundKey];
+      }
+    }
+    if (!tercio) {
+      tercio = {};
+    }
 
     // --- CÁLCULOS DEL MOTOR CON CONFIG PERSONALIZADA ---
 
