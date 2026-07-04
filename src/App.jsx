@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import Settings from './components/Settings';
 import CalculadoraParley from './components/CalculadoraParley';
 import FraccionarTickets from './components/FraccionarTickets';
+import BasesAlcanzadas from './components/BasesAlcanzadas';
 import { 
   defaultCasaAdjustRanges, 
   defaultVisitAdjustRanges, 
@@ -201,6 +202,10 @@ export default function App() {
 
         {activePage === 'tickets' && (
           <FraccionarTickets />
+        )}
+        
+        {activePage === 'bases_alcanzadas' && (
+          <BasesAlcanzadas config={config} />
         )}
         
         {activePage === 'settings' && (

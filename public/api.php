@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $configFile = dirname(__DIR__) . '/server_config.json';
 $feedFile = dirname(__DIR__) . '/server_feed.json';
+$basesFile = dirname(__DIR__) . '/server_bases.json';
 $tokenFile = dirname(__DIR__) . '/import_token.txt';
 
 // Si el archivo de config no existe, lo inicializamos
@@ -193,5 +194,90 @@ if ($action === 'clear_feed') {
     exit;
 }
 
+// Acción: save_bases
+if ($action === 'save_bases') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+        exit;
+    }
+    validateToken($expectedToken);
+    
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+    
+    if ($data === null || !isset($data['gameId'])) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "JSON inválido o estructura incorrecta"]);
+        exit;
+    }
+    
+    $existing = [];
+    if (file_exists($basesFile)) {
+        $existingContent = file_get_contents($basesFile);
+        $decodedBases = json_decode($existingContent, true);
+        if (is_array($decodedBases)) {
+            $existing = $decodedBases;
+        }
+    }
+    
+    $gameId = $data['gameId'];
+    $existing[$gameId] = $data;
+    
+    $saved = file_put_contents($basesFile, json_encode($existing, JSON_PRETTY_PRINT), LOCK_EX);
+    if ($saved === false) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Error escribiendo las bases en el servidor"]);
+        exit;
+    }
+    
+    clearstatcache(true, $basesFile);
+    
+    echo json_encode([
+        "success" => true,
+        "gameId" => $gameId,
+        "message" => "Bases alcanzadas guardadas para el juego $gameId"
+    ]);
+    exit;
+}
+
+// Acción: get_bases
+if ($action === 'get_bases') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+        exit;
+    }
+    
+    if (file_exists($basesFile)) {
+        clearstatcache(true, $basesFile);
+        echo file_get_contents($basesFile);
+    } else {
+        echo json_encode((object)[]);
+    }
+    exit;
+}
+
+// Acción: clear_bases
+if ($action === 'clear_bases') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+        exit;
+    }
+    validateToken($expectedToken);
+    
+    if (file_exists($basesFile)) {
+        unlink($basesFile);
+    }
+    
+    echo json_encode([
+        "success" => true,
+        "message" => "Historial de bases alcanzadas eliminado"
+    ]);
+    exit;
+}
+
 http_response_code(400);
 echo json_encode(["status" => "error", "message" => "Acción no válida"]);
+
