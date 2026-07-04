@@ -199,19 +199,26 @@ export default function BasesAlcanzadas({ config }) {
       return a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
     });
 
+    let teamNames = ["Visitante", "Casa"];
+    const titleMatch = document.title.match(/([A-Za-z0-9.\\s]+)\\s+vs\\.?\\s+([A-Za-z0-9.\\s]+)/i);
+    if (titleMatch) {
+      teamNames[0] = titleMatch[1].replace(/Boxscore\\s*\\|\\s*/i, '').trim();
+      const rawLocal = titleMatch[2].trim();
+      const endIdx = rawLocal.search(/[\\s|]/);
+      teamNames[1] = endIdx !== -1 ? rawLocal.substring(0, endIdx).replace(/\\.$/, '').trim() : rawLocal.replace(/\\.$/, '').trim();
+    } else {
+      const urlMatch = window.location.href.match(/\\/gameday\\/([a-z0-9-]+)-vs-([a-z0-9-]+)\\//i);
+      if (urlMatch) {
+        teamNames[0] = urlMatch[1].charAt(0).toUpperCase() + urlMatch[1].slice(1);
+        teamNames[1] = urlMatch[2].charAt(0).toUpperCase() + urlMatch[2].slice(1);
+      }
+    }
+
     const boxscores = [];
     battingTables.forEach(function(table, tIdx) {
       const headers = Array.from(table.querySelectorAll('th')).map(function(th) { return th.textContent.trim().toUpperCase(); });
       
-      let teamName = "Equipo " + (boxscores.length + 1);
-      const possibleHeader = table.parentElement.querySelector('h1, h2, h3, .Boxscore__team-name');
-      if (possibleHeader) {
-        teamName = possibleHeader.textContent.trim();
-      } else {
-        const prevEl = table.previousElementSibling;
-        if (prevEl && prevEl.textContent) teamName = prevEl.textContent.trim();
-      }
-      teamName = teamName.split(String.fromCharCode(10))[0].replace(/text/i, '').trim();
+      let teamName = teamNames[tIdx] || ("Equipo " + (tIdx + 1));
       
       let battingNotes = "";
       if (uniqueNotes[tIdx]) {
