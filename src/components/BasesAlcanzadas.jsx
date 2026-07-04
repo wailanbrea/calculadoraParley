@@ -140,9 +140,11 @@ export default function BasesAlcanzadas({ config }) {
     }
     
     function limpiarNombreJugador(rawName) {
-      let name = rawName.replace(/^([a-z]|[0-9]+)-/i, '').trim();
+      let name = rawName.replace(/^([a-z]|[0-9]+)-/i, '');
+      name = name.replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '').trim();
       const posRegex = /(?:1B|2B|3B|SS|LF|CF|RF|C|DH|PH|PR|P)(?:-(?:1B|2B|3B|SS|LF|CF|RF|C|DH|PH|PR|P))?$/i;
-      name = name.replace(posRegex, '').trim();
+      name = name.replace(posRegex, '');
+      name = name.replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '').trim();
       return name;
     }
     
@@ -248,16 +250,22 @@ export default function BasesAlcanzadas({ config }) {
         if (cells.length < 3) return;
         
         const nameCell = cells[0];
-        const rawName = nameCell.textContent.trim();
+        const originalText = nameCell.textContent;
+        const rawName = originalText.replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '').trim();
         if (rawName.toLowerCase() === 'totals') return;
         
-        const cleanName = limpiarNombreJugador(rawName);
         const isSub = nameCell.querySelector('span[style*="margin-left"]') || 
-                     nameCell.classList.contains('indent') || 
+                     nameCell.querySelector('[class*="indent"]') || 
+                     nameCell.className.indexOf('indent') !== -1 ||
                      rawName.indexOf('-') === 0 || 
                      /^[a-z0-9]-/i.test(rawName) ||
-                     nameCell.innerHTML.indexOf('&nbsp;&nbsp;') !== -1;
+                     nameCell.innerHTML.indexOf('&nbsp;&nbsp;') !== -1 ||
+                     nameCell.innerHTML.indexOf('&nbsp;') === 0 ||
+                     /^\s+/.test(originalText) ||
+                     originalText.indexOf('\u00A0') === 0;
                      
+        const cleanName = limpiarNombreJugador(rawName);
+
         const abIdx = headers.indexOf('AB');
         const rIdx = headers.indexOf('R');
         const hIdx = headers.indexOf('H');
