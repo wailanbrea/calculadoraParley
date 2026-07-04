@@ -92,22 +92,24 @@ export default function BasesAlcanzadas({ config }) {
     function parseTbLine(battingText) {
       const tbMap = {};
       if (!battingText) return tbMap;
-      const lines = battingText.split(String.fromCharCode(10)).map(function(l) { return l.trim(); }).filter(Boolean);
-      const tbLine = lines.find(function(l) { 
-        return l.indexOf('TB') === 0 || l.indexOf('BATTINGTB') === 0 || l.indexOf('TB ') !== -1; 
-      });
-      if (!tbLine) return tbMap;
       
-      const cleanLine = tbLine.replace(/^(BATTING)?TB\\s+/i, '').trim();
+      // Aislar quirúrgicamente la subsección de TB (Total Bases)
+      const match = battingText.match(/\\bTB\\s+([\\s\\S]*?)(?=\\b(?:RBI|Runs\\s+left|SF|SH|GIDP|Team\\s+RISP|Team\\s+LOB|BASERUNNING|FIELDING|OUTS)\\b|$)/i);
+      if (!match) return tbMap;
+      
+      const cleanLine = match[1].trim();
       const tokens = cleanLine.replace(/\\.$/, '').split(';');
       
       tokens.forEach(function(token) {
         const txt = token.trim();
         if (!txt) return;
-        const match = txt.match(/(.*?)\\s+([0-9]+)$/);
-        if (match) {
-          tbMap[match[1].trim()] = parseInt(match[2], 10);
+        
+        // Coincidir con "Nombre Número" al final
+        const m = txt.match(/(.*?)\\s+([0-9]+)$/);
+        if (m) {
+          tbMap[m[1].trim()] = parseInt(m[2], 10);
         } else {
+          // Si no tiene número (ej. "Lewis, R"), por regla oficial de MLB es 1 base alcanzada
           tbMap[txt] = 1;
         }
       });
@@ -154,20 +156,17 @@ export default function BasesAlcanzadas({ config }) {
       }
       teamName = teamName.split(String.fromCharCode(10))[0].replace(/text/i, '').trim();
       
+      // Buscar notas de bateo solo en los hermanos siguientes a esta tabla específica
       let battingNotes = "";
-      let parent = table.parentElement;
-      for (let depth = 0; depth < 4; depth++) {
-        if (!parent) break;
-        const notes = parent.querySelectorAll('div, p');
-        for (let i = 0; i < notes.length; i++) {
-          const text = notes[i].textContent.trim();
-          if (text.toUpperCase().indexOf('BATTING') !== -1 && text.indexOf('TB') !== -1) {
-            battingNotes = text;
-            break;
-          }
+      let sibling = table.nextElementSibling;
+      while (sibling) {
+        if (sibling.tagName === 'TABLE') break; // Detenerse al llegar a la siguiente tabla
+        const text = sibling.textContent.trim();
+        if (text.toUpperCase().indexOf('BATTING') !== -1 && text.indexOf('TB') !== -1) {
+          battingNotes = text;
+          break;
         }
-        if (battingNotes) break;
-        parent = parent.parentElement;
+        sibling = sibling.nextElementSibling;
       }
       
       const tbMap = parseTbLine(battingNotes);
@@ -459,7 +458,7 @@ export default function BasesAlcanzadas({ config }) {
                                 textAlign: 'center',
                                 ...badgeStyle 
                               }}>
-                                {p.tb} TB
+                                 {p.tb}
                               </span>
                             </div>
                           </div>
