@@ -1622,19 +1622,19 @@ function AutoImportSettingsTab() {
     function getLines(td) {
       if (!td) return [];
       const html = td.innerHTML || '';
-      return html.split(/<br\\s*\\/?>/i).map(line => {
+      return html.split(/<br\s*\/?>/i).map(line => {
         const temp = document.createElement('div');
         temp.innerHTML = line;
         return temp.textContent.trim();
       }).filter(Boolean);
     }
     
-    function isAmericanOdd(s) { return /[+-]\\d{3}\\b/.test(s); }
-    function esCodigoMLB(a, b) { return /^4\\d{3}$/.test(a || '') && /^4\\d{3}$/.test(b || ''); }
+    function isAmericanOdd(s) { return /[+-]\d{3}/.test(s); }
+    function esCodigoMLB(a, b) { return /^4\d{3}$/.test(a || '') && /^4\d{3}$/.test(b || ''); }
     
-    function filaDatos(tr, minTds = 8) {
-      return tr.matches('tr.grey, tr:not([class]), tr[class=""]') &&
-        tr.querySelectorAll('td').length > minTds;
+    function filaDatos(tr, minTds) {
+      if (tr.querySelector('th')) return false;
+      return tr.querySelectorAll('td').length > minTds;
     }
     
     function esTablaMlbJC(headerText) {
