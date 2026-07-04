@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+function simplificarNombreEquipo(fullName) {
+  const clean = (fullName || '').replace(/text/i, '').trim();
+  const parts = clean.split(' ');
+  if (parts.length <= 1) return clean;
+  
+  const last = parts[parts.length - 1];
+  const prev = parts[parts.length - 2];
+  
+  if (last.toLowerCase() === 'sox' || last.toLowerCase() === 'jays') {
+    return prev + ' ' + last;
+  }
+  return last;
+}
+
 export default function BasesAlcanzadas({ config }) {
   const [games, setGames] = useState({});
   const [selectedGameId, setSelectedGameId] = useState(null);
@@ -13,6 +27,11 @@ export default function BasesAlcanzadas({ config }) {
   const apiTargetUrl = baseUrl + 'api.php';
   const token = config?.importToken || 'calcparley_import_token_secure_9876';
 
+  const selectedGameIdRef = useRef(selectedGameId);
+  useEffect(() => {
+    selectedGameIdRef.current = selectedGameId;
+  }, [selectedGameId]);
+
   // Cargar juegos desde el servidor
   const loadBasesFromServer = (silent = false) => {
     if (!silent) setLoading(true);
@@ -23,9 +42,8 @@ export default function BasesAlcanzadas({ config }) {
       })
       .then(data => {
         setGames(data || {});
-        // Auto-seleccionar el primer juego si hay y ninguno está seleccionado
         const keys = Object.keys(data || {});
-        if (keys.length > 0 && !selectedGameId) {
+        if (keys.length > 0 && !selectedGameIdRef.current) {
           setSelectedGameId(keys[0]);
         }
       })
@@ -265,8 +283,21 @@ export default function BasesAlcanzadas({ config }) {
         });
       });
       
+      let runs = 0;
+      const tRows = table.querySelectorAll('tr');
+      tRows.forEach(function(row) {
+        const cells = row.querySelectorAll('td, th');
+        if (cells.length > 0 && cells[0].textContent.trim().toLowerCase() === 'totals') {
+          const rColIdx = headers.indexOf('R');
+          if (rColIdx !== -1 && cells[rColIdx]) {
+            runs = parseInt(cells[rColIdx].textContent.trim(), 10) || 0;
+          }
+        }
+      });
+
       boxscores.push({
         teamName: teamName,
+        runs: runs,
         lineup: lineup
       });
     });
@@ -412,6 +443,15 @@ export default function BasesAlcanzadas({ config }) {
                 {gameIds.map(id => {
                   const game = games[id];
                   const isSelected = id === selectedGameId;
+                  let displayTitle = game.title;
+                  if (game.boxscores && game.boxscores.length === 2) {
+                    const team1 = simplificarNombreEquipo(game.boxscores[0].teamName);
+                    const runs1 = game.boxscores[0].runs !== undefined ? game.boxscores[0].runs : 0;
+                    const team2 = simplificarNombreEquipo(game.boxscores[1].teamName);
+                    const runs2 = game.boxscores[1].runs !== undefined ? game.boxscores[1].runs : 0;
+                    displayTitle = `${team1} ${runs1}, ${team2} ${runs2}`;
+                  }
+                  
                   return (
                     <button
                       key={id}
@@ -429,7 +469,7 @@ export default function BasesAlcanzadas({ config }) {
                       }}
                     >
                       <div style={{ fontWeight: 'bold', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {game.title}
+                        {displayTitle}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: isSelected ? 'rgba(0, 210, 255, 0.7)' : '#64748b', marginTop: '4px' }}>
                         {game.date}
