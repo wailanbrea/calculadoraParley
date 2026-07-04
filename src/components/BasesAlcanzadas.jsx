@@ -230,7 +230,7 @@ export default function BasesAlcanzadas({ config }) {
         const isSub = nameCell.querySelector('span[style*="margin-left"]') || 
                      nameCell.classList.contains('indent') || 
                      rawName.indexOf('-') === 0 || 
-                     /^[a-z[0-9]]-/i.test(rawName) ||
+                     /^[a-z0-9]-/i.test(rawName) ||
                      nameCell.innerHTML.indexOf('&nbsp;&nbsp;') !== -1;
                      
         const abIdx = headers.indexOf('AB');
