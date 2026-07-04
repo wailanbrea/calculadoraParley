@@ -532,7 +532,7 @@ export default function BasesAlcanzadas({ config }) {
                       {team.lineup.map((p, pIdx) => {
                         const isSub = p.isSubstitution;
                         const isRev = p.todosCeros;
-                        const indentStyle = isSub ? { paddingLeft: '20px', color: '#64748b', fontStyle: 'italic' } : { fontWeight: '500' };
+                        const indentStyle = isSub ? { color: '#64748b', fontStyle: 'italic' } : { fontWeight: '500' };
                         
                         let badgeStyle = { background: 'rgba(255,255,255,0.05)', color: '#94a3b8', opacity: 0.6 };
                         let badgeText = p.tb;
@@ -581,7 +581,7 @@ export default function BasesAlcanzadas({ config }) {
                             }}
                           >
                             <span style={{ fontSize: '0.9rem' }}>
-                              {isSub ? '↳ ' : ''}{p.cleanName}
+                              {isSub ? '\u00A0\u00A0\u00A0\u00A0' : ''}{p.cleanName}
                             </span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <span style={{ fontSize: '0.75rem', opacity: isRev ? 0.8 : 0.5, color: isRev ? '#f59e0b' : 'inherit', fontWeight: isRev ? 'bold' : 'normal' }}>
