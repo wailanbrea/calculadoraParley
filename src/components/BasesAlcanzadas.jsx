@@ -233,24 +233,35 @@ export default function BasesAlcanzadas({ config }) {
                      /^[a-z[0-9]]-/i.test(rawName) ||
                      nameCell.innerHTML.indexOf('&nbsp;&nbsp;') !== -1;
                      
+        const abIdx = headers.indexOf('AB');
+        const rIdx = headers.indexOf('R');
+        const hIdx = headers.indexOf('H');
+        const rbiIdx = headers.indexOf('RBI');
+        const soIdx = headers.indexOf('SO') !== -1 ? headers.indexOf('SO') : headers.indexOf('K');
+
+        const ab = abIdx !== -1 && cells[abIdx] ? parseInt(cells[abIdx].textContent.trim(), 10) || 0 : 0;
+        const r = rIdx !== -1 && cells[rIdx] ? parseInt(cells[rIdx].textContent.trim(), 10) || 0 : 0;
+        const h = hIdx !== -1 && cells[hIdx] ? parseInt(cells[hIdx].textContent.trim(), 10) || 0 : 0;
+        const rbi = rbiIdx !== -1 && cells[rbiIdx] ? parseInt(cells[rbiIdx].textContent.trim(), 10) || 0 : 0;
+        const so = soIdx !== -1 && cells[soIdx] ? parseInt(cells[soIdx].textContent.trim(), 10) || 0 : 0;
+
+        const todosCeros = (ab === 0 && r === 0 && h === 0 && rbi === 0 && so === 0);
         let tb = 0;
-        let hits = 0;
-        
-        if (!isSub) {
-          const hColIdx = headers.indexOf('H');
-          hits = hColIdx !== -1 ? parseInt(cells[hColIdx].textContent.trim(), 10) || 0 : 0;
-          tb = obtenerBasesAlcanzadas(cleanName, tbMap, hits);
-        } else {
-          const hColIdx = headers.indexOf('H');
-          hits = hColIdx !== -1 ? parseInt(cells[hColIdx].textContent.trim(), 10) || 0 : 0;
+
+        if (!todosCeros) {
+          if (!isSub) {
+            tb = obtenerBasesAlcanzadas(cleanName, tbMap, h);
+          }
         }
-        
+
         lineup.push({
           rawName: rawName,
           cleanName: cleanName,
           isSubstitution: !!isSub,
-          hits: hits,
-          tb: tb
+          hits: h,
+          tb: tb,
+          todosCeros: todosCeros,
+          stats: { ab: ab, r: r, h: h, rbi: rbi, so: so }
         });
       });
       
@@ -465,20 +476,47 @@ export default function BasesAlcanzadas({ config }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {team.lineup.map((p, pIdx) => {
                         const isSub = p.isSubstitution;
+                        const isRev = p.todosCeros;
                         const indentStyle = isSub ? { paddingLeft: '20px', color: '#64748b', fontStyle: 'italic' } : { fontWeight: '500' };
-                        const badgeStyle = isSub 
-                          ? { background: 'rgba(255,255,255,0.03)', color: '#475569' } 
-                          : (p.tb > 0 
-                              ? { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' } 
-                              : { background: 'rgba(255,255,255,0.05)', color: '#94a3b8', opacity: 0.6 }
-                            );
+                        
+                        let badgeStyle = { background: 'rgba(255,255,255,0.05)', color: '#94a3b8', opacity: 0.6 };
+                        let badgeText = p.tb;
+                        
+                        if (isRev) {
+                          badgeStyle = { background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' };
+                          badgeText = 'Revisar';
+                        } else if (isSub) {
+                          badgeStyle = { background: 'rgba(255, 255, 255, 0.03)', color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.05)' };
+                          badgeText = '0';
+                        } else if (p.tb > 0) {
+                          badgeStyle = { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' };
+                          badgeText = p.tb;
+                        }
+
+                        let statsDetail = '';
+                        if (isRev) {
+                          statsDetail = 'Todos ceros';
+                        } else if (p.stats) {
+                          statsDetail = `AB:${p.stats.ab} R:${p.stats.r} H:${p.stats.h} RBI:${p.stats.rbi} K:${p.stats.so}`;
+                        } else {
+                          statsDetail = isSub ? 'Suplente' : `Hits: ${p.hits}`;
+                        }
+
+                        let stateText = '';
+                        if (isRev) {
+                          stateText = 'Revisar';
+                        } else if (isSub) {
+                          stateText = 'Suplente';
+                        } else {
+                          stateText = 'Titular';
+                        }
                         
                         return (
                           <div 
                             key={pIdx} 
                             style={{ 
                               display: 'flex', 
-                              justifycontent: 'space-between', 
+                              justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '8px 12px', 
                               background: isSub ? 'rgba(255,255,255,0.005)' : 'rgba(255,255,255,0.015)', 
@@ -491,8 +529,8 @@ export default function BasesAlcanzadas({ config }) {
                               {isSub ? '↳ ' : ''}{p.cleanName}
                             </span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <span style={{ fontSize: '0.75rem', opacity: 0.5 }}>
-                                {isSub ? 'Suplente' : `Hits: ${p.hits}`}
+                              <span style={{ fontSize: '0.75rem', opacity: isRev ? 0.8 : 0.5, color: isRev ? '#f59e0b' : 'inherit', fontWeight: isRev ? 'bold' : 'normal' }}>
+                                {isRev ? '⚠️ ' : ''}{statsDetail}
                               </span>
                               <span style={{ 
                                 fontSize: '0.8rem', 
@@ -503,7 +541,7 @@ export default function BasesAlcanzadas({ config }) {
                                 textAlign: 'center',
                                 ...badgeStyle 
                               }}>
-                                 {p.tb}
+                                 {badgeText}
                               </span>
                             </div>
                           </div>
