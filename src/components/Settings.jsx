@@ -1621,12 +1621,7 @@ function AutoImportSettingsTab() {
     
     function getLines(td) {
       if (!td) return [];
-      const html = td.innerHTML || '';
-      return html.split(/<br\s*\/?>/i).map(line => {
-        const temp = document.createElement('div');
-        temp.innerHTML = line;
-        return temp.textContent.trim();
-      }).filter(Boolean);
+      return td.innerText.replace(/\\u00a0/g, ' ').split('\\n').map(function(s) { return s.replace(/\\s+/g, ' ').trim(); }).filter(Boolean);
     }
     
     function isAmericanOdd(s) { return /[+-]\d{3}/.test(s); }
