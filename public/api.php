@@ -2,7 +2,9 @@
 // CORS setup
 $allowed_origins = [
     'http://172.20.0.251:8080',
-    'https://calcparley.bsolutions.dev'
+    'https://calcparley.bsolutions.dev',
+    'https://www.mlb.com',
+    'https://mlb.com'
 ];
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
 if (in_array($origin, $allowed_origins)) {
