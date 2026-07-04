@@ -170,7 +170,7 @@ export default function BasesAlcanzadas({ config }) {
         });
         
         if (battingTables.length > 1) {
-          break; // Detenerse antes de llegar al contenedor global que incluye a ambos equipos
+          break;
         }
         
         const notes = parent.querySelectorAll('div, p, span, section');
