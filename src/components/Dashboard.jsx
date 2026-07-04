@@ -568,13 +568,13 @@ function parseJuancitoSportHtml(htmlString) {
     if (rows.length < 2) return;
     const headerText = rows[0].textContent || '';
 
-    if (esTablaMlbJC(headerText)) {
+    if (esTablaMlbTercio(headerText)) {
+      tercio = tercio.concat(extraerTercio(table));
+    } else if (esTablaMlbJC(headerText)) {
       jc = jc.concat(extraerJuegoCompleto(table, false));
     } else if (esTablaBaseballMixto(headerText)) {
       jc = jc.concat(extraerJuegoCompleto(table, true));
       tercio = tercio.concat(extraerTercioDeBaseball(table));
-    } else if (esTablaMlbTercio(headerText)) {
-      tercio = tercio.concat(extraerTercio(table));
     }
   });
 
