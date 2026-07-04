@@ -1621,11 +1621,11 @@ function AutoImportSettingsTab() {
     
     function getLines(td) {
       if (!td) return [];
-      return td.innerText.replace(/\\u00a0/g, ' ').split('\\n').map(function(s) { return s.replace(/\\s+/g, ' ').trim(); }).filter(Boolean);
+      return td.innerText.split(String.fromCharCode(10)).map(function(s) { return s.trim(); }).filter(Boolean);
     }
     
-    function isAmericanOdd(s) { return /[+-]\d{3}/.test(s); }
-    function esCodigoMLB(a, b) { return /^4\d{3}$/.test(a || '') && /^4\d{3}$/.test(b || ''); }
+    function isAmericanOdd(s) { return /[+-][0-9]{3}/.test(s); }
+    function esCodigoMLB(a, b) { return /^4[0-9]{3}$/.test(a || '') && /^4[0-9]{3}$/.test(b || ''); }
     
     function filaDatos(tr, minTds) {
       if (tr.querySelector('th')) return false;
