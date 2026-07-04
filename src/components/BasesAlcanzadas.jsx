@@ -278,7 +278,7 @@ export default function BasesAlcanzadas({ config }) {
         const rbi = rbiIdx !== -1 && cells[rbiIdx] ? parseInt(cells[rbiIdx].textContent.trim(), 10) || 0 : 0;
         const so = soIdx !== -1 && cells[soIdx] ? parseInt(cells[soIdx].textContent.trim(), 10) || 0 : 0;
 
-        const todosCeros = (ab === 0 && r === 0 && h === 0 && rbi === 0 && so === 0);
+        const todosCeros = (!isSub && ab === 0 && r === 0 && h === 0 && rbi === 0 && so === 0);
         let tb = 0;
 
         if (!todosCeros) {
