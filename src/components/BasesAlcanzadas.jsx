@@ -93,7 +93,6 @@ export default function BasesAlcanzadas({ config }) {
       const tbMap = {};
       if (!battingText) return tbMap;
       
-      // Aislar quirúrgicamente la subsección de TB (Total Bases)
       const match = battingText.match(/\\bTB\\s+([\\s\\S]*?)(?=\\b(?:RBI|Runs\\s+left|SF|SH|GIDP|Team\\s+RISP|Team\\s+LOB|BASERUNNING|FIELDING|OUTS)\\b|$)/i);
       if (!match) return tbMap;
       
@@ -104,12 +103,10 @@ export default function BasesAlcanzadas({ config }) {
         const txt = token.trim();
         if (!txt) return;
         
-        // Coincidir con "Nombre Número" al final
         const m = txt.match(/(.*?)\\s+([0-9]+)$/);
         if (m) {
           tbMap[m[1].trim()] = parseInt(m[2], 10);
         } else {
-          // Si no tiene número (ej. "Lewis, R"), por regla oficial de MLB es 1 base alcanzada
           tbMap[txt] = 1;
         }
       });
@@ -156,11 +153,10 @@ export default function BasesAlcanzadas({ config }) {
       }
       teamName = teamName.split(String.fromCharCode(10))[0].replace(/text/i, '').trim();
       
-      // Buscar notas de bateo solo en los hermanos siguientes a esta tabla específica
       let battingNotes = "";
       let sibling = table.nextElementSibling;
       while (sibling) {
-        if (sibling.tagName === 'TABLE') break; // Detenerse al llegar a la siguiente tabla
+        if (sibling.tagName === 'TABLE') break;
         const text = sibling.textContent.trim();
         if (text.toUpperCase().indexOf('BATTING') !== -1 && text.indexOf('TB') !== -1) {
           battingNotes = text;
