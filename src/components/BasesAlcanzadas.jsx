@@ -88,17 +88,25 @@ export default function BasesAlcanzadas({ config }) {
       if (!td) return [];
       return td.innerText.split(String.fromCharCode(10)).map(function(s) { return s.trim(); }).filter(Boolean);
     }
-    
     function parseTbLine(battingText) {
       const tbMap = {};
       if (!battingText) return tbMap;
       
-      const match = battingText.match(/\\bTB\\s+([\\s\\S]*?)(?=\\b(?:RBI|Runs\\s+left|SF|SH|GIDP|Team\\s+RISP|Team\\s+LOB|BASERUNNING|FIELDING|OUTS)\\b|$)/i);
-      if (!match) return tbMap;
+      var tbIdx = battingText.indexOf('TB');
+      if (tbIdx === -1) return tbMap;
       
-      const cleanLine = match[1].trim();
-      const tokens = cleanLine.replace(/\\.$/, '').split(';');
+      var tbContent = battingText.substring(tbIdx + 2).trim();
       
+      var nextSectionMatch = tbContent.match(/(RBI|Runs\\s+left|SF|SH|GIDP|Team\\s+RISP|Team\\s+LOB|BASERUNNING|FIELDING|OUTS)/i);
+      if (nextSectionMatch) {
+        tbContent = tbContent.substring(0, nextSectionMatch.index).trim();
+      }
+      
+      if (tbContent.endsWith('.')) {
+        tbContent = tbContent.substring(0, tbContent.length - 1).trim();
+      }
+      
+      const tokens = tbContent.split(';');
       tokens.forEach(function(token) {
         const txt = token.trim();
         if (!txt) return;
@@ -154,15 +162,28 @@ export default function BasesAlcanzadas({ config }) {
       teamName = teamName.split(String.fromCharCode(10))[0].replace(/text/i, '').trim();
       
       let battingNotes = "";
-      let sibling = table.nextElementSibling;
-      while (sibling) {
-        if (sibling.tagName === 'TABLE') break;
-        const text = sibling.textContent.trim();
-        if (text.toUpperCase().indexOf('BATTING') !== -1 && text.indexOf('TB') !== -1) {
-          battingNotes = text;
-          break;
+      let parent = table.parentElement;
+      while (parent) {
+        const battingTables = Array.from(parent.querySelectorAll('table')).filter(function(t) {
+          const hdrs = Array.from(t.querySelectorAll('th')).map(function(th) { return th.textContent.trim().toUpperCase(); });
+          return hdrs.indexOf('AB') !== -1 && hdrs.indexOf('H') !== -1 && hdrs.indexOf('R') !== -1;
+        });
+        
+        if (battingTables.length > 1) {
+          break; // Detenerse antes de llegar al contenedor global que incluye a ambos equipos
         }
-        sibling = sibling.nextElementSibling;
+        
+        const notes = parent.querySelectorAll('div, p, span, section');
+        for (let i = 0; i < notes.length; i++) {
+          const text = notes[i].textContent.trim();
+          if (text.toUpperCase().indexOf('BATTING') !== -1 && text.toUpperCase().indexOf('TB') !== -1) {
+            battingNotes = text;
+            break;
+          }
+        }
+        
+        if (battingNotes) break;
+        parent = parent.parentElement;
       }
       
       const tbMap = parseTbLine(battingNotes);
