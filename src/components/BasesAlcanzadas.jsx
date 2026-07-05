@@ -324,6 +324,21 @@ export default function BasesAlcanzadas({ config }) {
     Preview: { bg: 'rgba(255, 255, 255, 0.03)', border: 'rgba(255, 255, 255, 0.1)', accent: '#94a3b8' }
   };
 
+  // Categoría real del juego: solo es "Live" si de verdad empezó a jugarse
+  // (la MLB marca "Live" también el calentamiento previo)
+  const categoriaJuego = (g) => {
+    const abs = g.status.abstractGameState;
+    const det = g.status.detailedState || '';
+    const ls = g.linescore;
+    const empezo = !!(ls && ls.currentInning >= 1 && ls.innings && ls.innings.length > 0);
+    if (det.indexOf('Postponed') !== -1 || det.indexOf('Cancelled') !== -1 || det.indexOf('Suspended') !== -1) {
+      return 'Preview';
+    }
+    if (abs === 'Final') return empezo ? 'Final' : 'Preview';
+    if (abs === 'Live' && empezo) return 'Live';
+    return 'Preview';
+  };
+
   return (
     <div style={{ padding: '24px', background: '#060813', minHeight: '100vh', color: '#f8fafc' }}>
 
@@ -454,7 +469,7 @@ export default function BasesAlcanzadas({ config }) {
               <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>
                 Cargando los juegos del {esHoy ? 'día' : selectedDate}...
               </div>
-            ) : scheduleLoaded && scheduleGames.length === 0 && gameIds.length === 0 ? (
+            ) : scheduleLoaded && scheduleGames.length === 0 ? (
               <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0', fontStyle: 'italic' }}>
                 No hay juegos de MLB en esta fecha.
               </div>
@@ -462,22 +477,33 @@ export default function BasesAlcanzadas({ config }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '460px', overflowY: 'auto' }}>
                 {scheduleGames.map(g => {
                   const pk = String(g.gamePk);
-                  const abs = g.status.abstractGameState;
-                  const est = estilosEstado[abs] || estilosEstado.Preview;
+                  const cat = categoriaJuego(g);
+                  const det = g.status.detailedState || '';
+                  const est = estilosEstado[cat];
                   const isSelected = pk === String(selectedGameId);
                   const ls = g.linescore;
                   const away = g.teams.away.team.teamName;
                   const home = g.teams.home.team.teamName;
 
                   let displayTitle, subtexto;
-                  if (abs === 'Preview') {
+                  if (cat === 'Preview') {
                     displayTitle = `${away} vs ${home}`;
-                    subtexto = `Inicia: ${new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                    if (det.indexOf('Postponed') !== -1) {
+                      subtexto = 'Pospuesto';
+                    } else if (det.indexOf('Suspended') !== -1) {
+                      subtexto = 'Suspendido';
+                    } else if (det.indexOf('Cancelled') !== -1) {
+                      subtexto = 'Cancelado';
+                    } else if (det.indexOf('Warmup') !== -1) {
+                      subtexto = `Calentamiento · ${new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                    } else {
+                      subtexto = `Inicia: ${new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                    }
                   } else {
                     const rA = (ls && ls.teams && ls.teams.away && ls.teams.away.runs) || 0;
                     const rH = (ls && ls.teams && ls.teams.home && ls.teams.home.runs) || 0;
                     displayTitle = `${away} ${rA}, ${home} ${rH}`;
-                    if (abs === 'Final') {
+                    if (cat === 'Final') {
                       subtexto = 'Final';
                     } else {
                       const flecha = ls && ls.inningState === 'Top' ? '▲' : '▼';
@@ -511,43 +537,6 @@ export default function BasesAlcanzadas({ config }) {
                   );
                 })}
 
-                {/* Juegos importados de fechas anteriores (solo visibles en la vista de Hoy) */}
-                {(esHoy ? gameIds.filter(id => !scheduleGames.some(g => String(g.gamePk) === id)) : []).map(id => {
-                  const game = games[id];
-                  const isSelected = id === String(selectedGameId);
-                  let displayTitle = game.title;
-                  if (game.boxscores && game.boxscores.length === 2) {
-                    const team1 = simplificarNombreEquipo(game.boxscores[0].teamName);
-                    const runs1 = game.boxscores[0].runs !== undefined ? game.boxscores[0].runs : 0;
-                    const team2 = simplificarNombreEquipo(game.boxscores[1].teamName);
-                    const runs2 = game.boxscores[1].runs !== undefined ? game.boxscores[1].runs : 0;
-                    displayTitle = `${team1} ${runs1}, ${team2} ${runs2}`;
-                  }
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => setSelectedGameId(id)}
-                      style={{
-                        textAlign: 'left',
-                        padding: '10px 12px',
-                        background: estilosEstado.Final.bg,
-                        border: isSelected ? '2px solid #00d2ff' : `1px solid ${estilosEstado.Final.border}`,
-                        borderRadius: '6px',
-                        color: '#f8fafc',
-                        cursor: 'pointer',
-                        transition: '0.15s',
-                        width: '100%'
-                      }}
-                    >
-                      <div style={{ fontWeight: 'bold', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {displayTitle}
-                      </div>
-                      <div style={{ fontSize: '0.72rem', color: estilosEstado.Final.accent, marginTop: '4px', fontWeight: 'bold' }}>
-                        Final · {game.date}
-                      </div>
-                    </button>
-                  );
-                })}
               </div>
             )}
           </div>

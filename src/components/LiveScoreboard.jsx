@@ -260,19 +260,28 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
   const estadoJuego = (g) => {
     const ls = g.linescore;
     const abs = g.status.abstractGameState;
-    if (abs === 'Final') {
+    const det = g.status.detailedState || '';
+    const empezo = !!(ls && ls.currentInning >= 1 && ls.innings && ls.innings.length > 0);
+
+    if (det.indexOf('Postponed') !== -1) return { text: 'Pospuesto', color: '#94a3b8', bg: 'rgba(148,163,184,0.15)' };
+    if (det.indexOf('Suspended') !== -1) return { text: 'Suspendido', color: '#94a3b8', bg: 'rgba(148,163,184,0.15)' };
+    if (det.indexOf('Cancelled') !== -1) return { text: 'Cancelado', color: '#94a3b8', bg: 'rgba(148,163,184,0.15)' };
+
+    if (abs === 'Final' && empezo) {
       const n = ls && ls.innings ? ls.innings.length : 9;
-      return { text: n !== 9 ? `Final/${n}` : 'Final', color: '#94a3b8', bg: 'rgba(148,163,184,0.15)' };
+      return { text: n !== 9 ? `Final/${n}` : 'Final', color: '#fca5a5', bg: 'rgba(239,68,68,0.15)' };
     }
-    if (abs === 'Live') {
+    if (abs === 'Live' && empezo) {
       const st = ls && ls.inningState;
       const flecha = st === 'Top' ? '▲' : st === 'Bottom' ? '▼' : st === 'Middle' ? '½' : '•';
       return { text: `${flecha} ${ordEn(ls && ls.currentInning)}`, color: '#10b981', bg: 'rgba(16,185,129,0.15)' };
     }
+    // Sin empezar (incluye calentamiento): gris con la hora de inicio
+    const hora = new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return {
-      text: new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      color: '#f59e0b',
-      bg: 'rgba(245,158,11,0.15)'
+      text: det.indexOf('Warmup') !== -1 ? `Calentamiento · ${hora}` : hora,
+      color: '#94a3b8',
+      bg: 'rgba(148,163,184,0.15)'
     };
   };
 
