@@ -275,17 +275,103 @@ export default function LiveScoreboard({ gameId }) {
     );
   };
 
-  const lineaPitchers = (g, side) => {
+  // Tabla de pitcheo como MLB.com: en orden de aparición, con rol (abridor/relevo) y decisión
+  const tablaPitchers = (g, side) => {
     const bx = boxscores[g.gamePk];
     const td = bx && bx.teams && bx.teams[side];
     if (!td || !td.pitchers || td.pitchers.length === 0) return null;
-    return td.pitchers.map(id => {
+
+    const filas = td.pitchers.map((id, idx) => {
       const p = td.players['ID' + id];
       if (!p) return null;
-      const k = (p.stats && p.stats.pitching && p.stats.pitching.strikeOuts) || 0;
-      const nombre = p.person.fullName.split(' ').pop();
-      return `${nombre} ${k}K`;
-    }).filter(Boolean).join(' → ');
+      const st = (p.stats && p.stats.pitching) || {};
+      const sea = (p.seasonStats && p.seasonStats.pitching) || {};
+      const abrio = st.gamesStarted > 0 || idx === 0;
+      const note = st.note || '';
+      return {
+        id,
+        nombre: p.person.fullName,
+        abrio,
+        note,
+        ip: st.inningsPitched || '0.0',
+        h: st.hits !== undefined ? st.hits : '-',
+        r: st.runs !== undefined ? st.runs : '-',
+        er: st.earnedRuns !== undefined ? st.earnedRuns : '-',
+        bb: st.baseOnBalls !== undefined ? st.baseOnBalls : '-',
+        k: st.strikeOuts !== undefined ? st.strikeOuts : '-',
+        hr: st.homeRuns !== undefined ? st.homeRuns : '-',
+        era: sea.era !== undefined ? sea.era : '-'
+      };
+    }).filter(Boolean);
+
+    if (filas.length === 0) return null;
+
+    const noteColor = (note) => {
+      if (note.indexOf('(W') === 0) return '#10b981';
+      if (note.indexOf('(L') === 0) return '#ef4444';
+      if (note.indexOf('(S') === 0 || note.indexOf('(H') === 0) return '#00d2ff';
+      return '#94a3b8';
+    };
+
+    const tdS = { padding: '3px 6px', textAlign: 'center', fontSize: '0.72rem', color: '#cbd5e1' };
+    const thS = { ...tdS, color: '#64748b', fontWeight: 'normal' };
+
+    return (
+      <div style={{ marginTop: '8px' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', marginBottom: '4px' }}>
+          {g.teams[side].team.abbreviation || g.teams[side].team.teamName} — Pitcheo
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <th style={{ ...thS, textAlign: 'left' }}>Pitcher</th>
+                <th style={thS}>Rol</th>
+                <th style={thS}>IP</th>
+                <th style={thS}>H</th>
+                <th style={thS}>R</th>
+                <th style={thS}>ER</th>
+                <th style={thS}>BB</th>
+                <th style={{ ...thS, color: '#00d2ff', fontWeight: 'bold' }}>K</th>
+                <th style={thS}>HR</th>
+                <th style={thS}>ERA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map(f => (
+                <tr key={f.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <td style={{ ...tdS, textAlign: 'left', whiteSpace: 'nowrap', color: '#f8fafc' }}>
+                    {f.nombre}
+                    {f.note && <span style={{ marginLeft: '6px', fontWeight: 'bold', color: noteColor(f.note) }}>{f.note}</span>}
+                  </td>
+                  <td style={{ ...tdS, whiteSpace: 'nowrap' }}>
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontWeight: 'bold',
+                      padding: '1px 7px',
+                      borderRadius: '8px',
+                      color: f.abrio ? '#f59e0b' : '#64748b',
+                      background: f.abrio ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.04)',
+                      border: f.abrio ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(255,255,255,0.06)'
+                    }}>
+                      {f.abrio ? 'ABRIÓ' : 'Relevo'}
+                    </span>
+                  </td>
+                  <td style={tdS}>{f.ip}</td>
+                  <td style={tdS}>{f.h}</td>
+                  <td style={tdS}>{f.r}</td>
+                  <td style={tdS}>{f.er}</td>
+                  <td style={tdS}>{f.bb}</td>
+                  <td style={{ ...tdS, fontWeight: 'bold', color: '#00d2ff' }}>{f.k}</td>
+                  <td style={tdS}>{f.hr}</td>
+                  <td style={tdS}>{f.era}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
   };
 
   const statsTemporada = (g, personId) => {
@@ -331,8 +417,8 @@ export default function LiveScoreboard({ gameId }) {
 
   const renderCard = (g) => {
     const est = estadoJuego(g);
-    const pitchAway = lineaPitchers(g, 'away');
-    const pitchHome = lineaPitchers(g, 'home');
+    const pitchAway = tablaPitchers(g, 'away');
+    const pitchHome = tablaPitchers(g, 'home');
     return (
       <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -349,10 +435,9 @@ export default function LiveScoreboard({ gameId }) {
         {tablaInnings(g)}
         {decisiones(g)}
         {(pitchAway || pitchHome) && (
-          <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.74rem', color: '#94a3b8' }}>
-            <div style={{ fontWeight: 'bold', color: '#64748b', marginBottom: '3px' }}>Ponches de pitchers (K):</div>
-            {pitchAway && <div>{g.teams.away.team.abbreviation || g.teams.away.team.teamName}: {pitchAway}</div>}
-            {pitchHome && <div>{g.teams.home.team.abbreviation || g.teams.home.team.teamName}: {pitchHome}</div>}
+          <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            {pitchAway}
+            {pitchHome}
           </div>
         )}
       </div>
