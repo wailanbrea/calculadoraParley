@@ -24,7 +24,7 @@ const MILESTONES = [
   { key: 'inning5', innings: 5, label: 'H completado (5 innings)' }
 ];
 
-export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGame }) {
+export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGame, onBoxscoresUpdate }) {
   const [gamesLive, setGamesLive] = useState([]);
   const [extraGames, setExtraGames] = useState({});
   const [standings, setStandings] = useState({});
@@ -203,6 +203,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGa
               .then(bx => {
                 boxRef.current[pk] = { final: stAbs === 'Final' };
                 setBoxscores(prev => ({ ...prev, [pk]: bx }));
+                if (onBoxscoresUpdate) onBoxscoresUpdate(pk, bx);
               })
               .catch(() => {});
           }
@@ -259,6 +260,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGa
         .then(bx => {
           boxRef.current[gameId] = { final: true };
           setBoxscores(prev => ({ ...prev, [gameId]: bx }));
+          if (onBoxscoresUpdate) onBoxscoresUpdate(gameId, bx);
         })
         .catch(() => {});
     }
@@ -292,7 +294,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGa
       return { text: `${flecha} ${ordEn(ls && ls.currentInning)}`, color: '#10b981', bg: 'rgba(16,185,129,0.15)' };
     }
     // Sin empezar (incluye calentamiento): gris con la hora de inicio
-    const hora = new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const hora = new Date(g.gameDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
     return {
       text: det.indexOf('Warmup') !== -1 ? `Calentamiento · ${hora}` : hora,
       color: '#94a3b8',
@@ -535,7 +537,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGa
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
             📺 Marcador en vivo (API MLB)
-            {lastUpdate && ` · Actualizado: ${lastUpdate.toLocaleTimeString()}`}
+            {lastUpdate && ` · Actualizado: ${lastUpdate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}`}
           </span>
           <span style={{ fontSize: '0.72rem', fontWeight: 'bold', padding: '2px 10px', borderRadius: '10px', color: est.color, background: est.bg }}>
             {est.text}

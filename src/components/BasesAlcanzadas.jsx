@@ -25,6 +25,7 @@ function simplificarNombreEquipo(fullName) {
 export default function BasesAlcanzadas({ config }) {
   const [games, setGames] = useState({});
   const [scheduleGames, setScheduleGames] = useState([]);
+  const [boxscoresMap, setBoxscoresMap] = useState({});
   const [scheduleLoaded, setScheduleLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(fechaHoyISO());
   const [selectedGameId, setSelectedGameId] = useState(null);
@@ -326,6 +327,23 @@ export default function BasesAlcanzadas({ config }) {
     Preview: { bg: 'rgba(255, 255, 255, 0.03)', border: 'rgba(255, 255, 255, 0.1)', accent: '#94a3b8' }
   };
 
+  // P azul: ambos pitchers abridores ya fueron relevados y el 5to inning (H) está completo.
+  // Solo entonces se pueden calificar los pitchers.
+  const pitchersCalificables = (g) => {
+    const ls = g.linescore;
+    const inn = (ls && ls.currentInning) || 0;
+    const st = ls && ls.inningState;
+    const paso5to = inn > 5 || (inn === 5 && st === 'End');
+    if (!paso5to) return false;
+
+    const bx = boxscoresMap[String(g.gamePk)];
+    if (!bx || !bx.teams) return false;
+    // Si hay más de un pitcher en la lista, el abridor ya fue relevado
+    const relevadoAway = (bx.teams.away.pitchers || []).length >= 2;
+    const relevadoHome = (bx.teams.home.pitchers || []).length >= 2;
+    return relevadoAway && relevadoHome;
+  };
+
   // Categoría real del juego: solo es "Live" si de verdad empezó a jugarse
   // (la MLB marca "Live" también el calentamiento previo)
   const categoriaJuego = (g) => {
@@ -368,7 +386,7 @@ export default function BasesAlcanzadas({ config }) {
           </h1>
           <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#94a3b8' }}>
             Pulsa "Sincronizar MLB" para importar los juegos finalizados desde la API oficial de la MLB
-            {lastSync && ` · Última sincronización: ${lastSync.toLocaleTimeString()}`}
+            {lastSync && ` · Última sincronización: ${lastSync.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`}
           </p>
         </div>
         <div className="ba-header-botones" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -500,12 +518,18 @@ export default function BasesAlcanzadas({ config }) {
                   const est = estilosEstado[cat];
                   const isSelected = pk === String(selectedGameId);
                   const ls = g.linescore;
-                  const away = g.teams.away.team.teamName;
-                  const home = g.teams.home.team.teamName;
+                  // Nombres completos de los equipos (ej. "Houston Astros")
+                  const away = g.teams.away.team.name || g.teams.away.team.teamName;
+                  const home = g.teams.home.team.name || g.teams.home.team.teamName;
+                  const hora = new Date(g.gameDate).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+                  const mostrarP = pitchersCalificables(g);
 
-                  let displayTitle, subtexto;
+                  const empezo = cat !== 'Preview';
+                  const rA = empezo ? ((ls && ls.teams && ls.teams.away && ls.teams.away.runs) || 0) : null;
+                  const rH = empezo ? ((ls && ls.teams && ls.teams.home && ls.teams.home.runs) || 0) : null;
+
+                  let subtexto;
                   if (cat === 'Preview') {
-                    displayTitle = `${away} vs ${home}`;
                     if (det.indexOf('Postponed') !== -1) {
                       subtexto = 'Pospuesto';
                     } else if (det.indexOf('Suspended') !== -1) {
@@ -513,22 +537,18 @@ export default function BasesAlcanzadas({ config }) {
                     } else if (det.indexOf('Cancelled') !== -1) {
                       subtexto = 'Cancelado';
                     } else if (det.indexOf('Warmup') !== -1) {
-                      subtexto = `Calentamiento · ${new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                      subtexto = `Calentamiento · ${hora}`;
                     } else {
-                      subtexto = `Inicia: ${new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                      subtexto = `Inicia: ${hora}`;
                     }
+                  } else if (cat === 'Final') {
+                    subtexto = `Final · ${hora}`;
                   } else {
-                    const rA = (ls && ls.teams && ls.teams.away && ls.teams.away.runs) || 0;
-                    const rH = (ls && ls.teams && ls.teams.home && ls.teams.home.runs) || 0;
-                    const hora = new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    displayTitle = `${away} ${rA}, ${home} ${rH}`;
-                    if (cat === 'Final') {
-                      subtexto = `Final · ${hora}`;
-                    } else {
-                      const flecha = ls && ls.inningState === 'Top' ? '▲' : '▼';
-                      subtexto = `En juego · ${flecha} ${(ls && ls.currentInning) || ''} · ${hora}`;
-                    }
+                    const flecha = ls && ls.inningState === 'Top' ? '▲' : '▼';
+                    subtexto = `En juego · ${flecha} ${(ls && ls.currentInning) || ''} · ${hora}`;
                   }
+
+                  const lineaEquipo = { display: 'flex', justifyContent: 'space-between', gap: '8px', fontWeight: 'bold', fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden' };
 
                   return (
                     <button
@@ -546,11 +566,33 @@ export default function BasesAlcanzadas({ config }) {
                         width: '100%'
                       }}
                     >
-                      <div style={{ fontWeight: 'bold', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {displayTitle}
+                      <div style={lineaEquipo}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{away}</span>
+                        {rA !== null && <span>{rA}</span>}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: est.accent, marginTop: '4px', fontWeight: 'bold' }}>
-                        {subtexto}
+                      <div style={{ ...lineaEquipo, marginTop: '2px' }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{home}</span>
+                        {rH !== null && <span>{rH}</span>}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: est.accent, marginTop: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{subtexto}</span>
+                        {mostrarP && (
+                          <span
+                            title="Ambos abridores relevados y 5 innings completos: ya se pueden calificar los pitchers"
+                            style={{
+                              background: 'rgba(59, 130, 246, 0.2)',
+                              color: '#3b82f6',
+                              border: '1px solid #3b82f6',
+                              borderRadius: '4px',
+                              padding: '0 6px',
+                              fontSize: '0.72rem',
+                              fontWeight: 'bold',
+                              lineHeight: '1.4'
+                            }}
+                          >
+                            P
+                          </span>
+                        )}
                       </div>
                     </button>
                   );
@@ -572,6 +614,7 @@ export default function BasesAlcanzadas({ config }) {
             onGamesUpdate={handleGamesUpdate}
             date={selectedDate}
             onSelectGame={(pk) => setSelectedGameId(String(pk))}
+            onBoxscoresUpdate={(pk, bx) => setBoxscoresMap(prev => ({ ...prev, [String(pk)]: bx }))}
           />
           {!selectedGameId ? (
             <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '40px', textAlign: 'center', color: '#64748b' }}>
