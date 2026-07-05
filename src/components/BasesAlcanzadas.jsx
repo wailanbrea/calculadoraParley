@@ -340,10 +340,26 @@ export default function BasesAlcanzadas({ config }) {
   };
 
   return (
-    <div style={{ padding: '24px', background: '#060813', minHeight: '100vh', color: '#f8fafc' }}>
+    <div className="ba-page" style={{ padding: '24px', background: '#060813', minHeight: '100vh', color: '#f8fafc' }}>
+
+      {/* Reglas responsive según el ancho de pantalla */}
+      <style>{`
+        @media (max-width: 900px) {
+          .ba-grid { display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+          .ba-grid > div { width: auto !important; min-width: 0 !important; }
+          .ba-sidebar { position: static !important; max-height: none !important; }
+          .ba-lista { flex: none !important; max-height: 45vh !important; }
+        }
+        @media (max-width: 760px) {
+          .ba-page { padding: 12px !important; }
+          .ba-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+          .ba-header-botones { width: 100% !important; flex-wrap: wrap !important; }
+          .ba-lineups { grid-template-columns: 1fr !important; gap: 14px !important; }
+        }
+      `}</style>
 
       {/* Cabecera */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
+      <div className="ba-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold', color: '#00d2ff', textShadow: '0 0 10px rgba(0, 210, 255, 0.2)' }}>
             ⚾ Bases Alcanzadas Resultados
@@ -353,7 +369,7 @@ export default function BasesAlcanzadas({ config }) {
             {lastSync && ` · Última sincronización: ${lastSync.toLocaleTimeString()}`}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div className="ba-header-botones" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <button
           onClick={() => syncMlbGames()}
           disabled={syncing}
@@ -382,10 +398,10 @@ export default function BasesAlcanzadas({ config }) {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '24px', alignItems: 'start' }}>
+      <div className="ba-grid" style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '24px', alignItems: 'start' }}>
         
         {/* Barra lateral fija: ocupa toda la altura de la ventana */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'sticky', top: '16px', maxHeight: 'calc(100vh - 32px)' }}>
+        <div className="ba-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'sticky', top: '16px', maxHeight: 'calc(100vh - 32px)' }}>
 
           {/* Tarjeta del Bookmarklet (colapsada para dejar espacio a la lista) */}
           <details style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '12px 16px', flexShrink: 0 }}>
@@ -474,7 +490,7 @@ export default function BasesAlcanzadas({ config }) {
                 No hay juegos de MLB en esta fecha.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+              <div className="ba-lista" style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 {scheduleGames.map(g => {
                   const pk = String(g.gamePk);
                   const cat = categoriaJuego(g);
@@ -544,7 +560,7 @@ export default function BasesAlcanzadas({ config }) {
         </div>
 
         {/* Panel derecho: Visor de Lineups y Bases Alcanzadas */}
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           {/* Marcador en vivo del juego seleccionado + alertas de innings */}
           <LiveScoreboard gameId={selectedGameId} onGamesUpdate={handleGamesUpdate} date={selectedDate} />
           {!selectedGameId ? (
@@ -578,7 +594,7 @@ export default function BasesAlcanzadas({ config }) {
               </div>
 
               {/* Contenedor de las dos columnas de lineups */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              <div className="ba-lineups" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                 {activeGame.boxscores.map((team, tIdx) => (
                   <div key={tIdx} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '8px', padding: '16px' }}>
                     <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#ef4444', borderBottom: '2px solid rgba(239, 68, 68, 0.2)', paddingBottom: '8px', fontSize: '1.1rem', fontWeight: 'bold' }}>

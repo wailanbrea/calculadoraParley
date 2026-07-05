@@ -554,10 +554,15 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
           0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
           50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
         }
+        @media (max-width: 600px) {
+          .ls-toasts { left: 10px !important; right: 10px !important; max-width: none !important; }
+          .ls-barra-alertas { flex-direction: column !important; }
+          .ls-barra-alertas button { white-space: normal !important; width: 100%; }
+        }
       `}</style>
 
       {/* Toasts de alertas (flotantes, para todos los juegos del día) */}
-      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '420px' }}>
+      <div className="ls-toasts" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '420px' }}>
         {toasts.map(t => (
           <div key={t.id} style={{
             background: 'linear-gradient(135deg, #0b1a2b 0%, #0b0f19 100%)',
@@ -584,7 +589,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
 
       {/* Barra compacta de alertas y notificaciones */}
       {(alerts.length > 0 || !notifGranted) && (
-        <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div className="ls-barra-alertas" style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '0.78rem', fontWeight: 'bold', color: '#00d2ff', marginBottom: alerts.length > 0 ? '6px' : 0 }}>
               🔔 Alertas de innings (1ro, tercio, H y final de todos los juegos de hoy)
