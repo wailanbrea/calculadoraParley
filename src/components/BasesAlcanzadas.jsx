@@ -70,54 +70,120 @@ export default function BasesAlcanzadas({ config }) {
       });
   };
 
-  // Sincronizar juegos finalizados desde la API oficial de la MLB (solo manual)
+  // Construye la estructura de bases alcanzadas desde un boxscore oficial de la MLB
+  const construirBoxscores = (data) => ['away', 'home'].map(tKey => {
+    const teamData = data.teams[tKey];
+    const playersList = Object.values(teamData.players).filter(p => p.battingOrder);
+    playersList.sort((a, b) => parseInt(a.battingOrder, 10) - parseInt(b.battingOrder, 10));
+
+    const lineup = playersList.map(p => {
+      const fullName = p.person.fullName;
+      const cleanName = fullName.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const isSub = !p.battingOrder.endsWith('00');
+      const bs = (p.stats && p.stats.batting) || {};
+      const ab = bs.atBats || 0;
+      const r = bs.runs || 0;
+      const h = bs.hits || 0;
+      const rbi = bs.rbi || 0;
+      const so = bs.strikeOuts || 0;
+      const tb = bs.totalBases || 0;
+      const todosCeros = (!isSub && ab === 0 && r === 0 && h === 0 && rbi === 0 && so === 0);
+      const pos = p.position ? p.position.abbreviation : '';
+      return {
+        rawName: fullName + (pos ? ' ' + pos : ''),
+        cleanName,
+        isSubstitution: isSub,
+        hits: h,
+        tb: isSub ? 0 : tb,
+        todosCeros,
+        stats: { ab, r, h, rbi, so }
+      };
+    });
+
+    return {
+      teamName: teamData.team.name,
+      runs: (teamData.teamStats && teamData.teamStats.batting && teamData.teamStats.batting.runs) || 0,
+      lineup
+    };
+  });
+
+  // Sincronización manual: el NAVEGADOR descarga los datos de la MLB (nunca está
+  // bloqueado por el CDN, a diferencia del VPS) y los guarda en el servidor
   const syncingRef = useRef(false);
-  const syncMlbGames = () => {
+  const syncMlbGames = async () => {
     if (syncingRef.current) return;
     syncingRef.current = true;
     setSyncing(true);
-    // Siempre enviar la fecha seleccionada: así el servidor sincroniza exactamente
-    // el día que se está viendo, sin depender de la zona horaria del VPS
-    fetch(`./api.php?action=sync_mlb_bases&date=${selectedDate}&_=${Date.now()}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Error sincronizando con la API de la MLB");
-        return res.json();
-      })
-      .then(data => {
-        if (data && data.games) {
-          setGames(data.games);
-          const keys = Object.keys(data.games);
-          if (keys.length > 0 && !selectedGameIdRef.current) {
-            setSelectedGameId(keys[0]);
-          }
+    try {
+      const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule/games/?sportId=1&date=${selectedDate}`);
+      if (!res.ok) throw new Error(`Error consultando el calendario de la MLB (HTTP ${res.status})`);
+      const data = await res.json();
+      const juegos = (data.dates && data.dates[0] && data.dates[0].games) || [];
+      const finales = juegos.filter(g => g.status.abstractGameState === 'Final');
+
+      let nuevos = 0;
+      let yaImportados = 0;
+      let fallos = 0;
+
+      for (const g of finales) {
+        const pk = String(g.gamePk);
+        if (games[pk]) {
+          yaImportados++;
+          continue;
         }
-        setLastSync(new Date());
-        const nuevos = data && typeof data.synchronized === 'number' ? data.synchronized : 0;
-        const yaImportados = data && typeof data.already_imported === 'number' ? data.already_imported : 0;
-        const errores = data && Array.isArray(data.fetch_errors) ? data.fetch_errors : [];
-        let texto;
-        let tipo = 'success';
-        if (nuevos > 0) {
-          texto = `Sincronización completada: ${nuevos} juego(s) del ${selectedDate} importado(s).`;
-        } else if (yaImportados > 0) {
-          texto = `Los ${yaImportados} juegos finalizados del ${selectedDate} ya estaban importados.`;
-        } else if (errores.length > 0) {
-          tipo = 'error';
-          texto = `El servidor no pudo consultar la API de la MLB: ${errores[0]}. Inténtalo de nuevo.`;
-        } else {
-          texto = `No hay juegos finalizados en la fecha ${selectedDate} todavía.`;
+        try {
+          const bxRes = await fetch(`https://statsapi.mlb.com/api/v1/game/${pk}/boxscore`);
+          if (!bxRes.ok) throw new Error(`boxscore HTTP ${bxRes.status}`);
+          const bx = await bxRes.json();
+          const boxscores = construirBoxscores(bx);
+          const payload = {
+            gameId: pk,
+            date: selectedDate.replace(/-/g, '/'),
+            title: `MLB Gameday: ${boxscores[0].teamName} vs. ${boxscores[1].teamName}`,
+            captured_at: new Date().toISOString(),
+            boxscores
+          };
+          const save = await fetch(`./api.php?action=save_bases`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CalcParley-Import-Token': token
+            },
+            body: JSON.stringify(payload)
+          });
+          if (!save.ok) throw new Error(`guardado HTTP ${save.status}`);
+          nuevos++;
+        } catch (e) {
+          console.error(`Fallo importando juego ${pk}:`, e);
+          fallos++;
         }
-        setMessage({ type: tipo, text: texto });
-        setTimeout(() => setMessage(null), 8000);
-      })
-      .catch(err => {
-        console.error(err);
-        setMessage({ type: 'error', text: err.message });
-      })
-      .finally(() => {
-        syncingRef.current = false;
-        setSyncing(false);
-      });
+      }
+
+      loadBasesFromServer(true);
+      setLastSync(new Date());
+
+      let texto;
+      let tipo = 'success';
+      if (nuevos > 0) {
+        texto = `Sincronización completada: ${nuevos} juego(s) del ${selectedDate} importado(s).` + (fallos > 0 ? ` (${fallos} fallo(s))` : '');
+      } else if (fallos > 0) {
+        tipo = 'error';
+        texto = `No se pudieron importar ${fallos} juego(s). Inténtalo de nuevo.`;
+      } else if (yaImportados > 0) {
+        texto = `Los ${yaImportados} juegos finalizados del ${selectedDate} ya estaban importados.`;
+      } else {
+        texto = `No hay juegos finalizados en la fecha ${selectedDate} todavía.`;
+      }
+      setMessage({ type: tipo, text: texto });
+      setTimeout(() => setMessage(null), 8000);
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: err.message });
+      setTimeout(() => setMessage(null), 8000);
+    } finally {
+      syncingRef.current = false;
+      setSyncing(false);
+    }
   };
 
   // Carga inicial e intervalo de refresco
