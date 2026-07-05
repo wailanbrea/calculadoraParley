@@ -564,7 +564,12 @@ export default function BasesAlcanzadas({ config }) {
           {/* Contenido centrado a un ancho de lectura cómodo (estándar ~1200px) */}
           <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
           {/* Marcador en vivo del juego seleccionado + alertas de innings */}
-          <LiveScoreboard gameId={selectedGameId} onGamesUpdate={handleGamesUpdate} date={selectedDate} />
+          <LiveScoreboard
+            gameId={selectedGameId}
+            onGamesUpdate={handleGamesUpdate}
+            date={selectedDate}
+            onSelectGame={(pk) => setSelectedGameId(String(pk))}
+          />
           {!selectedGameId ? (
             <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '40px', textAlign: 'center', color: '#64748b' }}>
               <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '12px' }}>⚾</span>

@@ -24,7 +24,7 @@ const MILESTONES = [
   { key: 'inning5', innings: 5, label: 'H completado (5 innings)' }
 ];
 
-export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
+export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGame }) {
   const [gamesLive, setGamesLive] = useState([]);
   const [extraGames, setExtraGames] = useState({});
   const [standings, setStandings] = useState({});
@@ -90,8 +90,14 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
     } catch (e) { /* sin soporte de audio */ }
   };
 
-  const pushAlert = (text) => {
-    const a = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), text };
+  // Seleccionar el juego de la alerta y traer la ventana al frente
+  const irAlJuego = (pk) => {
+    try { window.focus(); } catch (e) { /* sin permiso de foco */ }
+    if (pk && onSelectGame) onSelectGame(String(pk));
+  };
+
+  const pushAlert = ({ titulo, texto, pk }) => {
+    const a = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), titulo, texto, pk };
     setAlerts(prev => [a, ...prev].slice(0, 20));
     setToasts(prev => [...prev, a]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== a.id)), 20000);
@@ -108,14 +114,14 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
     // requireInteraction hace que no desaparezca sola hasta que el usuario la cierre.
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try {
-        const n = new Notification('⚾ Alerta MLB — CalcParley', {
-          body: text,
+        const n = new Notification(titulo, {
+          body: texto,
           icon: './favicon.svg',
           requireInteraction: true,
           tag: 'calcparley-' + a.id
         });
         n.onclick = () => {
-          try { window.focus(); } catch (e) { /* sin permiso de foco */ }
+          irAlJuego(pk);
           n.close();
         };
       } catch (e) { /* sin soporte */ }
@@ -144,16 +150,25 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
         seen[pk] = now;
       } else {
         now.filter(k => !prev.includes(k)).forEach(k => {
-          const away = g.teams.away.team.teamName;
-          const home = g.teams.home.team.teamName;
+          // Nombres completos de los equipos (ej. "Toronto Blue Jays")
+          const away = g.teams.away.team.name || g.teams.away.team.teamName;
+          const home = g.teams.home.team.name || g.teams.home.team.teamName;
           const rA = (ls && ls.teams && ls.teams.away && ls.teams.away.runs) || 0;
           const rH = (ls && ls.teams && ls.teams.home && ls.teams.home.runs) || 0;
           const score = `${away} ${rA} - ${home} ${rH}`;
           if (k === 'final') {
-            pushAlert(`🏁 FINAL: ${score}`);
+            pushAlert({
+              titulo: `🏁 FINAL: ${away} vs ${home}`,
+              texto: `Resultado final: ${score}`,
+              pk
+            });
           } else {
             const m = MILESTONES.find(x => x.key === k);
-            pushAlert(`⚾ ${away} vs ${home}: ${m ? m.label : k} · ${score}`);
+            pushAlert({
+              titulo: `⚾ ${away} vs ${home}`,
+              texto: `${m ? m.label : k} · ${score}`,
+              pk
+            });
           }
         });
         seen[pk] = Array.from(new Set([...prev, ...now]));
@@ -564,24 +579,30 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
       {/* Toasts de alertas (flotantes, para todos los juegos del día) */}
       <div className="ls-toasts" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '420px' }}>
         {toasts.map(t => (
-          <div key={t.id} style={{
-            background: 'linear-gradient(135deg, #0b1a2b 0%, #0b0f19 100%)',
-            border: '2px solid #00d2ff',
-            borderRadius: '10px',
-            padding: '16px 20px',
-            color: '#f8fafc',
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            boxShadow: '0 0 25px rgba(0, 210, 255, 0.45), 0 12px 32px rgba(0,0,0,0.7)',
-            animation: 'alertaEntrada 0.4s ease-out',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px'
-          }}>
+          <div
+            key={t.id}
+            onClick={() => { irAlJuego(t.pk); setToasts(prev => prev.filter(x => x.id !== t.id)); }}
+            title="Clic para ir a este juego"
+            style={{
+              background: 'linear-gradient(135deg, #0b1a2b 0%, #0b0f19 100%)',
+              border: '2px solid #00d2ff',
+              borderRadius: '10px',
+              padding: '16px 20px',
+              color: '#f8fafc',
+              fontSize: '0.95rem',
+              boxShadow: '0 0 25px rgba(0, 210, 255, 0.45), 0 12px 32px rgba(0,0,0,0.7)',
+              animation: 'alertaEntrada 0.4s ease-out',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              cursor: 'pointer'
+            }}
+          >
             <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>🔔</span>
             <div>
-              <div style={{ fontSize: '0.72rem', color: '#00d2ff', marginBottom: '4px', fontWeight: 'normal' }}>{t.time} · Alerta MLB</div>
-              {t.text}
+              <div style={{ fontSize: '0.72rem', color: '#00d2ff', marginBottom: '4px' }}>{t.time} · Alerta MLB · clic para ver el juego</div>
+              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>{t.titulo}</div>
+              <div style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>{t.texto}</div>
             </div>
           </div>
         ))}
@@ -597,8 +618,15 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
             {alerts.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '90px', overflowY: 'auto' }}>
                 {alerts.map(a => (
-                  <div key={a.id} style={{ fontSize: '0.76rem', color: '#cbd5e1' }}>
-                    <span style={{ color: '#64748b', marginRight: '8px' }}>{a.time}</span>{a.text}
+                  <div
+                    key={a.id}
+                    onClick={() => irAlJuego(a.pk)}
+                    title="Clic para ir a este juego"
+                    style={{ fontSize: '0.76rem', color: '#cbd5e1', cursor: 'pointer' }}
+                  >
+                    <span style={{ color: '#64748b', marginRight: '8px' }}>{a.time}</span>
+                    <span style={{ fontWeight: 'bold' }}>{a.titulo}</span>
+                    <span style={{ color: '#94a3b8' }}> — {a.texto}</span>
                   </div>
                 ))}
               </div>
