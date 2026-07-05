@@ -20,6 +20,7 @@ export default function BasesAlcanzadas({ config }) {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
+  const [autoSync, setAutoSync] = useState(() => localStorage.getItem('basesAutoSync') !== 'off');
   const [message, setMessage] = useState(null);
   const bookmarkletRef = useRef(null);
 
@@ -58,9 +59,27 @@ export default function BasesAlcanzadas({ config }) {
       });
   };
 
+  // La sincronización automática solo corre de 10:00 AM a 11:55 PM
+  const isWithinSyncWindow = () => {
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    if (h < 10) return false;
+    if (h === 23 && m > 55) return false;
+    return true;
+  };
+
+  const autoSyncRef = useRef(autoSync);
+  useEffect(() => {
+    autoSyncRef.current = autoSync;
+    localStorage.setItem('basesAutoSync', autoSync ? 'on' : 'off');
+  }, [autoSync]);
+
   // Sincronizar juegos finalizados desde la API oficial de la MLB
   const syncingRef = useRef(false);
   const syncMlbGames = (manual = false) => {
+    // La automática respeta la pausa y el horario; la manual siempre corre
+    if (!manual && (!autoSyncRef.current || !isWithinSyncWindow())) return;
     if (syncingRef.current) return;
     syncingRef.current = true;
     if (manual) setSyncing(true);
@@ -286,11 +305,36 @@ export default function BasesAlcanzadas({ config }) {
             ⚾ Bases Alcanzadas Resultados
           </h1>
           <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#94a3b8' }}>
-            Los juegos finalizados se importan automáticamente desde la API oficial de la MLB cada 5 minutos
+            {autoSync
+              ? 'Sincronización automática activa: cada 5 minutos, de 10:00 AM a 11:55 PM'
+              : 'Sincronización automática en pausa — usa "Sincronizar MLB" para actualizar manualmente'}
             {lastSync && ` · Última sincronización: ${lastSync.toLocaleTimeString()}`}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <button
+          onClick={() => {
+            const next = !autoSync;
+            setAutoSync(next);
+            if (next) {
+              // Al reanudar, sincronizar de inmediato (respetando el horario)
+              autoSyncRef.current = true;
+              syncMlbGames(false);
+            }
+          }}
+          style={{
+            padding: '8px 16px',
+            background: autoSync ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+            border: autoSync ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(16, 185, 129, 0.4)',
+            borderRadius: '6px',
+            color: autoSync ? '#f59e0b' : '#10b981',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            transition: '0.2s'
+          }}
+        >
+          {autoSync ? '⏸ Pausar Auto-Sync' : '▶ Reanudar Auto-Sync'}
+        </button>
         <button
           onClick={() => syncMlbGames(true)}
           disabled={syncing}
