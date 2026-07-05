@@ -138,23 +138,24 @@ function adaptarEventoLivescore(e) {
 
   const construirLinescoresLs = (event, teamNum) => {
     const ls = [];
-    if (event['Tr' + teamNum + 'q1'] !== undefined && event['Tr' + teamNum + 'q1'] !== null) {
+    const q1 = event['Tr' + teamNum + 'Q1'] !== undefined ? event['Tr' + teamNum + 'Q1'] : event['Tr' + teamNum + 'q1'];
+    if (q1 !== undefined && q1 !== null) {
       for (let q = 1; q <= 4; q++) {
-        const val = event['Tr' + teamNum + 'q' + q];
+        const val = event['Tr' + teamNum + 'Q' + q] !== undefined ? event['Tr' + teamNum + 'Q' + q] : event['Tr' + teamNum + 'q' + q];
         if (val !== undefined && val !== null && val !== '') {
           ls.push({ value: parseInt(val, 10) });
         }
       }
-      const ot = event['Tr' + teamNum + 'ot'];
+      const ot = event['Tr' + teamNum + 'OT'] !== undefined ? event['Tr' + teamNum + 'OT'] : event['Tr' + teamNum + 'ot'];
       if (ot !== undefined && ot !== null && ot !== '') {
         ls.push({ value: parseInt(ot, 10) });
       }
-    } else if (event['Tr' + teamNum + 'h1'] !== undefined && event['Tr' + teamNum + 'h1'] !== null) {
-      const h1 = event['Tr' + teamNum + 'h1'];
+    } else {
+      const h1 = event['Tr' + teamNum + 'H1'] !== undefined ? event['Tr' + teamNum + 'H1'] : event['Tr' + teamNum + 'h1'];
       if (h1 !== undefined && h1 !== null && h1 !== '') {
         ls.push({ value: parseInt(h1, 10) });
       }
-      const h2 = event['Tr' + teamNum + 'h2'];
+      const h2 = event['Tr' + teamNum + 'H2'] !== undefined ? event['Tr' + teamNum + 'H2'] : event['Tr' + teamNum + 'h2'];
       if (h2 !== undefined && h2 !== null && h2 !== '') {
         ls.push({ value: parseInt(h2, 10) });
       }
