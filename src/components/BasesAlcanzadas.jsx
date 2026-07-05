@@ -267,9 +267,6 @@ export default function BasesAlcanzadas({ config }) {
   return (
     <div style={{ padding: '24px', background: '#060813', minHeight: '100vh', color: '#f8fafc' }}>
 
-      {/* Marcadores en vivo estilo MLB.com con alertas de innings */}
-      <LiveScoreboard />
-
       {/* Cabecera */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #1e293b', paddingBottom: '16px' }}>
         <div>
@@ -406,6 +403,8 @@ export default function BasesAlcanzadas({ config }) {
 
         {/* Panel derecho: Visor de Lineups y Bases Alcanzadas */}
         <div style={{ flex: 1 }}>
+          {/* Marcador en vivo del juego seleccionado + alertas de innings */}
+          <LiveScoreboard gameId={activeGame ? activeGame.gameId : null} />
           {!activeGame ? (
             <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '40px', textAlign: 'center', color: '#64748b' }}>
               <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '12px' }}>⚾</span>

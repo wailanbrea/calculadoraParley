@@ -24,8 +24,9 @@ const MILESTONES = [
   { key: 'inning5', innings: 5, label: 'H completado (5 innings)' }
 ];
 
-export default function LiveScoreboard() {
+export default function LiveScoreboard({ gameId }) {
   const [gamesLive, setGamesLive] = useState([]);
+  const [extraGames, setExtraGames] = useState({});
   const [standings, setStandings] = useState({});
   const [boxscores, setBoxscores] = useState({});
   const [alerts, setAlerts] = useState([]);
@@ -146,6 +147,31 @@ export default function LiveScoreboard() {
     const interval = setInterval(poll, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Si el juego seleccionado no es de hoy (ej. importado de ayer), traerlo una vez por su gamePk
+  useEffect(() => {
+    if (!gameId || lastUpdate === null) return;
+    const enHoy = gamesLive.some(g => String(g.gamePk) === String(gameId));
+    if (enHoy || extraGames[gameId]) return;
+
+    fetch(`${API}/schedule?sportId=1&gamePk=${gameId}&hydrate=team,linescore,decisions`)
+      .then(r => r.json())
+      .then(data => {
+        const g = data.dates && data.dates[0] && data.dates[0].games && data.dates[0].games[0];
+        if (g) setExtraGames(prev => ({ ...prev, [gameId]: g }));
+      })
+      .catch(() => {});
+
+    if (!boxRef.current[gameId]) {
+      fetch(`${API}/game/${gameId}/boxscore`)
+        .then(r => r.json())
+        .then(bx => {
+          boxRef.current[gameId] = { final: true };
+          setBoxscores(prev => ({ ...prev, [gameId]: bx }));
+        })
+        .catch(() => {});
+    }
+  }, [gameId, gamesLive, lastUpdate]);
 
   const solicitarNotificaciones = () => {
     if (typeof Notification === 'undefined') {
@@ -298,10 +324,45 @@ export default function LiveScoreboard() {
     );
   };
 
-  return (
-    <div style={{ marginBottom: '28px' }}>
+  // Juego seleccionado: primero se busca entre los de hoy, luego en los traídos por gamePk
+  const juegoSeleccionado = gameId
+    ? (gamesLive.find(g => String(g.gamePk) === String(gameId)) || extraGames[gameId] || null)
+    : null;
 
-      {/* Toasts de alertas */}
+  const renderCard = (g) => {
+    const est = estadoJuego(g);
+    const pitchAway = lineaPitchers(g, 'away');
+    const pitchHome = lineaPitchers(g, 'home');
+    return (
+      <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+            📺 Marcador en vivo (API MLB)
+            {lastUpdate && ` · Actualizado: ${lastUpdate.toLocaleTimeString()}`}
+          </span>
+          <span style={{ fontSize: '0.72rem', fontWeight: 'bold', padding: '2px 10px', borderRadius: '10px', color: est.color, background: est.bg }}>
+            {est.text}
+          </span>
+        </div>
+        {filaEquipo(g, 'away')}
+        {filaEquipo(g, 'home')}
+        {tablaInnings(g)}
+        {decisiones(g)}
+        {(pitchAway || pitchHome) && (
+          <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.74rem', color: '#94a3b8' }}>
+            <div style={{ fontWeight: 'bold', color: '#64748b', marginBottom: '3px' }}>Ponches de pitchers (K):</div>
+            {pitchAway && <div>{g.teams.away.team.abbreviation || g.teams.away.team.teamName}: {pitchAway}</div>}
+            {pitchHome && <div>{g.teams.home.team.abbreviation || g.teams.home.team.teamName}: {pitchHome}</div>}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+
+      {/* Toasts de alertas (flotantes, para todos los juegos del día) */}
       <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '360px' }}>
         {toasts.map(t => (
           <div key={t.id} style={{ background: '#0b0f19', border: '1px solid #00d2ff', borderRadius: '8px', padding: '12px 16px', color: '#f8fafc', fontSize: '0.85rem', boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
@@ -311,72 +372,43 @@ export default function LiveScoreboard() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold', color: '#f8fafc' }}>
-            📺 Marcadores MLB de Hoy
-          </h2>
-          <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: '#64748b' }}>
-            Datos en vivo directo de la API de la MLB (se actualiza cada 30 segundos, no consume tu servidor)
-            {lastUpdate && ` · Actualizado: ${lastUpdate.toLocaleTimeString()}`}
-          </p>
-        </div>
-        {!notifGranted && (
-          <button
-            onClick={solicitarNotificaciones}
-            style={{ padding: '6px 14px', background: 'rgba(0,210,255,0.1)', border: '1px solid rgba(0,210,255,0.4)', borderRadius: '6px', color: '#00d2ff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.8rem' }}
-          >
-            🔔 Activar notificaciones
-          </button>
-        )}
-      </div>
-
-      {/* Alertas recientes */}
-      {alerts.length > 0 && (
-        <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px' }}>
-          <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#00d2ff', marginBottom: '8px' }}>🔔 Alertas recientes</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '120px', overflowY: 'auto' }}>
-            {alerts.map(a => (
-              <div key={a.id} style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-                <span style={{ color: '#64748b', marginRight: '8px' }}>{a.time}</span>{a.text}
+      {/* Barra compacta de alertas y notificaciones */}
+      {(alerts.length > 0 || !notifGranted) && (
+        <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 'bold', color: '#00d2ff', marginBottom: alerts.length > 0 ? '6px' : 0 }}>
+              🔔 Alertas de innings (1ro, tercio, H y final de todos los juegos de hoy)
+            </div>
+            {alerts.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '90px', overflowY: 'auto' }}>
+                {alerts.map(a => (
+                  <div key={a.id} style={{ fontSize: '0.76rem', color: '#cbd5e1' }}>
+                    <span style={{ color: '#64748b', marginRight: '8px' }}>{a.time}</span>{a.text}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
+          {!notifGranted && (
+            <button
+              onClick={solicitarNotificaciones}
+              style={{ padding: '5px 12px', background: 'rgba(0,210,255,0.1)', border: '1px solid rgba(0,210,255,0.4)', borderRadius: '6px', color: '#00d2ff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+            >
+              🔔 Activar notificaciones
+            </button>
+          )}
         </div>
       )}
 
-      {gamesLive.length === 0 ? (
-        <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '20px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
-          Cargando marcadores de hoy...
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '16px' }}>
-          {gamesLive.map(g => {
-            const est = estadoJuego(g);
-            const pitchAway = lineaPitchers(g, 'away');
-            const pitchHome = lineaPitchers(g, 'home');
-            return (
-              <div key={g.gamePk} style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px 16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 'bold', padding: '2px 10px', borderRadius: '10px', color: est.color, background: est.bg }}>
-                    {est.text}
-                  </span>
-                </div>
-                {filaEquipo(g, 'away')}
-                {filaEquipo(g, 'home')}
-                {tablaInnings(g)}
-                {decisiones(g)}
-                {(pitchAway || pitchHome) && (
-                  <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.74rem', color: '#94a3b8' }}>
-                    <div style={{ fontWeight: 'bold', color: '#64748b', marginBottom: '3px' }}>Ponches de pitchers (K):</div>
-                    {pitchAway && <div>{g.teams.away.team.abbreviation || g.teams.away.team.teamName}: {pitchAway}</div>}
-                    {pitchHome && <div>{g.teams.home.team.abbreviation || g.teams.home.team.teamName}: {pitchHome}</div>}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* Cuadro del juego seleccionado */}
+      {gameId && (
+        juegoSeleccionado
+          ? renderCard(juegoSeleccionado)
+          : (
+            <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', textAlign: 'center', color: '#64748b', fontSize: '0.8rem' }}>
+              Cargando marcador del juego...
+            </div>
+          )
       )}
     </div>
   );
