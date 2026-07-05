@@ -5,6 +5,30 @@ import Settings from './components/Settings';
 import CalculadoraParley from './components/CalculadoraParley';
 import FraccionarTickets from './components/FraccionarTickets';
 import BasesAlcanzadas from './components/BasesAlcanzadas';
+import ScoreboardDeporte from './components/ScoreboardDeporte';
+
+const LIGAS_BASKET = [
+  { id: 'basketball/nba', label: 'NBA' },
+  { id: 'basketball/wnba', label: 'WNBA' },
+  { id: 'basketball/mens-olympics-basketball', label: 'Olímpico Masculino' },
+  { id: 'basketball/womens-olympics-basketball', label: 'Olímpico Femenino' },
+  { id: 'basketball/mens-college-basketball', label: 'NCAA College (M)' }
+];
+
+const LIGAS_SOCCER = [
+  { id: 'soccer/fifa.world', label: 'Mundial FIFA 2026' },
+  { id: 'soccer/usa.1', label: 'MLS (USA)' },
+  { id: 'soccer/mex.1', label: 'Liga MX (México)' },
+  { id: 'soccer/esp.1', label: 'LaLiga (España)' },
+  { id: 'soccer/eng.1', label: 'Premier League (Inglaterra)' },
+  { id: 'soccer/ita.1', label: 'Serie A (Italia)' },
+  { id: 'soccer/ger.1', label: 'Bundesliga (Alemania)' },
+  { id: 'soccer/fra.1', label: 'Ligue 1 (Francia)' },
+  { id: 'soccer/uefa.champions', label: 'UEFA Champions League' },
+  { id: 'soccer/uefa.europa', label: 'UEFA Europa League' },
+  { id: 'soccer/conmebol.libertadores', label: 'Copa Libertadores' },
+  { id: 'soccer/concacaf.leagues.cup', label: 'Leagues Cup' }
+];
 import { 
   defaultCasaAdjustRanges, 
   defaultVisitAdjustRanges, 
@@ -206,6 +230,23 @@ export default function App() {
         
         {activePage === 'bases_alcanzadas' && (
           <BasesAlcanzadas config={config} />
+        )}
+
+        {activePage === 'basket' && (
+          <ScoreboardDeporte
+            titulo="Básquetbol — NBA e Internacional"
+            icono="🏀"
+            ligas={LIGAS_BASKET}
+          />
+        )}
+
+        {activePage === 'soccer' && (
+          <ScoreboardDeporte
+            titulo="Soccer"
+            icono="⚽"
+            ligas={LIGAS_SOCCER}
+            ordenLocalPrimero
+          />
         )}
         
         {activePage === 'settings' && (

@@ -55,7 +55,25 @@ export default function Navigation({ activePage, setActivePage }) {
             </button>
           </li>
           <li className="nav-item">
-            <button 
+            <button
+              className={`nav-link ${activePage === 'basket' ? 'active' : ''}`}
+              onClick={() => setActivePage('basket')}
+            >
+              <span style={{ fontSize: '1.2rem', width: '24px', textAlign: 'center' }}>🏀</span>
+              Básquetbol
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              className={`nav-link ${activePage === 'soccer' ? 'active' : ''}`}
+              onClick={() => setActivePage('soccer')}
+            >
+              <span style={{ fontSize: '1.2rem', width: '24px', textAlign: 'center' }}>⚽</span>
+              Soccer
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
               className={`nav-link ${activePage === 'settings' ? 'active' : ''}`}
               onClick={() => setActivePage('settings')}
             >
