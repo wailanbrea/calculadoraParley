@@ -284,10 +284,11 @@ if ($action === 'clear_bases') {
 if ($action === 'sync_mlb_bases') {
     $dateParam = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
     $datesToSync = [$dateParam];
-    
-    if (!isset($_GET['date'])) {
-        $yesterday = date('Y-m-d', strtotime('-1 day'));
-        $datesToSync[] = $yesterday;
+
+    // Si la fecha pedida es el día actual del servidor, barrer también el día anterior
+    // (los juegos nocturnos de MLB terminan pasada la medianoche)
+    if ($dateParam === date('Y-m-d')) {
+        $datesToSync[] = date('Y-m-d', strtotime('-1 day'));
     }
     
     $existing = [];
@@ -300,6 +301,7 @@ if ($action === 'sync_mlb_bases') {
     }
     
     $syncCount = 0;
+    $alreadyCount = 0;
     
     // Configurar timeout corto para las llamadas externas
     $context = stream_context_create([
@@ -327,6 +329,7 @@ if ($action === 'sync_mlb_bases') {
             }
             
             if (isset($existing[$gameId])) {
+                $alreadyCount++;
                 continue;
             }
             
@@ -407,7 +410,9 @@ if ($action === 'sync_mlb_bases') {
             $homeName = isset($boxscores[1]['teamName']) ? $boxscores[1]['teamName'] : 'Casa';
             $title = "MLB Gameday: " . $visitorName . " vs. " . $homeName;
             
-            $gameDate = isset($g['gameDate']) ? date('Y/m/d', strtotime($g['gameDate'])) : date('Y/m/d');
+            // Usar la fecha del calendario MLB consultado (no la conversión a la zona
+            // horaria del servidor, que etiquetaba mal los juegos nocturnos)
+            $gameDate = str_replace('-', '/', $syncDate);
             
             $existing[$gameId] = [
                 "gameId" => $gameId,
@@ -429,6 +434,8 @@ if ($action === 'sync_mlb_bases') {
     echo json_encode([
         "success" => true,
         "synchronized" => $syncCount,
+        "already_imported" => $alreadyCount,
+        "dates_synced" => $datesToSync,
         "message" => "Sincronización completada. $syncCount juegos nuevos importados.",
         "games" => $existing
     ]);

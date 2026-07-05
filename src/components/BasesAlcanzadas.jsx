@@ -76,9 +76,9 @@ export default function BasesAlcanzadas({ config }) {
     if (syncingRef.current) return;
     syncingRef.current = true;
     setSyncing(true);
-    // Si se está viendo un día anterior, importar los finales de ese día
-    const paramFecha = selectedDate !== fechaHoyISO() ? `&date=${selectedDate}` : '';
-    fetch(`./api.php?action=sync_mlb_bases${paramFecha}&_=${Date.now()}`)
+    // Siempre enviar la fecha seleccionada: así el servidor sincroniza exactamente
+    // el día que se está viendo, sin depender de la zona horaria del VPS
+    fetch(`./api.php?action=sync_mlb_bases&date=${selectedDate}&_=${Date.now()}`)
       .then(res => {
         if (!res.ok) throw new Error("Error sincronizando con la API de la MLB");
         return res.json();
@@ -93,13 +93,17 @@ export default function BasesAlcanzadas({ config }) {
         }
         setLastSync(new Date());
         const nuevos = data && typeof data.synchronized === 'number' ? data.synchronized : 0;
-        setMessage({
-          type: 'success',
-          text: nuevos > 0
-            ? `Sincronización completada: ${nuevos} juego(s) nuevo(s) importado(s).`
-            : 'Sincronización completada: no hay juegos finalizados nuevos.'
-        });
-        setTimeout(() => setMessage(null), 5000);
+        const yaImportados = data && typeof data.already_imported === 'number' ? data.already_imported : 0;
+        let texto;
+        if (nuevos > 0) {
+          texto = `Sincronización completada: ${nuevos} juego(s) del ${selectedDate} importado(s).`;
+        } else if (yaImportados > 0) {
+          texto = `Los ${yaImportados} juegos finalizados del ${selectedDate} ya estaban importados.`;
+        } else {
+          texto = `No hay juegos finalizados en la fecha ${selectedDate} todavía.`;
+        }
+        setMessage({ type: 'success', text: texto });
+        setTimeout(() => setMessage(null), 6000);
       })
       .catch(err => {
         console.error(err);
