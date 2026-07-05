@@ -94,16 +94,21 @@ export default function BasesAlcanzadas({ config }) {
         setLastSync(new Date());
         const nuevos = data && typeof data.synchronized === 'number' ? data.synchronized : 0;
         const yaImportados = data && typeof data.already_imported === 'number' ? data.already_imported : 0;
+        const errores = data && Array.isArray(data.fetch_errors) ? data.fetch_errors : [];
         let texto;
+        let tipo = 'success';
         if (nuevos > 0) {
           texto = `Sincronización completada: ${nuevos} juego(s) del ${selectedDate} importado(s).`;
         } else if (yaImportados > 0) {
           texto = `Los ${yaImportados} juegos finalizados del ${selectedDate} ya estaban importados.`;
+        } else if (errores.length > 0) {
+          tipo = 'error';
+          texto = `El servidor no pudo consultar la API de la MLB: ${errores[0]}. Inténtalo de nuevo.`;
         } else {
           texto = `No hay juegos finalizados en la fecha ${selectedDate} todavía.`;
         }
-        setMessage({ type: 'success', text: texto });
-        setTimeout(() => setMessage(null), 6000);
+        setMessage({ type: tipo, text: texto });
+        setTimeout(() => setMessage(null), 8000);
       })
       .catch(err => {
         console.error(err);

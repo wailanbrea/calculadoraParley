@@ -280,6 +280,47 @@ if ($action === 'clear_bases') {
     exit;
 }
 
+// Descarga una URL externa con cURL (forzado a IPv4, con reintento y timeouts amplios).
+// Fallback a file_get_contents si cURL no está disponible.
+function fetchExternalJson($url, &$error = null) {
+    $error = null;
+    if (function_exists('curl_init')) {
+        for ($try = 0; $try < 2; $try++) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 15,
+                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                CURLOPT_USERAGENT => 'CalcParley/1.0 (+https://calcparley.bsolutions.dev)',
+                CURLOPT_HTTPHEADER => ['Accept: application/json']
+            ]);
+            $res = curl_exec($ch);
+            $err = curl_error($ch);
+            $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if ($res !== false && $code >= 200 && $code < 300) {
+                return $res;
+            }
+            $error = $err !== '' ? $err : ('HTTP ' . $code);
+        }
+        return false;
+    }
+    $context = stream_context_create([
+        'http' => [
+            'timeout' => 15,
+            'ignore_errors' => true,
+            'header' => "User-Agent: CalcParley/1.0\r\nAccept: application/json\r\n"
+        ]
+    ]);
+    $res = @file_get_contents($url, false, $context);
+    if ($res === false) {
+        $error = 'file_get_contents fallo (revisa allow_url_fopen/openssl)';
+    }
+    return $res;
+}
+
 // Acción: sync_mlb_bases
 if ($action === 'sync_mlb_bases') {
     $dateParam = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
@@ -302,19 +343,16 @@ if ($action === 'sync_mlb_bases') {
     
     $syncCount = 0;
     $alreadyCount = 0;
-    
-    // Configurar timeout corto para las llamadas externas
-    $context = stream_context_create([
-        'http' => [
-            'timeout' => 5, // 5 segundos max
-            'ignore_errors' => true
-        ]
-    ]);
-    
+    $fetchErrors = [];
+
     foreach ($datesToSync as $syncDate) {
         $scheduleUrl = "https://statsapi.mlb.com/api/v1/schedule/games/?sportId=1&date=" . $syncDate;
-        $scheduleJson = @file_get_contents($scheduleUrl, false, $context);
-        if (!$scheduleJson) continue;
+        $fetchError = null;
+        $scheduleJson = fetchExternalJson($scheduleUrl, $fetchError);
+        if (!$scheduleJson) {
+            $fetchErrors[] = "calendario $syncDate: $fetchError";
+            continue;
+        }
         
         $scheduleData = json_decode($scheduleJson, true);
         if (!isset($scheduleData['dates'][0]['games'])) continue;
@@ -334,8 +372,12 @@ if ($action === 'sync_mlb_bases') {
             }
             
             $boxscoreUrl = "https://statsapi.mlb.com/api/v1/game/" . $gameId . "/boxscore";
-            $boxscoreJson = @file_get_contents($boxscoreUrl, false, $context);
-            if (!$boxscoreJson) continue;
+            $fetchError = null;
+            $boxscoreJson = fetchExternalJson($boxscoreUrl, $fetchError);
+            if (!$boxscoreJson) {
+                $fetchErrors[] = "boxscore $gameId: $fetchError";
+                continue;
+            }
             
             $boxscoreData = json_decode($boxscoreJson, true);
             if (!isset($boxscoreData['teams'])) continue;
@@ -436,6 +478,7 @@ if ($action === 'sync_mlb_bases') {
         "synchronized" => $syncCount,
         "already_imported" => $alreadyCount,
         "dates_synced" => $datesToSync,
+        "fetch_errors" => $fetchErrors,
         "message" => "Sincronización completada. $syncCount juegos nuevos importados.",
         "games" => $existing
     ]);
