@@ -212,6 +212,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   const [ocultos, setOcultos] = useState(ocultosRef.current);
   const [filtro, setFiltro] = useState('todos'); // todos | live | final
   const [mostrarOcultos, setMostrarOcultos] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
 
   // Hitos guardados: se normalizan a { f: fecha, h: [hitos] } (antes eran arrays simples)
   const hitosDe = (id) => {
@@ -335,11 +336,23 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     return res;
   };
 
+  // Nota: los hitos (claveHitos) ahora los administra exclusivamente el motor global
+  // de alertas (AlertasGlobales); este componente solo gestiona favoritos y ocultos.
   const guardarSeguimiento = () => {
     localStorage.setItem(claveSeguidos, JSON.stringify(seguidosRef.current));
-    localStorage.setItem(claveHitos, JSON.stringify(seenRef.current));
     localStorage.setItem(claveOcultos, JSON.stringify(ocultosRef.current));
   };
+
+  // Historial de alertas recientes: lo alimenta el motor global vía eventos de ventana
+  useEffect(() => {
+    const escuchar = (e) => {
+      if (e.detail && e.detail.tipo === tipoAlertas) {
+        setAlertas(prev => [e.detail, ...prev].slice(0, 30));
+      }
+    };
+    window.addEventListener('calcparley-alerta', escuchar);
+    return () => window.removeEventListener('calcparley-alerta', escuchar);
+  }, []);
 
   // Todos los juegos notifican; los ★ favoritos con prioridad (sonido + notificación fija);
   // los 🚫 ocultos no notifican. Al primer avistamiento de un juego se registran sus hitos
@@ -378,18 +391,20 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   };
 
   const toggleSeguir = (ev, ligaId) => {
+    // Releer el almacenamiento por si el motor global limpió favoritos de juegos terminados
+    seguidosRef.current = cargarJSON(claveSeguidos);
     const id = String(ev.id);
     if (seguidosRef.current[id]) {
       delete seguidosRef.current[id];
     } else {
       seguidosRef.current[id] = { liga: ligaId || ligaRef.current, fecha: selectedDate };
-      if (hitosDe(id) === null) setHitos(id, hitosActuales(ev), selectedDate);
     }
     setSeguidos({ ...seguidosRef.current });
     guardarSeguimiento();
   };
 
   const toggleOcultar = (ev) => {
+    ocultosRef.current = cargarJSON(claveOcultos);
     const id = String(ev.id);
     if (ocultosRef.current[id]) {
       delete ocultosRef.current[id];
@@ -404,6 +419,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
 
   // Favoritear/quitar todos los juegos activos de una lista (todo o nada)
   const toggleFavoritosLista = (evs, ligaId) => {
+    seguidosRef.current = cargarJSON(claveSeguidos);
     const activos = evs.filter(e => estadoCat(e) !== 'post' && !ocultosRef.current[String(e.id)]);
     if (activos.length === 0) return;
     const todosFav = activos.every(e => seguidosRef.current[String(e.id)]);
@@ -413,7 +429,6 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
         delete seguidosRef.current[id];
       } else if (!seguidosRef.current[id]) {
         seguidosRef.current[id] = { liga: ligaId || ligaRef.current, fecha: selectedDate };
-        if (hitosDe(id) === null) setHitos(id, hitosActuales(e), selectedDate);
       }
     });
     setSeguidos({ ...seguidosRef.current });
@@ -468,6 +483,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
       .then(data => (data.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
   };
 
+  // Las alertas las dispara el motor global (AlertasGlobales); aquí solo se carga la vista
   const cargar = (ligaActual, fechaActual) => {
     fetchScoreboard(ligaActual, fechaActual)
       .then(evs => {
@@ -475,19 +491,11 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
         setCargado(true);
         setLastUpdate(new Date());
         setError(null);
-        revisarAlertas(evs);
       })
       .catch(err => {
         setError(err.message);
         setCargado(true);
       });
-
-    // Vigilar también otras ligas donde haya juegos seguidos (aunque no se estén viendo)
-    const otras = [...new Set(Object.values(seguidosRef.current).map(s => s.liga))]
-      .filter(l => l && l !== ligaActual);
-    otras.forEach(l => {
-      fetchScoreboard(l, fechaHoyISO()).then(revisarAlertas).catch(() => {});
-    });
   };
 
   const [fuenteActiva, setFuenteActiva] = useState(null);
@@ -532,7 +540,6 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
       setCargado(true);
       setLastUpdate(new Date());
       setError(null);
-      res.forEach(g => revisarAlertas(g.eventos));
     });
   };
 
@@ -778,17 +785,30 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     );
   };
 
-  // Filtro Todos / En vivo / Finalizados + exclusión de ocultos
-  const filtrarEventos = (evs) => evs.filter(ev => {
+  // Filtro Todos / En vivo / Finalizados + búsqueda + exclusión de ocultos
+  const filtrarEventos = (evs, ligaCoincide = false) => evs.filter(ev => {
     if (!mostrarOcultos && ocultos[String(ev.id)]) return false;
     const st = estadoCat(ev);
     if (filtro === 'live' && st !== 'in') return false;
     if (filtro === 'final' && st !== 'post') return false;
+    const q = busqueda.trim().toLowerCase();
+    if (q && !ligaCoincide) {
+      const nombres = ((ev.competitions && ev.competitions[0] && ev.competitions[0].competitors) || [])
+        .map(c => (c.team && c.team.displayName) || '')
+        .join(' ')
+        .toLowerCase();
+      if (nombres.indexOf(q) === -1) return false;
+    }
     return true;
   });
 
   const gruposFiltrados = grupos
-    .map(g => ({ ...g, visibles: filtrarEventos(g.eventos) }))
+    .map(g => {
+      const q = busqueda.trim().toLowerCase();
+      // Si la búsqueda coincide con el nombre de la liga, se muestran todos sus juegos
+      const ligaCoincide = q ? (g.label || '').toLowerCase().indexOf(q) !== -1 : false;
+      return { ...g, visibles: filtrarEventos(g.eventos, ligaCoincide) };
+    })
     .filter(g => g.visibles.length > 0);
 
   const todosLosEventos = grupos.flatMap(g => g.eventos);
@@ -927,6 +947,15 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
               </button>
             )}
           </div>
+
+          {/* Buscador de juegos */}
+          <input
+            type="text"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="🔍 Buscar equipo o liga..."
+            style={{ padding: '8px 12px', background: '#0b0f19', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', color: '#f8fafc', fontSize: '0.85rem', minWidth: '210px' }}
+          />
 
           {/* Filtros de estado */}
           <div style={{ display: 'flex', gap: '6px' }}>

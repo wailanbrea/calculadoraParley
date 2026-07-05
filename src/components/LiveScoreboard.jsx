@@ -65,6 +65,17 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGa
     };
   }, []);
 
+  // Historial de alertas MLB: lo alimenta el motor global vía eventos de ventana
+  useEffect(() => {
+    const escuchar = (e) => {
+      if (e.detail && e.detail.tipo === 'mlb') {
+        setAlerts(prev => [e.detail, ...prev].slice(0, 20));
+      }
+    };
+    window.addEventListener('calcparley-alerta', escuchar);
+    return () => window.removeEventListener('calcparley-alerta', escuchar);
+  }, []);
+
   // Campana de tres notas ascendentes (suena aunque la pestaña esté en segundo plano)
   const sonarCampana = () => {
     try {
@@ -190,7 +201,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date, onSelectGa
         if (onGamesUpdate) onGamesUpdate(gs);
         setLastUpdate(new Date());
         // Las alertas de innings solo aplican al día actual
-        if (esHoy) checkMilestones(gs);
+        // Las alertas de innings las dispara el motor global (AlertasGlobales)
 
         gs.forEach(g => {
           const stAbs = g.status.abstractGameState;

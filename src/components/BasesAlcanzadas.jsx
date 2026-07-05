@@ -29,6 +29,7 @@ export default function BasesAlcanzadas({ config }) {
   const [scheduleLoaded, setScheduleLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState(fechaHoyISO());
   const [selectedGameId, setSelectedGameId] = useState(null);
+  const [busquedaJuego, setBusquedaJuego] = useState('');
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
@@ -570,6 +571,15 @@ export default function BasesAlcanzadas({ config }) {
               </button>
             )}
 
+            {/* Buscador de juegos */}
+            <input
+              type="text"
+              value={busquedaJuego}
+              onChange={(e) => setBusquedaJuego(e.target.value)}
+              placeholder="🔍 Buscar equipo..."
+              style={{ padding: '7px 10px', background: '#060813', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', color: '#f8fafc', fontSize: '0.8rem' }}
+            />
+
             <div style={{ display: 'flex', gap: '10px', fontSize: '0.68rem', color: '#64748b', flexWrap: 'wrap' }}>
               <span><span style={{ color: '#ef4444' }}>●</span> Final</span>
               <span><span style={{ color: '#10b981' }}>●</span> En juego</span>
@@ -586,7 +596,15 @@ export default function BasesAlcanzadas({ config }) {
               </div>
             ) : (
               <div className="ba-lista" style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                {scheduleGames.map(g => {
+                {scheduleGames.filter(g => {
+                  const q = busquedaJuego.trim().toLowerCase();
+                  if (!q) return true;
+                  const nombres = [
+                    g.teams.away.team.name, g.teams.away.team.teamName,
+                    g.teams.home.team.name, g.teams.home.team.teamName
+                  ].filter(Boolean).join(' ').toLowerCase();
+                  return nombres.indexOf(q) !== -1;
+                }).map(g => {
                   const pk = String(g.gamePk);
                   const cat = categoriaJuego(g);
                   const det = g.status.detailedState || '';

@@ -6,6 +6,7 @@ import CalculadoraParley from './components/CalculadoraParley';
 import FraccionarTickets from './components/FraccionarTickets';
 import BasesAlcanzadas from './components/BasesAlcanzadas';
 import ScoreboardDeporte from './components/ScoreboardDeporte';
+import AlertasGlobales from './components/AlertasGlobales';
 
 const LIGAS_BASKET = [
   { id: 'basketball/nba', label: 'NBA' },
@@ -230,6 +231,8 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {/* Motor global de alertas: funciona en cualquier sección de la app */}
+      <AlertasGlobales />
       <Navigation activePage={activePage} setActivePage={setActivePage} />
       
       <main className="main-content">
