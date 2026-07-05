@@ -158,7 +158,6 @@ body {
   flex: 1;
   margin-left: var(--sidebar-width);
   padding: 2.5rem;
-  max-width: 1400px;
   width: calc(100% - var(--sidebar-width));
 }
 
