@@ -345,6 +345,56 @@ function fetchExternalJson($url, &$error = null) {
     return $res;
 }
 
+// Acción: proxy_livescore — reenvía la API pública de Livescore.com (bloquea CORS del
+// navegador, así que el servidor la consulta con caché de ~55s para no abusar)
+if ($action === 'proxy_livescore') {
+    $sport = isset($_GET['sport']) ? $_GET['sport'] : 'soccer';
+    if (!in_array($sport, ['soccer', 'basketball'], true)) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Deporte no permitido"]);
+        exit;
+    }
+    $dateRaw = isset($_GET['date']) ? str_replace('-', '', $_GET['date']) : date('Ymd');
+    if (!preg_match('/^\d{8}$/', $dateRaw)) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Fecha inválida"]);
+        exit;
+    }
+    $tz = isset($_GET['tz']) ? (int)$_GET['tz'] : -4;
+    if ($tz < -12) $tz = -12;
+    if ($tz > 14) $tz = 14;
+
+    $cacheDir = dirname(__DIR__);
+    $cacheFile = $cacheDir . "/cache_ls_{$sport}_{$dateRaw}_{$tz}.json";
+
+    // Limpiar cachés de más de un día
+    foreach (glob($cacheDir . '/cache_ls_*.json') as $viejo) {
+        if (time() - filemtime($viejo) > 86400) @unlink($viejo);
+    }
+
+    if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < 55) {
+        echo file_get_contents($cacheFile);
+        exit;
+    }
+
+    $url = "https://prod-public-api.livescore.com/v1/api/app/date/{$sport}/{$dateRaw}/{$tz}?locale=en&MD=1";
+    $fetchError = null;
+    $res = fetchExternalJson($url, $fetchError);
+    if (!$res) {
+        // Si hay un caché viejo, servirlo antes que fallar
+        if (file_exists($cacheFile)) {
+            echo file_get_contents($cacheFile);
+            exit;
+        }
+        http_response_code(502);
+        echo json_encode(["status" => "error", "message" => "Livescore no disponible: $fetchError"]);
+        exit;
+    }
+    file_put_contents($cacheFile, $res, LOCK_EX);
+    echo $res;
+    exit;
+}
+
 // Acción: sync_mlb_bases
 if ($action === 'sync_mlb_bases') {
     $dateParam = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');

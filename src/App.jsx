@@ -262,6 +262,7 @@ export default function App() {
             ligas={LIGAS_BASKET}
             tipoAlertas="basket"
             agrupado
+            livescore="basketball"
           />
         )}
 
@@ -273,6 +274,7 @@ export default function App() {
             ordenLocalPrimero
             tipoAlertas="soccer"
             agrupado
+            livescore="soccer"
           />
         )}
         

@@ -94,7 +94,66 @@ function adaptarEventoTsdb(e) {
   };
 }
 
-export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrimero = false, tipoAlertas = 'basket', agrupado = false }) {
+// Adapta un evento de Livescore.com al formato de ESPN.
+// Esd viene ya en la zona horaria pedida (formato 20260705160000).
+function adaptarEventoLivescore(e) {
+  const eps = String(e.Eps || 'NS').trim();
+
+  let state = 'pre';
+  let period = 0;
+  let tipoNombre = 'STATUS_SCHEDULED';
+  let shortDetail;
+
+  if (/^(FT|AET|AP|FT\s*PEN)/i.test(eps)) {
+    state = 'post';
+    tipoNombre = 'STATUS_FINAL';
+  } else if (/Postp|Canc|Susp|Aband|Del/i.test(eps)) {
+    state = 'post';
+    tipoNombre = 'STATUS_POSTPONED';
+    shortDetail = 'Pospuesto';
+  } else if (eps !== 'NS' && eps !== 'TBC' && eps !== '') {
+    state = 'in';
+    shortDetail = eps;
+    if (/^HT$/i.test(eps)) {
+      tipoNombre = 'STATUS_HALFTIME';
+      period = 2;
+    }
+    const q = eps.match(/^Q(\d)/i);
+    if (q) period = parseInt(q[1], 10);
+    if (/^OT/i.test(eps)) period = 5;
+  }
+
+  const s = String(e.Esd || '');
+  const fechaLocal = s.length >= 12
+    ? `${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)}T${s.substring(8, 10)}:${s.substring(10, 12)}:00`
+    : new Date().toISOString();
+
+  const equipo = (t) => {
+    const info = (t && t[0]) || {};
+    return {
+      displayName: info.Nm || '?',
+      logo: info.Img ? `https://lsm-static-prod.livescore.com/medium/${info.Img}` : undefined
+    };
+  };
+
+  return {
+    id: 'ls' + String(e.Eid),
+    date: fechaLocal,
+    name: `${(e.T1 && e.T1[0] && e.T1[0].Nm) || '?'} vs ${(e.T2 && e.T2[0] && e.T2[0].Nm) || '?'}`,
+    status: {
+      period,
+      type: { state, name: tipoNombre, shortDetail, completed: state === 'post' && tipoNombre === 'STATUS_FINAL' }
+    },
+    competitions: [{
+      competitors: [
+        { id: 'ls' + e.Eid + '-h', homeAway: 'home', team: equipo(e.T1), score: e.Tr1 !== undefined && e.Tr1 !== null ? String(e.Tr1) : undefined },
+        { id: 'ls' + e.Eid + '-a', homeAway: 'away', team: equipo(e.T2), score: e.Tr2 !== undefined && e.Tr2 !== null ? String(e.Tr2) : undefined }
+      ]
+    }]
+  };
+}
+
+export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrimero = false, tipoAlertas = 'basket', agrupado = false, livescore = null }) {
   const [liga, setLiga] = useState(ligas[0].id);
   const [selectedDate, setSelectedDate] = useState(fechaHoyISO());
   const [eventos, setEventos] = useState([]);
@@ -325,13 +384,44 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     });
   };
 
+  const [fuenteActiva, setFuenteActiva] = useState(null);
+
+  // Cobertura total vía Livescore (a través del proxy del servidor)
+  const fetchGruposLivescore = (fechaActual) => {
+    const tz = -new Date().getTimezoneOffset() / 60;
+    return fetch(`./api.php?action=proxy_livescore&sport=${livescore}&date=${fechaActual}&tz=${Math.round(tz)}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`Proxy Livescore HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(data => {
+        if (!data || !Array.isArray(data.Stages)) throw new Error('Respuesta Livescore inválida');
+        return data.Stages.map(st => ({
+          liga: 'ls-' + (st.Sid || Math.random()),
+          label: [st.Cnm, st.Snm].filter(Boolean).join(' — '),
+          eventos: (st.Events || []).map(adaptarEventoLivescore).sort((a, b) => new Date(a.date) - new Date(b.date))
+        })).filter(g => g.eventos.length > 0);
+      });
+  };
+
   // Vista agrupada estilo Flashscore: todas las ligas a la vez, agrupadas por liga
   const cargarAgrupado = (fechaActual) => {
-    Promise.all(ligas.map(l =>
+    const usarEspn = () => Promise.all(ligas.map(l =>
       fetchScoreboard(l.id, fechaActual)
         .then(evs => ({ liga: l.id, label: l.label, eventos: evs }))
         .catch(() => ({ liga: l.id, label: l.label, eventos: [] }))
     )).then(res => {
+      setFuenteActiva('espn');
+      return res;
+    });
+
+    const promesa = livescore
+      ? fetchGruposLivescore(fechaActual)
+          .then(res => { setFuenteActiva('livescore'); return res; })
+          .catch(() => usarEspn()) // respaldo automático si el proxy falla
+      : usarEspn();
+
+    promesa.then(res => {
       setGrupos(res);
       setCargado(true);
       setLastUpdate(new Date());
@@ -623,6 +713,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
               {tipoAlertas === 'basket' ? ' (1er cuarto, medio tiempo H y final)' : ' (final o suspendido)'}
               {numSeguidos > 0 && ` · ★ ${numSeguidos} favorito(s)`}
               {lastUpdate && ` · Actualizado: ${lastUpdate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+              {livescore && fuenteActiva === 'espn' && ' · ⚠️ Cobertura parcial: la fuente completa no está disponible ahora'}
             </p>
           </div>
           {!notifGranted && (

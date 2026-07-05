@@ -16,6 +16,7 @@ dist-ssr
 server_bases.json
 server_feed.json
 import_token.txt
+cache_ls_*.json
 .playwright-mcp/
 
 # Editor directories and files
