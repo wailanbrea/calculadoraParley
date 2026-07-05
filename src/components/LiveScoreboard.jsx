@@ -24,7 +24,7 @@ const MILESTONES = [
   { key: 'inning5', innings: 5, label: 'H completado (5 innings)' }
 ];
 
-export default function LiveScoreboard({ gameId, onGamesUpdate }) {
+export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
   const [gamesLive, setGamesLive] = useState([]);
   const [extraGames, setExtraGames] = useState({});
   const [standings, setStandings] = useState({});
@@ -97,15 +97,19 @@ export default function LiveScoreboard({ gameId, onGamesUpdate }) {
     localStorage.setItem('mlbMilestones', JSON.stringify(seen));
   };
 
+  const fechaConsulta = date || hoyStr();
+  const esHoy = fechaConsulta === hoyStr();
+
   const poll = () => {
-    fetch(`${API}/schedule/games/?sportId=1&date=${hoyStr()}&hydrate=team,linescore,decisions`)
+    fetch(`${API}/schedule/games/?sportId=1&date=${fechaConsulta}&hydrate=team,linescore,decisions`)
       .then(r => r.json())
       .then(data => {
         const gs = (data.dates && data.dates[0] && data.dates[0].games) || [];
         setGamesLive(gs);
         if (onGamesUpdate) onGamesUpdate(gs);
         setLastUpdate(new Date());
-        checkMilestones(gs);
+        // Las alertas de innings solo aplican al día actual
+        if (esHoy) checkMilestones(gs);
 
         gs.forEach(g => {
           const stAbs = g.status.abstractGameState;
@@ -143,11 +147,16 @@ export default function LiveScoreboard({ gameId, onGamesUpdate }) {
         setStandings(map);
       })
       .catch(() => {});
-
-    poll();
-    const interval = setInterval(poll, 30000);
-    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    poll();
+    // Solo el día actual se refresca cada 30s; los días pasados son estáticos
+    if (esHoy) {
+      const interval = setInterval(poll, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [fechaConsulta]);
 
   // Si el juego seleccionado no es de hoy (ej. importado de ayer), traerlo una vez por su gamePk
   useEffect(() => {

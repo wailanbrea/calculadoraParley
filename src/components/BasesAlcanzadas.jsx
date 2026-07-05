@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import LiveScoreboard from './LiveScoreboard';
 
+function fechaHoyISO() {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
 function simplificarNombreEquipo(fullName) {
   const clean = (fullName || '').replace(/text/i, '').trim();
   const parts = clean.split(' ');
@@ -18,6 +25,8 @@ function simplificarNombreEquipo(fullName) {
 export default function BasesAlcanzadas({ config }) {
   const [games, setGames] = useState({});
   const [scheduleGames, setScheduleGames] = useState([]);
+  const [scheduleLoaded, setScheduleLoaded] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(fechaHoyISO());
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -66,7 +75,9 @@ export default function BasesAlcanzadas({ config }) {
     if (syncingRef.current) return;
     syncingRef.current = true;
     setSyncing(true);
-    fetch(`./api.php?action=sync_mlb_bases&_=${Date.now()}`)
+    // Si se está viendo un día anterior, importar los finales de ese día
+    const paramFecha = selectedDate !== fechaHoyISO() ? `&date=${selectedDate}` : '';
+    fetch(`./api.php?action=sync_mlb_bases${paramFecha}&_=${Date.now()}`)
       .then(res => {
         if (!res.ok) throw new Error("Error sincronizando con la API de la MLB");
         return res.json();
@@ -269,6 +280,31 @@ export default function BasesAlcanzadas({ config }) {
     }
   }, [scheduleGames]);
 
+  // Recibe los juegos del calendario desde LiveScoreboard
+  const handleGamesUpdate = (gs) => {
+    setScheduleGames(gs);
+    setScheduleLoaded(true);
+  };
+
+  // Cambiar la fecha consultada (limpia la selección para autoseleccionar en la nueva fecha)
+  const cambiarFecha = (nueva) => {
+    if (!nueva) return;
+    setSelectedDate(nueva);
+    setSelectedGameId(null);
+    setScheduleGames([]);
+    setScheduleLoaded(false);
+  };
+
+  const sumarDias = (n) => {
+    const d = new Date(selectedDate + 'T12:00:00');
+    d.setDate(d.getDate() + n);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    cambiarFecha(`${d.getFullYear()}-${mm}-${dd}`);
+  };
+
+  const esHoy = selectedDate === fechaHoyISO();
+
   const activeGame = selectedGameId ? games[selectedGameId] : null;
   const gameIds = Object.keys(games);
 
@@ -373,15 +409,54 @@ export default function BasesAlcanzadas({ config }) {
             <h3 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 'bold', color: '#f8fafc' }}>
               Partidos Cargados
             </h3>
+
+            {/* Selector de fecha */}
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <button
+                onClick={() => sumarDias(-1)}
+                title="Día anterior"
+                style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#94a3b8', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                ◀
+              </button>
+              <input
+                type="date"
+                value={selectedDate}
+                max={fechaHoyISO()}
+                onChange={(e) => cambiarFecha(e.target.value)}
+                style={{ flex: 1, padding: '6px 8px', background: '#060813', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', color: '#f8fafc', fontSize: '0.8rem', colorScheme: 'dark' }}
+              />
+              <button
+                onClick={() => sumarDias(1)}
+                disabled={esHoy}
+                title="Día siguiente"
+                style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: esHoy ? '#334155' : '#94a3b8', cursor: esHoy ? 'default' : 'pointer', fontWeight: 'bold', opacity: esHoy ? 0.5 : 1 }}
+              >
+                ▶
+              </button>
+            </div>
+            {!esHoy && (
+              <button
+                onClick={() => cambiarFecha(fechaHoyISO())}
+                style={{ padding: '6px 10px', background: 'rgba(0,210,255,0.1)', border: '1px solid rgba(0,210,255,0.4)', borderRadius: '6px', color: '#00d2ff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.78rem' }}
+              >
+                📅 Volver a Hoy (en vivo)
+              </button>
+            )}
+
             <div style={{ display: 'flex', gap: '10px', fontSize: '0.68rem', color: '#64748b', flexWrap: 'wrap' }}>
               <span><span style={{ color: '#ef4444' }}>●</span> Final</span>
               <span><span style={{ color: '#10b981' }}>●</span> En juego</span>
               <span><span style={{ color: '#94a3b8' }}>●</span> Sin empezar</span>
             </div>
 
-            {scheduleGames.length === 0 && gameIds.length === 0 ? (
+            {!scheduleLoaded && scheduleGames.length === 0 ? (
               <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>
-                Cargando los juegos del día...
+                Cargando los juegos del {esHoy ? 'día' : selectedDate}...
+              </div>
+            ) : scheduleLoaded && scheduleGames.length === 0 && gameIds.length === 0 ? (
+              <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0', fontStyle: 'italic' }}>
+                No hay juegos de MLB en esta fecha.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '460px', overflowY: 'auto' }}>
@@ -436,8 +511,8 @@ export default function BasesAlcanzadas({ config }) {
                   );
                 })}
 
-                {/* Juegos importados de fechas anteriores (ya no están en el calendario de hoy) */}
-                {gameIds.filter(id => !scheduleGames.some(g => String(g.gamePk) === id)).map(id => {
+                {/* Juegos importados de fechas anteriores (solo visibles en la vista de Hoy) */}
+                {(esHoy ? gameIds.filter(id => !scheduleGames.some(g => String(g.gamePk) === id)) : []).map(id => {
                   const game = games[id];
                   const isSelected = id === String(selectedGameId);
                   let displayTitle = game.title;
@@ -482,7 +557,7 @@ export default function BasesAlcanzadas({ config }) {
         {/* Panel derecho: Visor de Lineups y Bases Alcanzadas */}
         <div style={{ flex: 1 }}>
           {/* Marcador en vivo del juego seleccionado + alertas de innings */}
-          <LiveScoreboard gameId={selectedGameId} onGamesUpdate={setScheduleGames} />
+          <LiveScoreboard gameId={selectedGameId} onGamesUpdate={handleGamesUpdate} date={selectedDate} />
           {!selectedGameId ? (
             <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '40px', textAlign: 'center', color: '#64748b' }}>
               <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '12px' }}>⚾</span>
