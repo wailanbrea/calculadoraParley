@@ -516,7 +516,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
     const pitchAway = tablaPitchers(g, 'away');
     const pitchHome = tablaPitchers(g, 'home');
     return (
-      <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px 16px' }}>
+      <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px 20px', maxWidth: '920px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
             📺 Marcador en vivo (API MLB)

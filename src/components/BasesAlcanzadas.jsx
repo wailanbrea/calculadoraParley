@@ -561,6 +561,8 @@ export default function BasesAlcanzadas({ config }) {
 
         {/* Panel derecho: Visor de Lineups y Bases Alcanzadas */}
         <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Contenido centrado a un ancho de lectura cómodo (estándar ~1200px) */}
+          <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
           {/* Marcador en vivo del juego seleccionado + alertas de innings */}
           <LiveScoreboard gameId={selectedGameId} onGamesUpdate={handleGamesUpdate} date={selectedDate} />
           {!selectedGameId ? (
@@ -594,7 +596,7 @@ export default function BasesAlcanzadas({ config }) {
               </div>
 
               {/* Contenedor de las dos columnas de lineups */}
-              <div className="ba-lineups" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+              <div className="ba-lineups" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 480px))', justifyContent: 'center', gap: '16px' }}>
                 {activeGame.boxscores.map((team, tIdx) => (
                   <div key={tIdx} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '8px', padding: '16px' }}>
                     <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#ef4444', borderBottom: '2px solid rgba(239, 68, 68, 0.2)', paddingBottom: '8px', fontSize: '1.1rem', fontWeight: 'bold' }}>
@@ -682,6 +684,7 @@ export default function BasesAlcanzadas({ config }) {
 
             </div>
           )}
+          </div>
         </div>
 
       </div>
