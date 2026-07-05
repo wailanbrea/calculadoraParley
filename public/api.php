@@ -280,6 +280,161 @@ if ($action === 'clear_bases') {
     exit;
 }
 
+// Acción: sync_mlb_bases
+if ($action === 'sync_mlb_bases') {
+    $dateParam = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+    $datesToSync = [$dateParam];
+    
+    if (!isset($_GET['date'])) {
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $datesToSync[] = $yesterday;
+    }
+    
+    $existing = [];
+    if (file_exists($basesFile)) {
+        $existingContent = file_get_contents($basesFile);
+        $decodedBases = json_decode($existingContent, true);
+        if (is_array($decodedBases)) {
+            $existing = $decodedBases;
+        }
+    }
+    
+    $syncCount = 0;
+    
+    // Configurar timeout corto para las llamadas externas
+    $context = stream_context_create([
+        'http' => [
+            'timeout' => 5, // 5 segundos max
+            'ignore_errors' => true
+        ]
+    ]);
+    
+    foreach ($datesToSync as $syncDate) {
+        $scheduleUrl = "https://statsapi.mlb.com/api/v1/schedule/games/?sportId=1&date=" . $syncDate;
+        $scheduleJson = @file_get_contents($scheduleUrl, false, $context);
+        if (!$scheduleJson) continue;
+        
+        $scheduleData = json_decode($scheduleJson, true);
+        if (!isset($scheduleData['dates'][0]['games'])) continue;
+        
+        $gamesList = $scheduleData['dates'][0]['games'];
+        foreach ($gamesList as $g) {
+            $gameId = (string)$g['gamePk'];
+            
+            $state = isset($g['status']['abstractGameState']) ? $g['status']['abstractGameState'] : '';
+            if ($state !== 'Final') {
+                continue;
+            }
+            
+            if (isset($existing[$gameId])) {
+                continue;
+            }
+            
+            $boxscoreUrl = "https://statsapi.mlb.com/api/v1/game/" . $gameId . "/boxscore";
+            $boxscoreJson = @file_get_contents($boxscoreUrl, false, $context);
+            if (!$boxscoreJson) continue;
+            
+            $boxscoreData = json_decode($boxscoreJson, true);
+            if (!isset($boxscoreData['teams'])) continue;
+            
+            $boxscores = [];
+            $teamsKeys = ['away', 'home'];
+            
+            foreach ($teamsKeys as $tKey) {
+                $teamData = $boxscoreData['teams'][$tKey];
+                $teamName = isset($teamData['team']['name']) ? $teamData['team']['name'] : ($tKey === 'away' ? 'Visitante' : 'Casa');
+                $teamRuns = isset($teamData['teamStats']['batting']['runs']) ? (int)$teamData['teamStats']['batting']['runs'] : 0;
+                
+                $playersObj = isset($teamData['players']) ? $teamData['players'] : [];
+                $playersList = [];
+                
+                foreach ($playersObj as $pId => $p) {
+                    if (isset($p['battingOrder'])) {
+                        $playersList[] = $p;
+                    }
+                }
+                
+                usort($playersList, function($a, $b) {
+                    return (int)$a['battingOrder'] - (int)$b['battingOrder'];
+                });
+                
+                $lineup = [];
+                foreach ($playersList as $p) {
+                    $fullName = isset($p['person']['fullName']) ? $p['person']['fullName'] : 'Jugador';
+                    
+                    // Reemplazo simple de caracteres especiales
+                    $cleanName = str_replace(
+                        ['á','é','í','ó','ú','Á','É','Í','Ó','Ú','ñ','Ñ','ü','Ü','í','Í'],
+                        ['a','e','i','o','u','A','E','I','O','U','n','N','u','U','i','I'],
+                        $fullName
+                    );
+                    
+                    $battingOrder = isset($p['battingOrder']) ? $p['battingOrder'] : '000';
+                    $isSub = (substr($battingOrder, -2) !== '00');
+                    
+                    $batStats = isset($p['stats']['batting']) ? $p['stats']['batting'] : [];
+                    $ab = isset($batStats['atBats']) ? (int)$batStats['atBats'] : 0;
+                    $r = isset($batStats['runs']) ? (int)$batStats['runs'] : 0;
+                    $h = isset($batStats['hits']) ? (int)$batStats['hits'] : 0;
+                    $rbi = isset($batStats['rbi']) ? (int)$batStats['rbi'] : 0;
+                    $so = isset($batStats['strikeOuts']) ? (int)$batStats['strikeOuts'] : 0;
+                    $tb = isset($batStats['totalBases']) ? (int)$batStats['totalBases'] : 0;
+                    
+                    $todosCeros = (!$isSub && $ab === 0 && $r === 0 && $h === 0 && $rbi === 0 && $so === 0);
+                    
+                    $pos = isset($p['position']['abbreviation']) ? $p['position']['abbreviation'] : '';
+                    $rawName = $fullName . ($pos ? ' ' . $pos : '');
+                    
+                    $lineup[] = [
+                        "rawName" => $rawName,
+                        "cleanName" => $cleanName,
+                        "isSubstitution" => $isSub,
+                        "hits" => $h,
+                        "tb" => $isSub ? 0 : $tb,
+                        "todosCeros" => $todosCeros,
+                        "stats" => [ "ab" => $ab, "r" => $r, "h" => $h, "rbi" => $rbi, "so" => $so ]
+                    ];
+                }
+                
+                $boxscores[] = [
+                    "teamName" => $teamName,
+                    "runs" => $teamRuns,
+                    "lineup" => $lineup
+                ];
+            }
+            
+            $visitorName = isset($boxscores[0]['teamName']) ? $boxscores[0]['teamName'] : 'Visitante';
+            $homeName = isset($boxscores[1]['teamName']) ? $boxscores[1]['teamName'] : 'Casa';
+            $title = "MLB Gameday: " . $visitorName . " vs. " . $homeName;
+            
+            $gameDate = isset($g['gameDate']) ? date('Y/m/d', strtotime($g['gameDate'])) : date('Y/m/d');
+            
+            $existing[$gameId] = [
+                "gameId" => $gameId,
+                "date" => $gameDate,
+                "title" => $title,
+                "captured_at" => date('c'),
+                "boxscores" => $boxscores
+            ];
+            
+            $syncCount++;
+        }
+    }
+    
+    if ($syncCount > 0) {
+        file_put_contents($basesFile, json_encode($existing, JSON_PRETTY_PRINT), LOCK_EX);
+        clearstatcache(true, $basesFile);
+    }
+    
+    echo json_encode([
+        "success" => true,
+        "synchronized" => $syncCount,
+        "message" => "Sincronización completada. $syncCount juegos nuevos importados.",
+        "games" => $existing
+    ]);
+    exit;
+}
+
 http_response_code(400);
 echo json_encode(["status" => "error", "message" => "Acción no válida"]);
 

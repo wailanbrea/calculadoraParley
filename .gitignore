@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Datos de runtime del servidor (no versionar)
+server_bases.json
+server_feed.json
+import_token.txt
+.playwright-mcp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

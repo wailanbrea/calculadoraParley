@@ -18,6 +18,8 @@ export default function BasesAlcanzadas({ config }) {
   const [games, setGames] = useState({});
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
   const [message, setMessage] = useState(null);
   const bookmarkletRef = useRef(null);
 
@@ -56,13 +58,65 @@ export default function BasesAlcanzadas({ config }) {
       });
   };
 
-  // Carga inicial e intervalo de refresco
+  // Sincronizar juegos finalizados desde la API oficial de la MLB
+  const syncingRef = useRef(false);
+  const syncMlbGames = (manual = false) => {
+    if (syncingRef.current) return;
+    syncingRef.current = true;
+    if (manual) setSyncing(true);
+    fetch(`./api.php?action=sync_mlb_bases&_=${Date.now()}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Error sincronizando con la API de la MLB");
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.games) {
+          setGames(data.games);
+          const keys = Object.keys(data.games);
+          if (keys.length > 0 && !selectedGameIdRef.current) {
+            setSelectedGameId(keys[0]);
+          }
+        }
+        setLastSync(new Date());
+        if (manual) {
+          const nuevos = data && typeof data.synchronized === 'number' ? data.synchronized : 0;
+          setMessage({
+            type: 'success',
+            text: nuevos > 0
+              ? `Sincronización completada: ${nuevos} juego(s) nuevo(s) importado(s).`
+              : 'Sincronización completada: no hay juegos finalizados nuevos.'
+          });
+          setTimeout(() => setMessage(null), 5000);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        if (manual) setMessage({ type: 'error', text: err.message });
+      })
+      .finally(() => {
+        syncingRef.current = false;
+        if (manual) setSyncing(false);
+      });
+  };
+
+  // Carga inicial e intervalos de refresco
   useEffect(() => {
     loadBasesFromServer();
-    const interval = setInterval(() => {
+    syncMlbGames(false);
+
+    const refreshInterval = setInterval(() => {
       loadBasesFromServer(true);
     }, 4000);
-    return () => clearInterval(interval);
+
+    // Sincronización automática con la MLB cada 5 minutos
+    const syncInterval = setInterval(() => {
+      syncMlbGames(false);
+    }, 5 * 60 * 1000);
+
+    return () => {
+      clearInterval(refreshInterval);
+      clearInterval(syncInterval);
+    };
   }, []);
 
   // Limpiar historial en el servidor
@@ -232,12 +286,23 @@ export default function BasesAlcanzadas({ config }) {
             ⚾ Bases Alcanzadas Resultados
           </h1>
           <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#94a3b8' }}>
-            Visualiza los lineups y las bases alcanzadas (TB) importados desde MLB.com
+            Los juegos finalizados se importan automáticamente desde la API oficial de la MLB cada 5 minutos
+            {lastSync && ` · Última sincronización: ${lastSync.toLocaleTimeString()}`}
           </p>
         </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <button
+          onClick={() => syncMlbGames(true)}
+          disabled={syncing}
+          style={{ padding: '8px 16px', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid rgba(0, 210, 255, 0.4)', borderRadius: '6px', color: '#00d2ff', fontWeight: 'bold', cursor: syncing ? 'wait' : 'pointer', transition: '0.2s', opacity: syncing ? 0.6 : 1 }}
+          onMouseOver={(e) => { if (!syncing) e.target.style.background = 'rgba(0, 210, 255, 0.2)'; }}
+          onMouseOut={(e) => e.target.style.background = 'rgba(0, 210, 255, 0.1)'}
+        >
+          {syncing ? '⏳ Sincronizando...' : '🔄 Sincronizar MLB'}
+        </button>
         {gameIds.length > 0 && (
-          <button 
-            onClick={handleClearHistory} 
+          <button
+            onClick={handleClearHistory}
             style={{ padding: '8px 16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '6px', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
             onMouseOver={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.2)'}
             onMouseOut={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.1)'}
@@ -245,6 +310,7 @@ export default function BasesAlcanzadas({ config }) {
             Limpiar Historial
           </button>
         )}
+        </div>
       </div>
 
       {message && (
@@ -261,10 +327,10 @@ export default function BasesAlcanzadas({ config }) {
           {/* Tarjeta del Bookmarklet */}
           <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' }}>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 'bold', color: '#f8fafc' }}>
-              ⚡ Importador 1-Clic MLB
+              ⚡ Importador 1-Clic MLB (opcional)
             </h3>
             <p style={{ margin: '0 0 16px 0', fontSize: '0.82rem', color: '#94a3b8', lineHeight: '1.4' }}>
-              Arrastra el botón azul a tu barra de favoritos. Luego, en la pestaña "Box" de un juego finalizado en MLB.com, haz clic en él para importar.
+              Los juegos finalizados ya se importan solos cada 5 minutos. Este marcador es solo un respaldo: arrástralo a tu barra de favoritos y úsalo en un Boxscore de MLB.com si necesitas importar un juego manualmente.
             </p>
             <a
               ref={bookmarkletRef}
@@ -300,7 +366,7 @@ export default function BasesAlcanzadas({ config }) {
               <div style={{ color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>Cargando...</div>
             ) : gameIds.length === 0 ? (
               <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0', fontStyle: 'italic' }}>
-                No hay partidos cargados. Usa el importador 1-Clic en MLB.com.
+                No hay partidos cargados aún. Se importarán automáticamente cuando haya juegos finalizados, o pulsa "Sincronizar MLB".
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '400px', overflowY: 'auto' }}>
