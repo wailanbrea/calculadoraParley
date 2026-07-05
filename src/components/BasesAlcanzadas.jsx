@@ -100,287 +100,112 @@ export default function BasesAlcanzadas({ config }) {
     const token = '${token}';
     const serverUrl = '${apiTargetUrl}';
     
-    function getText(el) { return el ? el.textContent.trim() : ''; }
-    
-    function getLines(td) {
-      if (!td) return [];
-      return td.innerText.split(String.fromCharCode(10)).map(function(s) { return s.trim(); }).filter(Boolean);
-    }
-    function parseTbLine(battingText) {
-      const tbMap = {};
-      if (!battingText) return tbMap;
-      
-      var tbIdx = battingText.indexOf('TB');
-      if (tbIdx === -1) return tbMap;
-      
-      var tbContent = battingText.substring(tbIdx + 2).trim();
-      
-      var nextSectionMatch = tbContent.match(/(RBI|Runs\\s+left|SF|SH|GIDP|Team\\s+RISP|Team\\s+LOB|BASERUNNING|FIELDING|OUTS)/i);
-      if (nextSectionMatch) {
-        tbContent = tbContent.substring(0, nextSectionMatch.index).trim();
-      }
-      
-      if (tbContent.endsWith('.')) {
-        tbContent = tbContent.substring(0, tbContent.length - 1).trim();
-      }
-      
-      const tokens = tbContent.split(';');
-      tokens.forEach(function(token) {
-        const txt = token.trim();
-        if (!txt) return;
-        
-        const m = txt.match(/(.*?)\\s+([0-9]+)$/);
-        if (m) {
-          tbMap[m[1].trim()] = parseInt(m[2], 10);
-        } else {
-          tbMap[txt] = 1;
-        }
-      });
-      return tbMap;
-    }
-    
-    function limpiarNombreJugador(rawName) {
-      let name = rawName.replace(/^([a-z]|[0-9]+)-/i, '');
-      name = name.replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '').trim();
-      const posRegex = /(?:1B|2B|3B|SS|LF|CF|RF|C|DH|PH|PR|P)(?:-(?:1B|2B|3B|SS|LF|CF|RF|C|DH|PH|PR|P))?$/i;
-      name = name.replace(posRegex, '');
-      name = name.replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '').trim();
-      return name;
-    }
-    
-    function obtenerBasesAlcanzadas(nombreLimpio, tbMap, hits) {
-      if (hits === 0) return 0;
-      const norm = function(s) {
-        return s.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z\\s,]/g, "").trim();
-      };
-      const normNombre = norm(nombreLimpio);
-      for (const tbName in tbMap) {
-        const normTb = norm(tbName);
-        if (normNombre === normTb || normNombre.indexOf(normTb) !== -1 || normTb.indexOf(normNombre) !== -1) {
-          return tbMap[tbName];
-        }
-      }
-      return hits > 0 ? hits : 0;
-    }
-    
-    const tables = document.querySelectorAll('table');
-    const battingTables = [];
-    tables.forEach(function(table) {
-      const headers = Array.from(table.querySelectorAll('th')).map(function(th) { return th.textContent.trim().toUpperCase(); });
-      const isBattingTable = headers.indexOf('AB') !== -1 && headers.indexOf('H') !== -1 && headers.indexOf('R') !== -1;
-      if (isBattingTable) {
-        battingTables.push(table);
-      }
-    });
-
-    const candidates = [];
-    const allElements = document.querySelectorAll('div, p, section');
-    allElements.forEach(function(el) {
-      const text = el.textContent.trim();
-      if (text.toUpperCase().indexOf('BATTING') !== -1 && text.indexOf('TB') !== -1 && text.length < 2000) {
-        candidates.push({ el: el, text: text, len: text.length });
-      }
-    });
-
-    candidates.sort(function(a, b) { return a.len - b.len; });
-    const uniqueNotes = [];
-    candidates.forEach(function(cand) {
-      var isDuplicate = false;
-      for (var i = 0; i < uniqueNotes.length; i++) {
-        if (uniqueNotes[i].text.indexOf(cand.text) !== -1 || cand.text.indexOf(uniqueNotes[i].text) !== -1) {
-          isDuplicate = true;
-          break;
-        }
-      }
-      if (!isDuplicate) {
-        uniqueNotes.push(cand);
-      }
-    });
-
-    uniqueNotes.sort(function(a, b) {
-      return a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
-    });
-
-    let teamNames = ["Visitante", "Casa"];
-    const titleMatch = document.title.match(/([A-Za-z0-9.\\s]+)\\s+vs\\.?\\s+([A-Za-z0-9.\\s]+)/i);
-    if (titleMatch) {
-      teamNames[0] = titleMatch[1].replace(/Boxscore\\s*\\|\\s*/i, '').trim();
-      const rawLocal = titleMatch[2].trim();
-      const endIdx = rawLocal.search(/[\\s|]/);
-      teamNames[1] = endIdx !== -1 ? rawLocal.substring(0, endIdx).replace(/\\.$/, '').trim() : rawLocal.replace(/\\.$/, '').trim();
-    } else {
-      const urlMatch = window.location.href.match(/\\/gameday\\/([a-z0-9-]+)-vs-([a-z0-9-]+)\\//i);
-      if (urlMatch) {
-        teamNames[0] = urlMatch[1].charAt(0).toUpperCase() + urlMatch[1].slice(1);
-        teamNames[1] = urlMatch[2].charAt(0).toUpperCase() + urlMatch[2].slice(1);
-      }
-    }
-
-    const boxscores = [];
-    battingTables.forEach(function(table, tIdx) {
-      const headers = Array.from(table.querySelectorAll('th')).map(function(th) { return th.textContent.trim().toUpperCase(); });
-      
-      let teamName = teamNames[tIdx] || ("Equipo " + (tIdx + 1));
-      
-      let battingNotes = "";
-      if (uniqueNotes[tIdx]) {
-        battingNotes = uniqueNotes[tIdx].text;
-      } else {
-        let parent = table.parentElement;
-        while (parent) {
-          const notes = parent.querySelectorAll('div, p, span, section');
-          for (let i = 0; i < notes.length; i++) {
-            const text = notes[i].textContent.trim();
-            if (text.toUpperCase().indexOf('BATTING') !== -1 && text.toUpperCase().indexOf('TB') !== -1 && text.length < 2000) {
-              battingNotes = text;
-              break;
-            }
-          }
-          if (battingNotes) break;
-          parent = parent.parentElement;
-        }
-      }
-      
-      const tbMap = parseTbLine(battingNotes);
-      const rows = table.querySelectorAll('tbody tr');
-      const lineup = [];
-         rows.forEach(function(row) {
-        const cells = row.querySelectorAll('td');
-        if (cells.length < 3) return;
-        
-        const nameCell = cells[0];
-        const originalText = nameCell.textContent;
-        const rawName = originalText.replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '').trim();
-        
-        var nameLower = rawName.toLowerCase();
-        if (nameLower === 'totals' || nameLower === 'total' || nameLower.indexOf('total') === 0) return;
-        
-        var htmlLower = nameCell.innerHTML.toLowerCase();
-        var trHtmlLower = row.innerHTML.toLowerCase();
-        var trClassLower = row.className.toLowerCase();
-        var tdClassLower = nameCell.className.toLowerCase();
-        
-        var hasStyleIndent = htmlLower.indexOf('padding-left') !== -1 || 
-                             htmlLower.indexOf('margin-left') !== -1 || 
-                             htmlLower.indexOf('text-indent') !== -1 ||
-                             trHtmlLower.indexOf('padding-left') !== -1 ||
-                             row.style.paddingLeft || 
-                             row.style.marginLeft ||
-                             nameCell.style.paddingLeft ||
-                             nameCell.style.marginLeft;
-
-        var hasClassIndent = trClassLower.indexOf('indent') !== -1 || 
-                             trClassLower.indexOf('sub') !== -1 || 
-                             trClassLower.indexOf('alternate') !== -1 ||
-                             tdClassLower.indexOf('indent') !== -1 || 
-                             tdClassLower.indexOf('sub') !== -1 ||
-                             nameCell.querySelector('[class*="indent"]') ||
-                             nameCell.querySelector('[class*="sub"]') ||
-                             row.querySelector('[class*="indent"]') ||
-                             row.querySelector('[class*="sub"]');
-
-        var hasPrefixIndent = rawName.indexOf('-') === 0 || 
-                              /^[a-z0-9]-/i.test(rawName) ||
-                              htmlLower.indexOf('&nbsp;&nbsp;') !== -1 ||
-                              htmlLower.indexOf('&nbsp;') === 0 ||
-                              /^\s+/.test(originalText) ||
-                              originalText.indexOf('\u00A0') === 0 ||
-                              originalText.charCodeAt(0) === 160;
-
-        const isSub = !!(hasStyleIndent || hasClassIndent || hasPrefixIndent);
-        const cleanName = limpiarNombreJugador(rawName);
-
-        const abIdx = headers.indexOf('AB');
-        const rIdx = headers.indexOf('R');
-        const hIdx = headers.indexOf('H');
-        const rbiIdx = headers.indexOf('RBI');
-        const soIdx = headers.indexOf('SO') !== -1 ? headers.indexOf('SO') : headers.indexOf('K');
-
-        const ab = abIdx !== -1 && cells[abIdx] ? parseInt(cells[abIdx].textContent.trim(), 10) || 0 : 0;
-        const r = rIdx !== -1 && cells[rIdx] ? parseInt(cells[rIdx].textContent.trim(), 10) || 0 : 0;
-        const h = hIdx !== -1 && cells[hIdx] ? parseInt(cells[hIdx].textContent.trim(), 10) || 0 : 0;
-        const rbi = rbiIdx !== -1 && cells[rbiIdx] ? parseInt(cells[rbiIdx].textContent.trim(), 10) || 0 : 0;
-        const so = soIdx !== -1 && cells[soIdx] ? parseInt(cells[soIdx].textContent.trim(), 10) || 0 : 0;
-
-        const todosCeros = (!isSub && ab === 0 && r === 0 && h === 0 && rbi === 0 && so === 0);
-        let tb = 0;
-
-        if (!todosCeros) {
-          if (!isSub) {
-            tb = obtenerBasesAlcanzadas(cleanName, tbMap, h);
-          }
-        }
-
-        lineup.push({
-          rawName: rawName,
-          cleanName: cleanName,
-          isSubstitution: !!isSub,
-          hits: h,
-          tb: tb,
-          todosCeros: todosCeros,
-          stats: { ab: ab, r: r, h: h, rbi: rbi, so: so }
-        });
-      });
-      
-      let runs = 0;
-      const tRows = table.querySelectorAll('tr');
-      tRows.forEach(function(row) {
-        const cells = row.querySelectorAll('td, th');
-        if (cells.length > 0 && cells[0].textContent.trim().toLowerCase() === 'totals') {
-          const rColIdx = headers.indexOf('R');
-          if (rColIdx !== -1 && cells[rColIdx]) {
-            runs = parseInt(cells[rColIdx].textContent.trim(), 10) || 0;
-          }
-        }
-      });
-
-      boxscores.push({
-        teamName: teamName,
-        runs: runs,
-        lineup: lineup
-      });
-    });
-    
-    if (boxscores.length === 0) {
-      alert("No se detectaron tablas de boxscore. Asegúrate de estar en la pestaña 'Box' de MLB Boxscore.");
+    const gameIdMatch = window.location.href.match(/\\/([0-9]{5,8})\\//);
+    const gameId = gameIdMatch ? gameIdMatch[1] : null;
+    if (!gameId) {
+      alert("No se pudo obtener el ID del juego de la URL actual. Asegúrate de estar en una página de MLB Gameday.");
       return;
     }
     
-    const gameIdMatch = window.location.href.match(/\\/([0-9]{5,8})\\//);
-    const gameId = gameIdMatch ? gameIdMatch[1] : 'game_' + Date.now();
-    
-    const dateMatch = window.location.href.match(/\\/([0-9]{4})\\/([0-9]{2})\\/([0-9]{2})\\//);
-    const date = dateMatch ? dateMatch[1] + '/' + dateMatch[2] + '/' + dateMatch[3] : new Date().toLocaleDateString();
-    
-    let title = document.title.replace('Boxscore | ', '').replace(' | MLB.com', '').trim();
-    if (!title || title.indexOf('http') === 0) {
-      title = boxscores.map(function(t){ return t.teamName; }).join(' vs ');
-    }
-    
-    fetch(serverUrl + '?action=save_bases', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CalcParley-Import-Token': token
-      },
-      body: JSON.stringify({
-        gameId: gameId,
-        date: date,
-        title: title,
-        captured_at: new Date().toISOString(),
-        boxscores: boxscores
+    fetch('https://statsapi.mlb.com/api/v1/game/' + gameId + '/boxscore')
+      .then(function(res) {
+        if (!res.ok) throw new Error("Error consultando la API de la MLB (Status: " + res.status + ")");
+        return res.json();
       })
-    })
-    .then(function(res) {
-      if (!res.ok) throw new Error('Error de servidor (Status: ' + res.status + ')');
-      return res.json();
-    })
-    .then(function(data) {
-      alert('Sincronización exitosa: Bases alcanzadas guardadas para ' + title);
-    })
-    .catch(function(err) {
-      alert('Fallo al guardar: ' + err.message);
-    });
+      .then(function(data) {
+        const boxscores = [];
+        const teams = ['away', 'home'];
+        
+        teams.forEach(function(tKey) {
+          const teamData = data.teams[tKey];
+          const teamName = teamData.team.name;
+          const teamRuns = teamData.teamStats.batting.runs || 0;
+          
+          const playersObj = teamData.players;
+          const playersList = [];
+          
+          Object.keys(playersObj).forEach(function(pId) {
+            const p = playersObj[pId];
+            if (p.battingOrder) {
+              playersList.push(p);
+            }
+          });
+          
+          playersList.sort(function(a, b) {
+            return parseInt(a.battingOrder, 10) - parseInt(b.battingOrder, 10);
+          });
+          
+          const lineup = [];
+          playersList.forEach(function(p) {
+            const fullName = p.person.fullName;
+            const cleanName = fullName.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+            
+            const isSub = !p.battingOrder.endsWith('00');
+            
+            const batStats = p.stats.batting || {};
+            const ab = batStats.atBats || 0;
+            const r = batStats.runs || 0;
+            const h = batStats.hits || 0;
+            const rbi = batStats.rbi || 0;
+            const so = batStats.strikeOuts || 0;
+            const tb = batStats.totalBases || 0;
+            
+            const todosCeros = (!isSub && ab === 0 && r === 0 && h === 0 && rbi === 0 && so === 0);
+            
+            const pos = p.position ? p.position.abbreviation : '';
+            const rawName = fullName + (pos ? ' ' + pos : '');
+            
+            lineup.push({
+              rawName: rawName,
+              cleanName: cleanName,
+              isSubstitution: isSub,
+              hits: h,
+              tb: isSub ? 0 : tb,
+              todosCeros: todosCeros,
+              stats: { ab: ab, r: r, h: h, rbi: rbi, so: so }
+            });
+          });
+          
+          boxscores.push({
+            teamName: teamName,
+            runs: teamRuns,
+            lineup: lineup
+          });
+        });
+        
+        const dateMatch = window.location.href.match(/\\/([0-9]{4})\\/([0-9]{2})\\/([0-9]{2})\\//);
+        const date = dateMatch ? dateMatch[1] + '/' + dateMatch[2] + '/' + dateMatch[3] : new Date().toLocaleDateString();
+        
+        let title = document.title.replace('Boxscore | ', '').replace(' | MLB.com', '').trim();
+        if (!title || title.indexOf('http') === 0) {
+          title = boxscores.map(function(t){ return t.teamName; }).join(' vs ');
+        }
+        
+        return fetch(serverUrl + '?action=save_bases', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CalcParley-Import-Token': token
+          },
+          body: JSON.stringify({
+            gameId: gameId,
+            date: date,
+            title: title,
+            captured_at: new Date().toISOString(),
+            boxscores: boxscores
+          })
+        });
+      })
+      .then(function(res) {
+        if (!res.ok) throw new Error('Error al guardar en el servidor (Status: ' + res.status + ')');
+        return res.json();
+      })
+      .then(function(data) {
+        alert('Sincronización exitosa: Bases alcanzadas guardadas correctamente.');
+      })
+      .catch(function(err) {
+        alert('Fallo al importar: ' + err.message);
+      });
   })();`;
 
   const compressedBookmarklet = bookmarkletCode
