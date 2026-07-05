@@ -24,7 +24,7 @@ const MILESTONES = [
   { key: 'inning5', innings: 5, label: 'H completado (5 innings)' }
 ];
 
-export default function LiveScoreboard({ gameId }) {
+export default function LiveScoreboard({ gameId, onGamesUpdate }) {
   const [gamesLive, setGamesLive] = useState([]);
   const [extraGames, setExtraGames] = useState({});
   const [standings, setStandings] = useState({});
@@ -103,6 +103,7 @@ export default function LiveScoreboard({ gameId }) {
       .then(data => {
         const gs = (data.dates && data.dates[0] && data.dates[0].games) || [];
         setGamesLive(gs);
+        if (onGamesUpdate) onGamesUpdate(gs);
         setLastUpdate(new Date());
         checkMilestones(gs);
 
