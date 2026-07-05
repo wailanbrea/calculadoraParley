@@ -280,9 +280,11 @@ export default function BasesAlcanzadas({ config }) {
     }
   }, [scheduleGames]);
 
-  // Recibe los juegos del calendario desde LiveScoreboard
+  // Recibe los juegos del calendario desde LiveScoreboard,
+  // ordenados por hora de inicio (del más temprano al más tarde)
   const handleGamesUpdate = (gs) => {
-    setScheduleGames(gs);
+    const ordenados = gs.slice().sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
+    setScheduleGames(ordenados);
     setScheduleLoaded(true);
   };
 
@@ -518,12 +520,13 @@ export default function BasesAlcanzadas({ config }) {
                   } else {
                     const rA = (ls && ls.teams && ls.teams.away && ls.teams.away.runs) || 0;
                     const rH = (ls && ls.teams && ls.teams.home && ls.teams.home.runs) || 0;
+                    const hora = new Date(g.gameDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     displayTitle = `${away} ${rA}, ${home} ${rH}`;
                     if (cat === 'Final') {
-                      subtexto = 'Final';
+                      subtexto = `Final · ${hora}`;
                     } else {
                       const flecha = ls && ls.inningState === 'Top' ? '▲' : '▼';
-                      subtexto = `En juego · ${flecha} ${(ls && ls.currentInning) || ''}`;
+                      subtexto = `En juego · ${flecha} ${(ls && ls.currentInning) || ''} · ${hora}`;
                     }
                   }
 
