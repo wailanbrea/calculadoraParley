@@ -246,6 +246,15 @@ export default function LiveScoreboard({ gameId, onGamesUpdate }) {
 
     const tot = (side, key) => (ls.teams && ls.teams[side] ? (ls.teams[side][key] !== undefined ? ls.teams[side][key] : '-') : '-');
 
+    // Suma R + H + E del equipo (ej. Toronto 0+1+1 = 2, Mariners 11+11+0 = 22)
+    const totalRHE = (side) => {
+      const r = tot(side, 'runs');
+      const h = tot(side, 'hits');
+      const e = tot(side, 'errors');
+      if (r === '-' || h === '-' || e === '-') return '-';
+      return (Number(r) || 0) + (Number(h) || 0) + (Number(e) || 0);
+    };
+
     return (
       <div style={{ overflowX: 'auto', marginTop: '10px' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -256,6 +265,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate }) {
               <th style={{ ...totStyle, color: '#64748b' }}>R</th>
               <th style={{ ...thStyle }}>H</th>
               <th style={{ ...thStyle }}>E</th>
+              <th style={{ ...totStyle, color: '#00d2ff' }}>Total</th>
             </tr>
           </thead>
           <tbody>
@@ -268,6 +278,7 @@ export default function LiveScoreboard({ gameId, onGamesUpdate }) {
                 <td style={totStyle}>{tot(side, 'runs')}</td>
                 <td style={tdStyle}>{tot(side, 'hits')}</td>
                 <td style={tdStyle}>{tot(side, 'errors')}</td>
+                <td style={{ ...totStyle, color: '#00d2ff' }}>{totalRHE(side)}</td>
               </tr>
             ))}
           </tbody>
