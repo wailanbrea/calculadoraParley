@@ -254,15 +254,17 @@ export default function BasesAlcanzadas({ config }) {
         const rawName = originalText.replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '').trim();
         if (rawName.toLowerCase() === 'totals') return;
         
-        const isSub = nameCell.querySelector('span[style*="margin-left"]') || 
-                     nameCell.querySelector('[class*="indent"]') || 
-                     nameCell.className.indexOf('indent') !== -1 ||
-                     rawName.indexOf('-') === 0 || 
-                     /^[a-z0-9]-/i.test(rawName) ||
-                     nameCell.innerHTML.indexOf('&nbsp;&nbsp;') !== -1 ||
-                     nameCell.innerHTML.indexOf('&nbsp;') === 0 ||
-                     /^\s+/.test(originalText) ||
-                     originalText.indexOf('\u00A0') === 0;
+        const isSub = row.className.toLowerCase().indexOf('indent') !== -1 || 
+                      row.className.toLowerCase().indexOf('sub') !== -1 || 
+                      nameCell.querySelector('[class*="indent"]') || 
+                      nameCell.className.toLowerCase().indexOf('indent') !== -1 ||
+                      nameCell.querySelector('span[style*="margin-left"]') || 
+                      rawName.indexOf('-') === 0 || 
+                      /^[a-z0-9]-/i.test(rawName) ||
+                      nameCell.innerHTML.indexOf('&nbsp;&nbsp;') !== -1 ||
+                      nameCell.innerHTML.indexOf('&nbsp;') === 0 ||
+                      /^\s+/.test(originalText) ||
+                      originalText.indexOf('\u00A0') === 0;
                      
         const cleanName = limpiarNombreJugador(rawName);
 
