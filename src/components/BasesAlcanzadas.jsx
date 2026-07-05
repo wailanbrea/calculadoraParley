@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import LiveScoreboard from './LiveScoreboard';
 
 function simplificarNombreEquipo(fullName) {
   const clean = (fullName || '').replace(/text/i, '').trim();
@@ -265,7 +266,10 @@ export default function BasesAlcanzadas({ config }) {
 
   return (
     <div style={{ padding: '24px', background: '#060813', minHeight: '100vh', color: '#f8fafc' }}>
-      
+
+      {/* Marcadores en vivo estilo MLB.com con alertas de innings */}
+      <LiveScoreboard />
+
       {/* Cabecera */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #1e293b', paddingBottom: '16px' }}>
         <div>
