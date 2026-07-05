@@ -343,9 +343,9 @@ export default function BasesAlcanzadas({ config }) {
     <div style={{ padding: '24px', background: '#060813', minHeight: '100vh', color: '#f8fafc' }}>
 
       {/* Cabecera */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #1e293b', paddingBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold', color: '#00d2ff', textShadow: '0 0 10px rgba(0, 210, 255, 0.2)' }}>
+          <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold', color: '#00d2ff', textShadow: '0 0 10px rgba(0, 210, 255, 0.2)' }}>
             ⚾ Bases Alcanzadas Resultados
           </h1>
           <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#94a3b8' }}>
@@ -384,15 +384,15 @@ export default function BasesAlcanzadas({ config }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '24px', alignItems: 'start' }}>
         
-        {/* Barra lateral: Bookmarklet y Lista de partidos */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
-          {/* Tarjeta del Bookmarklet */}
-          <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 'bold', color: '#f8fafc' }}>
+        {/* Barra lateral fija: ocupa toda la altura de la ventana */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'sticky', top: '16px', maxHeight: 'calc(100vh - 32px)' }}>
+
+          {/* Tarjeta del Bookmarklet (colapsada para dejar espacio a la lista) */}
+          <details style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '12px 16px', flexShrink: 0 }}>
+            <summary style={{ fontSize: '0.88rem', fontWeight: 'bold', color: '#f8fafc', cursor: 'pointer' }}>
               ⚡ Importador 1-Clic MLB (opcional)
-            </h3>
-            <p style={{ margin: '0 0 16px 0', fontSize: '0.82rem', color: '#94a3b8', lineHeight: '1.4' }}>
+            </summary>
+            <p style={{ margin: '12px 0 16px 0', fontSize: '0.82rem', color: '#94a3b8', lineHeight: '1.4' }}>
               Este marcador es un respaldo del botón "Sincronizar MLB": arrástralo a tu barra de favoritos y úsalo en un Boxscore de MLB.com si necesitas importar un juego manualmente.
             </p>
             <a
@@ -417,10 +417,10 @@ export default function BasesAlcanzadas({ config }) {
             >
               ⚽ Importar Bases
             </a>
-          </div>
+          </details>
 
-          {/* Lista de todos los juegos de hoy, coloreados por estado */}
-          <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Lista de todos los juegos de la fecha, coloreados por estado (se estira hasta abajo) */}
+          <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0 }}>
             <h3 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 'bold', color: '#f8fafc' }}>
               Partidos Cargados
             </h3>
@@ -474,7 +474,7 @@ export default function BasesAlcanzadas({ config }) {
                 No hay juegos de MLB en esta fecha.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '460px', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 {scheduleGames.map(g => {
                   const pk = String(g.gamePk);
                   const cat = categoriaJuego(g);
