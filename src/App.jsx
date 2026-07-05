@@ -238,6 +238,7 @@ export default function App() {
             icono="🏀"
             ligas={LIGAS_BASKET}
             tipoAlertas="basket"
+            agrupado
           />
         )}
 

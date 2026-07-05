@@ -445,7 +445,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
             onClick={() => toggleSeguir(ev, ligaId)}
             title={esFavorito
               ? 'Favorito: recibirás sus alertas (clic para quitar)'
-              : 'Marcar favorito para recibir sus alertas (final o suspendido)'}
+              : `Marcar favorito para recibir sus alertas (${tipoAlertas === 'basket' ? '1er cuarto, medio tiempo H y final' : 'final o suspendido'})`}
             style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: esFavorito ? '#f59e0b' : '#475569', padding: '0 2px', lineHeight: 1 }}
           >
             {esFavorito ? '★' : '☆'}
