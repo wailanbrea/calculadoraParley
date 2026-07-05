@@ -37,6 +37,9 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
   );
 
   const boxRef = useRef({});
+  const audioCtxRef = useRef(null);
+  const tituloOriginalRef = useRef(document.title);
+  const alertasSinVerRef = useRef(0);
   const seenRef = useRef(null);
   if (seenRef.current === null) {
     try {
@@ -46,13 +49,76 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
     }
   }
 
+  // Restaurar el título de la pestaña cuando el usuario vuelve a mirarla
+  useEffect(() => {
+    const alVolver = () => {
+      if (!document.hidden) {
+        alertasSinVerRef.current = 0;
+        document.title = tituloOriginalRef.current;
+      }
+    };
+    document.addEventListener('visibilitychange', alVolver);
+    window.addEventListener('focus', alVolver);
+    return () => {
+      document.removeEventListener('visibilitychange', alVolver);
+      window.removeEventListener('focus', alVolver);
+    };
+  }, []);
+
+  // Campana de tres notas ascendentes (suena aunque la pestaña esté en segundo plano)
+  const sonarCampana = () => {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+      [880, 1174.66, 1567.98].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        const t = ctx.currentTime + i * 0.18;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.4, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        osc.start(t);
+        osc.stop(t + 0.45);
+      });
+    } catch (e) { /* sin soporte de audio */ }
+  };
+
   const pushAlert = (text) => {
     const a = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), text };
     setAlerts(prev => [a, ...prev].slice(0, 20));
     setToasts(prev => [...prev, a]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== a.id)), 12000);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== a.id)), 20000);
+
+    sonarCampana();
+
+    // Contador de alertas en el título de la pestaña si no la está viendo
+    if (document.hidden) {
+      alertasSinVerRef.current += 1;
+      document.title = `(${alertasSinVerRef.current}) 🔔 Alerta MLB — CalcParley`;
+    }
+
+    // Notificación del sistema: visible aunque esté en otra pestaña o aplicación.
+    // requireInteraction hace que no desaparezca sola hasta que el usuario la cierre.
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      try { new Notification('CalcParley MLB', { body: text }); } catch (e) { /* sin soporte */ }
+      try {
+        const n = new Notification('⚾ Alerta MLB — CalcParley', {
+          body: text,
+          icon: './favicon.svg',
+          requireInteraction: true,
+          tag: 'calcparley-' + a.id
+        });
+        n.onclick = () => {
+          try { window.focus(); } catch (e) { /* sin permiso de foco */ }
+          n.close();
+        };
+      } catch (e) { /* sin soporte */ }
     }
   };
 
@@ -468,12 +534,41 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
 
+      {/* Animaciones de las alertas */}
+      <style>{`
+        @keyframes alertaEntrada {
+          0% { transform: translateX(120%); opacity: 0; }
+          60% { transform: translateX(-8px); opacity: 1; }
+          100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes pulsoNotif {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+          50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+        }
+      `}</style>
+
       {/* Toasts de alertas (flotantes, para todos los juegos del día) */}
-      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '360px' }}>
+      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '420px' }}>
         {toasts.map(t => (
-          <div key={t.id} style={{ background: '#0b0f19', border: '1px solid #00d2ff', borderRadius: '8px', padding: '12px 16px', color: '#f8fafc', fontSize: '0.85rem', boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '4px' }}>{t.time}</div>
-            {t.text}
+          <div key={t.id} style={{
+            background: 'linear-gradient(135deg, #0b1a2b 0%, #0b0f19 100%)',
+            border: '2px solid #00d2ff',
+            borderRadius: '10px',
+            padding: '16px 20px',
+            color: '#f8fafc',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            boxShadow: '0 0 25px rgba(0, 210, 255, 0.45), 0 12px 32px rgba(0,0,0,0.7)',
+            animation: 'alertaEntrada 0.4s ease-out',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px'
+          }}>
+            <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>🔔</span>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: '#00d2ff', marginBottom: '4px', fontWeight: 'normal' }}>{t.time} · Alerta MLB</div>
+              {t.text}
+            </div>
           </div>
         ))}
       </div>
@@ -498,9 +593,20 @@ export default function LiveScoreboard({ gameId, onGamesUpdate, date }) {
           {!notifGranted && (
             <button
               onClick={solicitarNotificaciones}
-              style={{ padding: '5px 12px', background: 'rgba(0,210,255,0.1)', border: '1px solid rgba(0,210,255,0.4)', borderRadius: '6px', color: '#00d2ff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+              style={{
+                padding: '8px 14px',
+                background: 'rgba(245, 158, 11, 0.15)',
+                border: '1px solid #f59e0b',
+                borderRadius: '6px',
+                color: '#f59e0b',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                whiteSpace: 'nowrap',
+                animation: 'pulsoNotif 2s infinite'
+              }}
             >
-              🔔 Activar notificaciones
+              🔔 Activar notificaciones (para verlas aunque estés en otra pestaña)
             </button>
           )}
         </div>
