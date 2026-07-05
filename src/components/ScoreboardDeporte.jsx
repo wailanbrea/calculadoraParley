@@ -30,10 +30,11 @@ const ETIQUETAS_HITO = {
   suspendido: 'Juego suspendido / pospuesto'
 };
 
-export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrimero = false, tipoAlertas = 'basket' }) {
+export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrimero = false, tipoAlertas = 'basket', agrupado = false }) {
   const [liga, setLiga] = useState(ligas[0].id);
   const [selectedDate, setSelectedDate] = useState(fechaHoyISO());
   const [eventos, setEventos] = useState([]);
+  const [grupos, setGrupos] = useState([]);
   const [cargado, setCargado] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState(null);
@@ -191,13 +192,13 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     if (cambio) guardarSeguimiento();
   };
 
-  const toggleSeguir = (ev) => {
+  const toggleSeguir = (ev, ligaId) => {
     const id = String(ev.id);
     if (seguidosRef.current[id]) {
       delete seguidosRef.current[id];
       delete seenRef.current[id];
     } else {
-      seguidosRef.current[id] = { liga: ligaRef.current, fecha: selectedDate };
+      seguidosRef.current[id] = { liga: ligaId || ligaRef.current, fecha: selectedDate };
       // Registrar los hitos ya alcanzados sin alertar (solo avisará lo que ocurra desde ahora)
       seenRef.current[id] = hitosActuales(ev);
     }
@@ -244,6 +245,21 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     });
   };
 
+  // Vista agrupada estilo Flashscore: todas las ligas a la vez, agrupadas por liga
+  const cargarAgrupado = (fechaActual) => {
+    Promise.all(ligas.map(l =>
+      fetchScoreboard(l.id, fechaActual)
+        .then(evs => ({ liga: l.id, label: l.label, eventos: evs }))
+        .catch(() => ({ liga: l.id, label: l.label, eventos: [] }))
+    )).then(res => {
+      setGrupos(res);
+      setCargado(true);
+      setLastUpdate(new Date());
+      setError(null);
+      res.forEach(g => revisarAlertas(g.eventos));
+    });
+  };
+
   useEffect(() => {
     // Limpiar seguimientos de fechas viejas (2+ días)
     const limite = new Date();
@@ -262,13 +278,17 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   useEffect(() => {
     setCargado(false);
     setEventos([]);
-    cargar(liga, selectedDate);
+    setGrupos([]);
+    const hacerCarga = agrupado
+      ? () => cargarAgrupado(selectedDate)
+      : () => cargar(liga, selectedDate);
+    hacerCarga();
     // Solo el día actual se refresca automáticamente (cada 60s)
     if (selectedDate === fechaHoyISO()) {
-      const t = setInterval(() => cargar(liga, selectedDate), 60000);
+      const t = setInterval(hacerCarga, 60000);
       return () => clearInterval(t);
     }
-  }, [liga, selectedDate]);
+  }, [liga, selectedDate, agrupado]);
 
   const sumarDias = (n) => {
     const d = new Date(selectedDate + 'T12:00:00');
@@ -394,6 +414,70 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     );
   };
 
+  // Fila compacta estilo Flashscore: estrella, estado/hora, equipos y marcador
+  const renderFila = (ev, ligaId) => {
+    const comp = ev.competitions && ev.competitions[0];
+    if (!comp) return null;
+    const state = (ev.status && ev.status.type && ev.status.type.state) || 'pre';
+    const est = ESTILOS_ESTADO[state] || ESTILOS_ESTADO.pre;
+    const id = String(ev.id);
+    const esFavorito = !!seguidos[id];
+
+    let estadoCorto;
+    if (state === 'pre') {
+      estadoCorto = hora12(ev.date);
+    } else if (state === 'in') {
+      estadoCorto = ev.status.type.shortDetail || 'En juego';
+    } else {
+      estadoCorto = ev.status.type.completed === false ? (ev.status.type.shortDetail || 'Final') : 'Final';
+    }
+
+    let competidores = (comp.competitors || []).slice();
+    competidores.sort((a, b) => {
+      const orden = (c) => (c.homeAway === 'home' ? (ordenLocalPrimero ? 0 : 1) : (ordenLocalPrimero ? 1 : 0));
+      return orden(a) - orden(b);
+    });
+
+    return (
+      <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        {state !== 'post' ? (
+          <button
+            onClick={() => toggleSeguir(ev, ligaId)}
+            title={esFavorito
+              ? 'Favorito: recibirás sus alertas (clic para quitar)'
+              : 'Marcar favorito para recibir sus alertas (final o suspendido)'}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: esFavorito ? '#f59e0b' : '#475569', padding: '0 2px', lineHeight: 1 }}
+          >
+            {esFavorito ? '★' : '☆'}
+          </button>
+        ) : (
+          <span style={{ width: '20px' }} />
+        )}
+        <span style={{ width: '80px', flexShrink: 0, fontSize: '0.72rem', fontWeight: 'bold', color: est.accent }}>
+          {estadoCorto}
+        </span>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          {competidores.map(c => (
+            <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0 }}>
+                {c.team && c.team.logo && (
+                  <img src={c.team.logo} alt="" style={{ width: '17px', height: '17px', objectFit: 'contain' }} />
+                )}
+                <span style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: c.winner ? 'bold' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {c.team ? c.team.displayName : '?'}
+                </span>
+              </div>
+              <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#00d2ff', minWidth: '22px', textAlign: 'right' }}>
+                {state === 'pre' ? '-' : (c.score !== undefined ? c.score : '-')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const gruposConJuegos = grupos.filter(g => g.eventos.length > 0);
   const numSeguidos = Object.keys(seguidos).length;
 
   return (
@@ -453,9 +537,11 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
               {icono} {titulo}
             </h1>
             <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-              Pulsa "🔕 Avisar" en un juego para recibir sus alertas
+              {agrupado
+                ? 'Marca con ★ tus juegos favoritos para recibir sus alertas'
+                : 'Pulsa "🔕 Avisar" en un juego para recibir sus alertas'}
               {tipoAlertas === 'basket' ? ' (1er cuarto, medio tiempo H y final)' : ' (final o suspendido)'}
-              {numSeguidos > 0 && ` · Siguiendo ${numSeguidos} juego(s)`}
+              {numSeguidos > 0 && ` · ★ ${numSeguidos} favorito(s)`}
               {lastUpdate && ` · Actualizado: ${lastUpdate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`}
             </p>
           </div>
@@ -487,13 +573,15 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
 
         {/* Controles: liga y fecha */}
         <div className="sd-controles" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
-          <select
-            value={liga}
-            onChange={(e) => setLiga(e.target.value)}
-            style={{ padding: '8px 12px', background: '#0b0f19', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', color: '#f8fafc', fontSize: '0.85rem', fontWeight: 'bold' }}
-          >
-            {ligas.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-          </select>
+          {!agrupado && (
+            <select
+              value={liga}
+              onChange={(e) => setLiga(e.target.value)}
+              style={{ padding: '8px 12px', background: '#0b0f19', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', color: '#f8fafc', fontSize: '0.85rem', fontWeight: 'bold' }}
+            >
+              {ligas.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+            </select>
+          )}
 
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             <button
@@ -532,7 +620,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
         </div>
 
         {/* Contenido */}
-        {error ? (
+        {error && !agrupado ? (
           <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '10px', padding: '16px', color: '#fca5a5', fontSize: '0.9rem' }}>
             {error} — reintentando en la próxima actualización.
           </div>
@@ -540,6 +628,26 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
           <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '30px', textAlign: 'center', color: '#64748b' }}>
             Cargando juegos...
           </div>
+        ) : agrupado ? (
+          gruposConJuegos.length === 0 ? (
+            <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '30px', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+              No hay juegos en ninguna liga en la fecha {selectedDate}.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {gruposConJuegos.map(g => (
+                <div key={g.liga} style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
+                  <div style={{ padding: '9px 14px', background: 'rgba(0, 210, 255, 0.07)', borderBottom: '1px solid rgba(0,210,255,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '0.88rem', color: '#00d2ff' }}>{g.label}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{g.eventos.length} juego(s)</span>
+                  </div>
+                  <div>
+                    {g.eventos.map(ev => renderFila(ev, g.liga))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         ) : eventos.length === 0 ? (
           <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '30px', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
             No hay juegos de esta liga en la fecha {selectedDate}.

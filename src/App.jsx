@@ -248,6 +248,7 @@ export default function App() {
             ligas={LIGAS_SOCCER}
             ordenLocalPrimero
             tipoAlertas="soccer"
+            agrupado
           />
         )}
         
