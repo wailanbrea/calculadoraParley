@@ -237,6 +237,7 @@ export default function App() {
             titulo="Básquetbol — NBA e Internacional"
             icono="🏀"
             ligas={LIGAS_BASKET}
+            tipoAlertas="basket"
           />
         )}
 
@@ -246,6 +247,7 @@ export default function App() {
             icono="⚽"
             ligas={LIGAS_SOCCER}
             ordenLocalPrimero
+            tipoAlertas="soccer"
           />
         )}
         
