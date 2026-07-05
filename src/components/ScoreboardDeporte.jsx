@@ -30,6 +30,70 @@ const ETIQUETAS_HITO = {
   suspendido: 'Juego suspendido / pospuesto'
 };
 
+// Adapta un evento de TheSportsDB al formato de ESPN para reutilizar todo el render/alertas
+function adaptarEventoTsdb(e) {
+  const limpiar = (n) => (n || '').replace(/ Basketball$/i, '').trim();
+  const estadoRaw = (e.strStatus || 'NS').toUpperCase().trim();
+
+  let state = 'pre';
+  let period = 0;
+  let tipoNombre = 'STATUS_SCHEDULED';
+  let shortDetail;
+
+  if (/^(FT|AOT|AET|PEN|MATCH FINISHED|FINISHED)$/.test(estadoRaw)) {
+    state = 'post';
+    tipoNombre = 'STATUS_FINAL';
+  } else if (/POSTP|CANC|SUSP|ABAN/.test(estadoRaw)) {
+    state = 'post';
+    tipoNombre = 'STATUS_POSTPONED';
+    shortDetail = 'Pospuesto';
+  } else if (estadoRaw !== 'NS' && estadoRaw !== '' && estadoRaw !== 'TBD') {
+    state = 'in';
+    shortDetail = e.strProgress || estadoRaw;
+    if (estadoRaw === 'HT') {
+      tipoNombre = 'STATUS_HALFTIME';
+      period = 2;
+    }
+    const q = estadoRaw.match(/^Q(\d)/);
+    if (q) period = parseInt(q[1], 10);
+    if (/^(2H|OT)/.test(estadoRaw)) period = estadoRaw.startsWith('OT') ? 5 : 2;
+  }
+
+  // strTimestamp/strTime vienen en UTC
+  let fechaIso;
+  if (e.strTimestamp) {
+    fechaIso = e.strTimestamp.endsWith('Z') ? e.strTimestamp : e.strTimestamp + 'Z';
+  } else {
+    fechaIso = `${e.dateEvent}T${e.strTime || '00:00:00'}Z`;
+  }
+
+  return {
+    id: String(e.idEvent),
+    date: fechaIso,
+    name: `${limpiar(e.strHomeTeam)} vs ${limpiar(e.strAwayTeam)}`,
+    status: {
+      period,
+      type: { state, name: tipoNombre, shortDetail, completed: state === 'post' && tipoNombre === 'STATUS_FINAL' }
+    },
+    competitions: [{
+      competitors: [
+        {
+          id: String(e.idEvent) + '-h',
+          homeAway: 'home',
+          team: { displayName: limpiar(e.strHomeTeam), logo: e.strHomeTeamBadge || undefined },
+          score: e.intHomeScore !== null && e.intHomeScore !== undefined ? String(e.intHomeScore) : undefined
+        },
+        {
+          id: String(e.idEvent) + '-a',
+          homeAway: 'away',
+          team: { displayName: limpiar(e.strAwayTeam), logo: e.strAwayTeamBadge || undefined },
+          score: e.intAwayScore !== null && e.intAwayScore !== undefined ? String(e.intAwayScore) : undefined
+        }
+      ]
+    }]
+  };
+}
+
 export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrimero = false, tipoAlertas = 'basket', agrupado = false }) {
   const [liga, setLiga] = useState(ligas[0].id);
   const [selectedDate, setSelectedDate] = useState(fechaHoyISO());
@@ -214,6 +278,22 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   // ---------- Carga de datos ----------
 
   const fetchScoreboard = (ligaId, fechaISO) => {
+    // Fuente TheSportsDB: id con formato "tsdb:Deporte:FiltroLiga" (ej. tsdb:Basketball:FIBA)
+    if (ligaId.startsWith('tsdb:')) {
+      const partes = ligaId.split(':');
+      const deporte = partes[1];
+      const filtro = (partes[2] || '').toUpperCase();
+      return fetch(`https://www.thesportsdb.com/api/v1/json/123/eventsday.php?d=${fechaISO}&s=${deporte}`)
+        .then(r => {
+          if (!r.ok) throw new Error(`Error consultando TheSportsDB (HTTP ${r.status})`);
+          return r.json();
+        })
+        .then(data => (data.events || [])
+          .filter(e => !filtro || (e.strLeague || '').toUpperCase().indexOf(filtro) !== -1)
+          .map(adaptarEventoTsdb)
+          .sort((a, b) => new Date(a.date) - new Date(b.date)));
+    }
+
     const fechaParam = fechaISO.replace(/-/g, '');
     return fetch(`https://site.api.espn.com/apis/site/v2/sports/${ligaId}/scoreboard?dates=${fechaParam}`)
       .then(r => {
