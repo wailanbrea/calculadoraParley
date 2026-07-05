@@ -244,28 +244,50 @@ export default function BasesAlcanzadas({ config }) {
       const tbMap = parseTbLine(battingNotes);
       const rows = table.querySelectorAll('tbody tr');
       const lineup = [];
-      
-      rows.forEach(function(row) {
+         rows.forEach(function(row) {
         const cells = row.querySelectorAll('td');
         if (cells.length < 3) return;
         
         const nameCell = cells[0];
         const originalText = nameCell.textContent;
         const rawName = originalText.replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '').trim();
-        if (rawName.toLowerCase() === 'totals') return;
         
-        const isSub = row.className.toLowerCase().indexOf('indent') !== -1 || 
-                      row.className.toLowerCase().indexOf('sub') !== -1 || 
-                      nameCell.querySelector('[class*="indent"]') || 
-                      nameCell.className.toLowerCase().indexOf('indent') !== -1 ||
-                      nameCell.querySelector('span[style*="margin-left"]') || 
-                      rawName.indexOf('-') === 0 || 
-                      /^[a-z0-9]-/i.test(rawName) ||
-                      nameCell.innerHTML.indexOf('&nbsp;&nbsp;') !== -1 ||
-                      nameCell.innerHTML.indexOf('&nbsp;') === 0 ||
-                      /^\s+/.test(originalText) ||
-                      originalText.indexOf('\u00A0') === 0;
-                     
+        var nameLower = rawName.toLowerCase();
+        if (nameLower === 'totals' || nameLower === 'total' || nameLower.indexOf('total') === 0) return;
+        
+        var htmlLower = nameCell.innerHTML.toLowerCase();
+        var trHtmlLower = row.innerHTML.toLowerCase();
+        var trClassLower = row.className.toLowerCase();
+        var tdClassLower = nameCell.className.toLowerCase();
+        
+        var hasStyleIndent = htmlLower.indexOf('padding-left') !== -1 || 
+                             htmlLower.indexOf('margin-left') !== -1 || 
+                             htmlLower.indexOf('text-indent') !== -1 ||
+                             trHtmlLower.indexOf('padding-left') !== -1 ||
+                             row.style.paddingLeft || 
+                             row.style.marginLeft ||
+                             nameCell.style.paddingLeft ||
+                             nameCell.style.marginLeft;
+
+        var hasClassIndent = trClassLower.indexOf('indent') !== -1 || 
+                             trClassLower.indexOf('sub') !== -1 || 
+                             trClassLower.indexOf('alternate') !== -1 ||
+                             tdClassLower.indexOf('indent') !== -1 || 
+                             tdClassLower.indexOf('sub') !== -1 ||
+                             nameCell.querySelector('[class*="indent"]') ||
+                             nameCell.querySelector('[class*="sub"]') ||
+                             row.querySelector('[class*="indent"]') ||
+                             row.querySelector('[class*="sub"]');
+
+        var hasPrefixIndent = rawName.indexOf('-') === 0 || 
+                              /^[a-z0-9]-/i.test(rawName) ||
+                              htmlLower.indexOf('&nbsp;&nbsp;') !== -1 ||
+                              htmlLower.indexOf('&nbsp;') === 0 ||
+                              /^\s+/.test(originalText) ||
+                              originalText.indexOf('\u00A0') === 0 ||
+                              originalText.charCodeAt(0) === 160;
+
+        const isSub = !!(hasStyleIndent || hasClassIndent || hasPrefixIndent);
         const cleanName = limpiarNombreJugador(rawName);
 
         const abIdx = headers.indexOf('AB');
