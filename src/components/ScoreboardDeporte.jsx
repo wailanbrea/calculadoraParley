@@ -169,6 +169,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
 
   const claveSeguidos = `deporteSeguidos_${tipoAlertas}`;
   const claveHitos = `deporteHitos_${tipoAlertas}`;
+  const claveOcultos = `deporteOcultos_${tipoAlertas}`;
 
   const cargarJSON = (clave) => {
     try { return JSON.parse(localStorage.getItem(clave) || '{}'); } catch (e) { return {}; }
@@ -176,9 +177,24 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
 
   const seguidosRef = useRef(null);
   const seenRef = useRef(null);
+  const ocultosRef = useRef(null);
   if (seguidosRef.current === null) seguidosRef.current = cargarJSON(claveSeguidos);
   if (seenRef.current === null) seenRef.current = cargarJSON(claveHitos);
+  if (ocultosRef.current === null) ocultosRef.current = cargarJSON(claveOcultos);
   const [seguidos, setSeguidos] = useState(seguidosRef.current);
+  const [ocultos, setOcultos] = useState(ocultosRef.current);
+  const [filtro, setFiltro] = useState('todos'); // todos | live | final
+  const [mostrarOcultos, setMostrarOcultos] = useState(false);
+
+  // Hitos guardados: se normalizan a { f: fecha, h: [hitos] } (antes eran arrays simples)
+  const hitosDe = (id) => {
+    const v = seenRef.current[id];
+    if (v === undefined) return null;
+    return Array.isArray(v) ? v : (v.h || []);
+  };
+  const setHitos = (id, arr, fecha) => {
+    seenRef.current[id] = { f: fecha || fechaHoyISO(), h: arr };
+  };
 
   const audioCtxRef = useRef(null);
   const tituloOriginalRef = useRef(document.title);
@@ -229,23 +245,26 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     } catch (e) { /* sin soporte de audio */ }
   };
 
-  const dispararAlerta = (ev, hito) => {
+  // esFavorito = prioridad alta: suena la campana y la notificación queda fija hasta cerrarla.
+  // Los juegos normales notifican de forma discreta (sin sonido, la notificación se cierra sola).
+  const dispararAlerta = (ev, hito, esFavorito = false) => {
     const comp = (ev.competitions && ev.competitions[0]) || {};
     const cs = comp.competitors || [];
     const marcador = cs.map(c => `${c.team ? c.team.displayName : '?'} ${c.score !== undefined ? c.score : 0}`).join(' - ');
+    const prefijo = esFavorito ? '★ ' : '';
     const tituloMsg = hito === 'final'
-      ? `🏁 FINAL: ${ev.name || marcador}`
-      : `${icono} ${ev.name || marcador}`;
+      ? `${prefijo}🏁 FINAL: ${ev.name || marcador}`
+      : `${prefijo}${icono} ${ev.name || marcador}`;
     const textoMsg = hito === 'final'
       ? `Resultado final: ${marcador}`
       : `${ETIQUETAS_HITO[hito] || hito} · ${marcador}`;
 
-    const a = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }), titulo: tituloMsg, texto: textoMsg };
-    setAlertas(prev => [a, ...prev].slice(0, 20));
+    const a = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }), titulo: tituloMsg, texto: textoMsg, fav: esFavorito };
+    setAlertas(prev => [a, ...prev].slice(0, 30));
     setToasts(prev => [...prev, a]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== a.id)), 20000);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== a.id)), esFavorito ? 25000 : 12000);
 
-    sonarCampana();
+    if (esFavorito) sonarCampana();
 
     if (document.hidden) {
       sinVerRef.current += 1;
@@ -257,7 +276,8 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
         const n = new Notification(tituloMsg, {
           body: textoMsg,
           icon: './favicon.svg',
-          requireInteraction: true,
+          requireInteraction: esFavorito,
+          silent: !esFavorito,
           tag: 'calcparley-dep-' + a.id
         });
         n.onclick = () => {
@@ -291,25 +311,40 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   const guardarSeguimiento = () => {
     localStorage.setItem(claveSeguidos, JSON.stringify(seguidosRef.current));
     localStorage.setItem(claveHitos, JSON.stringify(seenRef.current));
+    localStorage.setItem(claveOcultos, JSON.stringify(ocultosRef.current));
   };
 
+  // Todos los juegos notifican; los ★ favoritos con prioridad (sonido + notificación fija);
+  // los 🚫 ocultos no notifican. Al primer avistamiento de un juego se registran sus hitos
+  // en silencio para no bombardear con eventos viejos al abrir la página.
   const revisarAlertas = (evs) => {
     let cambio = false;
     evs.forEach(ev => {
       const id = String(ev.id);
-      if (!seguidosRef.current[id]) return;
       const ahora = hitosActuales(ev);
-      const antes = seenRef.current[id] || [];
-      const nuevos = ahora.filter(k => !antes.includes(k));
-      nuevos.forEach(k => dispararAlerta(ev, k));
-      if (nuevos.length > 0) {
-        seenRef.current[id] = Array.from(new Set([...antes, ...ahora]));
+      const antes = hitosDe(id);
+
+      if (antes === null) {
+        setHitos(id, ahora, selectedDate);
         cambio = true;
-        // Al terminar (o suspenderse) el juego, dejar de seguirlo automáticamente
-        if (nuevos.includes('final') || nuevos.includes('suspendido')) {
-          delete seguidosRef.current[id];
-          setSeguidos({ ...seguidosRef.current });
-        }
+        return;
+      }
+
+      const nuevos = ahora.filter(k => !antes.includes(k));
+      if (nuevos.length === 0) return;
+
+      setHitos(id, Array.from(new Set([...antes, ...ahora])), selectedDate);
+      cambio = true;
+
+      if (!ocultosRef.current[id]) {
+        const esFav = !!seguidosRef.current[id];
+        nuevos.forEach(k => dispararAlerta(ev, k, esFav));
+      }
+
+      // Al terminar (o suspenderse) el juego, limpiar su marca de favorito
+      if ((nuevos.includes('final') || nuevos.includes('suspendido')) && seguidosRef.current[id]) {
+        delete seguidosRef.current[id];
+        setSeguidos({ ...seguidosRef.current });
       }
     });
     if (cambio) guardarSeguimiento();
@@ -319,13 +354,57 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     const id = String(ev.id);
     if (seguidosRef.current[id]) {
       delete seguidosRef.current[id];
-      delete seenRef.current[id];
     } else {
       seguidosRef.current[id] = { liga: ligaId || ligaRef.current, fecha: selectedDate };
-      // Registrar los hitos ya alcanzados sin alertar (solo avisará lo que ocurra desde ahora)
-      seenRef.current[id] = hitosActuales(ev);
+      if (hitosDe(id) === null) setHitos(id, hitosActuales(ev), selectedDate);
     }
     setSeguidos({ ...seguidosRef.current });
+    guardarSeguimiento();
+  };
+
+  const toggleOcultar = (ev) => {
+    const id = String(ev.id);
+    if (ocultosRef.current[id]) {
+      delete ocultosRef.current[id];
+    } else {
+      ocultosRef.current[id] = { fecha: selectedDate };
+    }
+    setOcultos({ ...ocultosRef.current });
+    guardarSeguimiento();
+  };
+
+  const estadoCat = (ev) => (ev.status && ev.status.type && ev.status.type.state) || 'pre';
+
+  // Favoritear/quitar todos los juegos activos de una lista (todo o nada)
+  const toggleFavoritosLista = (evs, ligaId) => {
+    const activos = evs.filter(e => estadoCat(e) !== 'post' && !ocultosRef.current[String(e.id)]);
+    if (activos.length === 0) return;
+    const todosFav = activos.every(e => seguidosRef.current[String(e.id)]);
+    activos.forEach(e => {
+      const id = String(e.id);
+      if (todosFav) {
+        delete seguidosRef.current[id];
+      } else if (!seguidosRef.current[id]) {
+        seguidosRef.current[id] = { liga: ligaId || ligaRef.current, fecha: selectedDate };
+        if (hitosDe(id) === null) setHitos(id, hitosActuales(e), selectedDate);
+      }
+    });
+    setSeguidos({ ...seguidosRef.current });
+    guardarSeguimiento();
+  };
+
+  // Ocultar/mostrar todos los juegos de una lista (todo o nada)
+  const toggleOcultosLista = (evs) => {
+    const algunoVisible = evs.some(e => !ocultosRef.current[String(e.id)]);
+    evs.forEach(e => {
+      const id = String(e.id);
+      if (algunoVisible) {
+        ocultosRef.current[id] = { fecha: selectedDate };
+      } else {
+        delete ocultosRef.current[id];
+      }
+    });
+    setOcultos({ ...ocultosRef.current });
     guardarSeguimiento();
   };
 
@@ -431,18 +510,25 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   };
 
   useEffect(() => {
-    // Limpiar seguimientos de fechas viejas (2+ días)
+    // Limpiar favoritos, ocultos e hitos de fechas viejas (2+ días)
     const limite = new Date();
     limite.setDate(limite.getDate() - 2);
+    const esViejo = (f) => !f || new Date(f + 'T12:00:00') < limite;
+
     Object.keys(seguidosRef.current).forEach(id => {
-      const f = seguidosRef.current[id] && seguidosRef.current[id].fecha;
-      if (f && new Date(f + 'T12:00:00') < limite) {
-        delete seguidosRef.current[id];
-        delete seenRef.current[id];
-      }
+      if (esViejo(seguidosRef.current[id] && seguidosRef.current[id].fecha)) delete seguidosRef.current[id];
     });
+    Object.keys(ocultosRef.current).forEach(id => {
+      if (esViejo(ocultosRef.current[id] && ocultosRef.current[id].fecha)) delete ocultosRef.current[id];
+    });
+    Object.keys(seenRef.current).forEach(id => {
+      const v = seenRef.current[id];
+      if (Array.isArray(v) || esViejo(v && v.f)) delete seenRef.current[id];
+    });
+
     guardarSeguimiento();
     setSeguidos({ ...seguidosRef.current });
+    setOcultos({ ...ocultosRef.current });
   }, []);
 
   useEffect(() => {
@@ -592,6 +678,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     const est = ESTILOS_ESTADO[state] || ESTILOS_ESTADO.pre;
     const id = String(ev.id);
     const esFavorito = !!seguidos[id];
+    const esOculto = !!ocultos[id];
 
     let estadoCorto;
     if (state === 'pre') {
@@ -609,13 +696,13 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     });
 
     return (
-      <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', opacity: esOculto ? 0.45 : 1 }}>
         {state !== 'post' ? (
           <button
             onClick={() => toggleSeguir(ev, ligaId)}
             title={esFavorito
-              ? 'Favorito: recibirás sus alertas (clic para quitar)'
-              : `Marcar favorito para recibir sus alertas (${tipoAlertas === 'basket' ? '1er cuarto, medio tiempo H y final' : 'final o suspendido'})`}
+              ? 'Favorito (prioridad alta: suena y la notificación queda fija). Clic para quitar.'
+              : `Marcar favorito (prioridad alta) — alertas: ${tipoAlertas === 'basket' ? '1er cuarto, medio tiempo H y final' : 'final o suspendido'}`}
             style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: esFavorito ? '#f59e0b' : '#475569', padding: '0 2px', lineHeight: 1 }}
           >
             {esFavorito ? '★' : '☆'}
@@ -623,6 +710,13 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
         ) : (
           <span style={{ width: '20px' }} />
         )}
+        <button
+          onClick={() => toggleOcultar(ev)}
+          title={esOculto ? 'Oculto: no notifica. Clic para mostrar y volver a notificar.' : 'Ocultar este juego (no enviará notificaciones)'}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: esOculto ? '#f59e0b' : '#475569', padding: '0 2px', lineHeight: 1 }}
+        >
+          {esOculto ? '👁' : '🚫'}
+        </button>
         <span style={{ width: '80px', flexShrink: 0, fontSize: '0.72rem', fontWeight: 'bold', color: est.accent }}>
           {estadoCorto}
         </span>
@@ -647,8 +741,24 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     );
   };
 
-  const gruposConJuegos = grupos.filter(g => g.eventos.length > 0);
+  // Filtro Todos / En vivo / Finalizados + exclusión de ocultos
+  const filtrarEventos = (evs) => evs.filter(ev => {
+    if (!mostrarOcultos && ocultos[String(ev.id)]) return false;
+    const st = estadoCat(ev);
+    if (filtro === 'live' && st !== 'in') return false;
+    if (filtro === 'final' && st !== 'post') return false;
+    return true;
+  });
+
+  const gruposFiltrados = grupos
+    .map(g => ({ ...g, visibles: filtrarEventos(g.eventos) }))
+    .filter(g => g.visibles.length > 0);
+
+  const todosLosEventos = grupos.flatMap(g => g.eventos);
   const numSeguidos = Object.keys(seguidos).length;
+  const numOcultos = todosLosEventos.filter(e => ocultos[String(e.id)]).length;
+  const activosVisibles = todosLosEventos.filter(e => estadoCat(e) !== 'post' && !ocultos[String(e.id)]);
+  const todosSonFavoritos = activosVisibles.length > 0 && activosVisibles.every(e => seguidos[String(e.id)]);
 
   return (
     <div style={{ padding: '24px', background: '#060813', minHeight: '100vh', color: '#f8fafc' }}>
@@ -707,10 +817,8 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
               {icono} {titulo}
             </h1>
             <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-              {agrupado
-                ? 'Marca con ★ tus juegos favoritos para recibir sus alertas'
-                : 'Pulsa "🔕 Avisar" en un juego para recibir sus alertas'}
-              {tipoAlertas === 'basket' ? ' (1er cuarto, medio tiempo H y final)' : ' (final o suspendido)'}
+              Todos los juegos notifican{tipoAlertas === 'basket' ? ' (1er cuarto, H y final)' : ' (final o suspendido)'} ·
+              ★ favoritos con prioridad (suenan y quedan fijas) · 🚫 ocultos no notifican
               {numSeguidos > 0 && ` · ★ ${numSeguidos} favorito(s)`}
               {lastUpdate && ` · Actualizado: ${lastUpdate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`}
               {livescore && fuenteActiva === 'espn' && ' · ⚠️ Cobertura parcial: la fuente completa no está disponible ahora'}
@@ -783,6 +891,53 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
             )}
           </div>
 
+          {/* Filtros de estado */}
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {[
+              { id: 'todos', label: 'Todos' },
+              { id: 'live', label: '🟢 En vivo' },
+              { id: 'final', label: '🔴 Finalizados' }
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setFiltro(f.id)}
+                style={{
+                  padding: '7px 12px',
+                  background: filtro === f.id ? 'rgba(0,210,255,0.15)' : 'rgba(255,255,255,0.04)',
+                  border: filtro === f.id ? '1px solid #00d2ff' : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '6px',
+                  color: filtro === f.id ? '#00d2ff' : '#94a3b8',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.78rem'
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Acciones masivas */}
+          {agrupado && todosLosEventos.length > 0 && (
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                onClick={() => toggleFavoritosLista(todosLosEventos)}
+                title="Marcar o quitar todos los juegos activos como favoritos"
+                style={{ padding: '7px 12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '6px', color: '#f59e0b', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.78rem' }}
+              >
+                {todosSonFavoritos ? '☆ Quitar todos' : '★ Todos favoritos'}
+              </button>
+              {(numOcultos > 0 || mostrarOcultos) && (
+                <button
+                  onClick={() => setMostrarOcultos(!mostrarOcultos)}
+                  style={{ padding: '7px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', color: '#94a3b8', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.78rem' }}
+                >
+                  {mostrarOcultos ? '👁 Ocultar de nuevo' : `👁 Ver ocultos (${numOcultos})`}
+                </button>
+              )}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '10px', fontSize: '0.7rem', color: '#64748b' }}>
             <span><span style={{ color: '#ef4444' }}>●</span> Final</span>
             <span><span style={{ color: '#10b981' }}>●</span> En juego</span>
@@ -800,23 +955,48 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
             Cargando juegos...
           </div>
         ) : agrupado ? (
-          gruposConJuegos.length === 0 ? (
+          gruposFiltrados.length === 0 ? (
             <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '10px', padding: '30px', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
-              No hay juegos en ninguna liga en la fecha {selectedDate}.
+              {filtro !== 'todos'
+                ? 'No hay juegos con este filtro en la fecha seleccionada.'
+                : `No hay juegos en ninguna liga en la fecha ${selectedDate}.`}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              {gruposConJuegos.map(g => (
-                <div key={g.liga} style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
-                  <div style={{ padding: '9px 14px', background: 'rgba(0, 210, 255, 0.07)', borderBottom: '1px solid rgba(0,210,255,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 'bold', fontSize: '0.88rem', color: '#00d2ff' }}>{g.label}</span>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{g.eventos.length} juego(s)</span>
+              {gruposFiltrados.map(g => {
+                const activosLiga = g.eventos.filter(e => estadoCat(e) !== 'post' && !ocultos[String(e.id)]);
+                const ligaTodaFav = activosLiga.length > 0 && activosLiga.every(e => seguidos[String(e.id)]);
+                const ligaOculta = g.eventos.length > 0 && g.eventos.every(e => ocultos[String(e.id)]);
+                return (
+                  <div key={g.liga} style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ padding: '9px 14px', background: 'rgba(0, 210, 255, 0.07)', borderBottom: '1px solid rgba(0,210,255,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 'bold', fontSize: '0.88rem', color: '#00d2ff', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        {activosLiga.length > 0 && (
+                          <button
+                            onClick={() => toggleFavoritosLista(g.eventos, g.liga)}
+                            title={ligaTodaFav ? 'Quitar favorito a toda la liga' : 'Marcar toda la liga como favorita'}
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem', color: ligaTodaFav ? '#f59e0b' : '#475569', padding: 0, lineHeight: 1 }}
+                          >
+                            {ligaTodaFav ? '★' : '☆'}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => toggleOcultosLista(g.eventos)}
+                          title={ligaOculta ? 'Mostrar la liga y volver a notificar' : 'Ocultar toda la liga (sin notificaciones)'}
+                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: ligaOculta ? '#f59e0b' : '#475569', padding: 0, lineHeight: 1 }}
+                        >
+                          {ligaOculta ? '👁' : '🚫'}
+                        </button>
+                        <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{g.visibles.length} juego(s)</span>
+                      </div>
+                    </div>
+                    <div>
+                      {g.visibles.map(ev => renderFila(ev, g.liga))}
+                    </div>
                   </div>
-                  <div>
-                    {g.eventos.map(ev => renderFila(ev, g.liga))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )
         ) : eventos.length === 0 ? (
