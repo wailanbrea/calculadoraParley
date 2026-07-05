@@ -136,6 +136,32 @@ function adaptarEventoLivescore(e) {
     };
   };
 
+  const construirLinescoresLs = (event, teamNum) => {
+    const ls = [];
+    if (event['Tr' + teamNum + 'q1'] !== undefined && event['Tr' + teamNum + 'q1'] !== null) {
+      for (let q = 1; q <= 4; q++) {
+        const val = event['Tr' + teamNum + 'q' + q];
+        if (val !== undefined && val !== null && val !== '') {
+          ls.push({ value: parseInt(val, 10) });
+        }
+      }
+      const ot = event['Tr' + teamNum + 'ot'];
+      if (ot !== undefined && ot !== null && ot !== '') {
+        ls.push({ value: parseInt(ot, 10) });
+      }
+    } else if (event['Tr' + teamNum + 'h1'] !== undefined && event['Tr' + teamNum + 'h1'] !== null) {
+      const h1 = event['Tr' + teamNum + 'h1'];
+      if (h1 !== undefined && h1 !== null && h1 !== '') {
+        ls.push({ value: parseInt(h1, 10) });
+      }
+      const h2 = event['Tr' + teamNum + 'h2'];
+      if (h2 !== undefined && h2 !== null && h2 !== '') {
+        ls.push({ value: parseInt(h2, 10) });
+      }
+    }
+    return ls;
+  };
+
   return {
     id: 'ls' + String(e.Eid),
     date: fechaLocal,
@@ -146,8 +172,8 @@ function adaptarEventoLivescore(e) {
     },
     competitions: [{
       competitors: [
-        { id: 'ls' + e.Eid + '-h', homeAway: 'home', team: equipo(e.T1), score: e.Tr1 !== undefined && e.Tr1 !== null ? String(e.Tr1) : undefined },
-        { id: 'ls' + e.Eid + '-a', homeAway: 'away', team: equipo(e.T2), score: e.Tr2 !== undefined && e.Tr2 !== null ? String(e.Tr2) : undefined }
+        { id: 'ls' + e.Eid + '-h', homeAway: 'home', team: equipo(e.T1), score: e.Tr1 !== undefined && e.Tr1 !== null ? String(e.Tr1) : undefined, linescores: construirLinescoresLs(e, 1) },
+        { id: 'ls' + e.Eid + '-a', homeAway: 'away', team: equipo(e.T2), score: e.Tr2 !== undefined && e.Tr2 !== null ? String(e.Tr2) : undefined, linescores: construirLinescoresLs(e, 2) }
       ]
     }]
   };
@@ -721,21 +747,31 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
           {estadoCorto}
         </span>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          {competidores.map(c => (
-            <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0 }}>
-                {c.team && c.team.logo && (
-                  <img src={c.team.logo} alt="" style={{ width: '17px', height: '17px', objectFit: 'contain' }} />
-                )}
-                <span style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: c.winner ? 'bold' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {c.team ? c.team.displayName : '?'}
-                </span>
+          {competidores.map(c => {
+            const periodos = (c.linescores || []).map(ls => ls.value !== undefined ? ls.value : '').filter(v => v !== '');
+            return (
+              <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0 }}>
+                  {c.team && c.team.logo && (
+                    <img src={c.team.logo} alt="" style={{ width: '17px', height: '17px', objectFit: 'contain' }} />
+                  )}
+                  <span style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: c.winner ? 'bold' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {c.team ? c.team.displayName : '?'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#00d2ff', minWidth: '22px', textAlign: 'right' }}>
+                    {state === 'pre' ? '-' : (c.score !== undefined ? c.score : '-')}
+                  </span>
+                  {state !== 'pre' && periodos.length > 0 && (
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic', letterSpacing: '0.5px' }}>
+                      ({periodos.join(', ')})
+                    </span>
+                  )}
+                </div>
               </div>
-              <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#00d2ff', minWidth: '22px', textAlign: 'right' }}>
-                {state === 'pre' ? '-' : (c.score !== undefined ? c.score : '-')}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
