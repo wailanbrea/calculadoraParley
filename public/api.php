@@ -281,37 +281,61 @@ if ($action === 'clear_bases') {
 }
 
 // Descarga una URL externa con cURL (forzado a IPv4, con reintento y timeouts amplios).
+// El CDN de la MLB (Fastly) responde 406 a peticiones que no parecen de un navegador,
+// así que se prueban varios perfiles de encabezados hasta que uno funcione.
 // Fallback a file_get_contents si cURL no está disponible.
 function fetchExternalJson($url, &$error = null) {
     $error = null;
+
+    $navegadorUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+    $perfiles = [
+        [
+            'ua' => $navegadorUA,
+            'headers' => [
+                'Accept: application/json, text/plain, */*',
+                'Accept-Language: en-US,en;q=0.9,es;q=0.8',
+                'Referer: https://www.mlb.com/',
+                'Origin: https://www.mlb.com'
+            ]
+        ],
+        [
+            'ua' => $navegadorUA,
+            'headers' => ['Accept: */*']
+        ]
+    ];
+
     if (function_exists('curl_init')) {
-        for ($try = 0; $try < 2; $try++) {
-            $ch = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_CONNECTTIMEOUT => 5,
-                CURLOPT_TIMEOUT => 15,
-                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-                CURLOPT_USERAGENT => 'CalcParley/1.0 (+https://calcparley.bsolutions.dev)',
-                CURLOPT_HTTPHEADER => ['Accept: application/json']
-            ]);
-            $res = curl_exec($ch);
-            $err = curl_error($ch);
-            $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-            if ($res !== false && $code >= 200 && $code < 300) {
-                return $res;
+        foreach ($perfiles as $perfil) {
+            for ($try = 0; $try < 2; $try++) {
+                $ch = curl_init($url);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_CONNECTTIMEOUT => 5,
+                    CURLOPT_TIMEOUT => 15,
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                    CURLOPT_ENCODING => '',
+                    CURLOPT_USERAGENT => $perfil['ua'],
+                    CURLOPT_HTTPHEADER => $perfil['headers']
+                ]);
+                $res = curl_exec($ch);
+                $err = curl_error($ch);
+                $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                if ($res !== false && $code >= 200 && $code < 300) {
+                    return $res;
+                }
+                $error = $err !== '' ? $err : ('HTTP ' . $code);
             }
-            $error = $err !== '' ? $err : ('HTTP ' . $code);
         }
         return false;
     }
+
     $context = stream_context_create([
         'http' => [
             'timeout' => 15,
             'ignore_errors' => true,
-            'header' => "User-Agent: CalcParley/1.0\r\nAccept: application/json\r\n"
+            'header' => "User-Agent: $navegadorUA\r\nAccept: application/json, text/plain, */*\r\nAccept-Language: en-US,en;q=0.9\r\nReferer: https://www.mlb.com/\r\n"
         ]
     ]);
     $res = @file_get_contents($url, false, $context);
