@@ -54,7 +54,8 @@ function adaptarEventoTsdb(e) {
       tipoNombre = 'STATUS_HALFTIME';
       period = 2;
     }
-    const q = estadoRaw.match(/^Q(\d)/);
+    // Acepta el cuarto en ambos formatos: "2Q" (Livescore) y "Q2".
+    const q = estadoRaw.match(/^(\d)Q/i) || estadoRaw.match(/^Q(\d)/i);
     if (q) period = parseInt(q[1], 10);
     if (/^(2H|OT)/.test(estadoRaw)) period = estadoRaw.startsWith('OT') ? 5 : 2;
   }
@@ -118,7 +119,10 @@ function adaptarEventoLivescore(e) {
       tipoNombre = 'STATUS_HALFTIME';
       period = 2;
     }
-    const q = eps.match(/^Q(\d)/i);
+    // El proxy Livescore reporta el cuarto como "2Q" (dígito primero); antes solo se
+    // buscaba "Q2", por lo que period quedaba en 0 y las alertas de cuarto no se
+    // disparaban hasta el FT (todas juntas). Aceptamos ambos formatos.
+    const q = eps.match(/^(\d)Q/i) || eps.match(/^Q(\d)/i);
     if (q) period = parseInt(q[1], 10);
     if (/^OT/i.test(eps)) period = 5;
   }

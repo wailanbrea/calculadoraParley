@@ -53,7 +53,10 @@ function estadoLivescore(e) {
   } else if (eps !== 'NS' && eps !== 'TBC' && eps !== '') {
     state = 'in';
     if (/^HT$/i.test(eps)) { halftime = true; period = 2; }
-    const q = eps.match(/^Q(\d)/i);
+    // El proxy Livescore reporta el cuarto como "2Q" (dígito primero); antes solo
+    // se buscaba "Q2", así que period quedaba en 0 durante todo el juego y los hitos
+    // q1/h no se detectaban hasta el FT, disparándose todos juntos. Aceptamos ambos.
+    const q = eps.match(/^(\d)Q/i) || eps.match(/^Q(\d)/i);
     if (q) period = parseInt(q[1], 10);
     if (/^OT/i.test(eps)) period = 5;
   }
