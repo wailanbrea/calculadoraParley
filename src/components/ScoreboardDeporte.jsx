@@ -781,8 +781,10 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
       }}>
         {/* Logo + Nombre equipo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
-          {team.team && team.team.logo && (
+          {team.team && team.team.logo ? (
             <img src={team.team.logo} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain', flexShrink: 0 }} />
+          ) : (
+            <span style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           )}
           <span style={{
             fontSize: '0.82rem',
