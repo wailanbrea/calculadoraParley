@@ -367,6 +367,16 @@ if ($action === 'proxy_livescore') {
     $cacheDir = dirname(__DIR__);
     $cacheFile = $cacheDir . "/cache_ls_{$sport}_{$dateRaw}_{$tz}.json";
 
+    // Si es baloncesto y existe un archivo de sofascore cargado para esa fecha, servirlo directamente
+    if ($sport === 'basketball') {
+        $formattedDate = substr($dateRaw, 0, 4) . '-' . substr($dateRaw, 4, 2) . '-' . substr($dateRaw, 6, 2);
+        $sofascoreFile = $cacheDir . "/sofascore_basketball_{$formattedDate}.json";
+        if (file_exists($sofascoreFile)) {
+            echo file_get_contents($sofascoreFile);
+            exit;
+        }
+    }
+
     // Limpiar cachés de más de un día
     foreach (glob($cacheDir . '/cache_ls_*.json') as $viejo) {
         if (time() - filemtime($viejo) > 86400) @unlink($viejo);
