@@ -208,10 +208,12 @@ class MlbAdapter(
         val soloCasaJson = j.soloJsonCasa ?: "--"
         val soloVisitOk = j.coincideVisit
         val soloCasaOk = j.coincideCasa
+        val soloVisitRef = if (soloVisitOk) "OK" else "ERROR (Ref: ML ${row.ml.getOrNull(0) ?: "--"} / Tot ${row.total})"
+        val soloCasaRef = if (soloCasaOk) "OK" else "ERROR (Ref: ML ${row.ml.getOrNull(1) ?: "--"} / Tot ${row.total})"
         b.tvSoloBlock.text =
             "SOLO\n" +
-                "Visitante  JSON $soloVisitJson   Calc ${j.soloCalcVisit}   ${if (soloVisitOk) "OK" else "ERROR"}\n" +
-                "Casa       JSON $soloCasaJson   Calc ${j.soloCalcCasa}   ${if (soloCasaOk) "OK" else "ERROR"}"
+                "Visitante  JSON $soloVisitJson   Calc ${j.soloCalcVisit}   $soloVisitRef\n" +
+                "Casa       JSON $soloCasaJson   Calc ${j.soloCalcCasa}   $soloCasaRef"
         b.tvSoloBlock.setTextColor(ContextCompat.getColor(context, R.color.md_theme_onSurface))
 
         val paLineUsed = when {
@@ -261,11 +263,12 @@ class MlbAdapter(
         val noCalc = fmtSigned(j.sinoCalcNo)
         val siOk = parseSignedIntLoose(j.sinoJsonSi)?.let { it == j.sinoCalcSi } ?: true
         val noOk = parseSignedIntLoose(j.sinoJsonNo)?.let { it == j.sinoCalcNo } ?: true
+        val siNoStatus = if (siOk && noOk) "MATCH" else "FAIL (Ref: Tot ${row.total})"
         b.tvSiNoBlock.text =
             "SI / NO\n" +
                 "JSON   SI $siJson   NO $noJson\n" +
                 "CALC   SI $siCalc   NO $noCalc\n" +
-                "Estado ${if (siOk && noOk) "MATCH" else "FAIL"}"
+                "Estado $siNoStatus"
         b.tvSiNoBlock.setTextColor(
             ContextCompat.getColor(context, if (siOk && noOk) R.color.md_theme_onSurface else R.color.md_theme_error)
         )
