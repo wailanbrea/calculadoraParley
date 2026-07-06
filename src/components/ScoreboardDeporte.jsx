@@ -193,6 +193,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   const [notifGranted, setNotifGranted] = useState(
     typeof Notification !== 'undefined' && Notification.permission === 'granted'
   );
+  const [colapsados, setColapsados] = useState({});
 
   const claveSeguidos = `deporteSeguidos_${tipoAlertas}`;
   const claveHitos = `deporteHitos_${tipoAlertas}`;
@@ -704,7 +705,36 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     );
   };
 
-  // Fila compacta estilo Flashscore: estrella, estado/hora, equipos y marcador
+  // -------- Ordenamiento estilo Flashscore: live primero, luego pre, luego post --------
+  const prioridadEstado = (ev) => {
+    const st = (ev.status && ev.status.type && ev.status.type.state) || 'pre';
+    if (st === 'in') return 0;
+    if (st === 'pre') return 1;
+    return 2;
+  };
+
+  const ordenarEventos = (evs) => evs.slice().sort((a, b) => {
+    const pa = prioridadEstado(a);
+    const pb = prioridadEstado(b);
+    if (pa !== pb) return pa - pb;
+    return new Date(a.date) - new Date(b.date);
+  });
+
+  const prioridadGrupo = (g) => {
+    const evs = g.visibles || g.eventos || [];
+    const tieneVivo = evs.some(e => ((e.status && e.status.type && e.status.type.state) || 'pre') === 'in');
+    const tienePre = evs.some(e => ((e.status && e.status.type && e.status.type.state) || 'pre') === 'pre');
+    if (tieneVivo) return 0;
+    if (tienePre) return 1;
+    return 2;
+  };
+
+  const toggleColapsar = (ligaId) => {
+    setColapsados(prev => ({ ...prev, [ligaId]: !prev[ligaId] }));
+  };
+
+  // Fila compacta estilo Flashscore: una fila horizontal por partido
+  // Layout: ★ | estado/hora | local logo nombre | score - score | nombre logo visitante | (periodos) | 🚫
   const renderFila = (ev, ligaId) => {
     const comp = ev.competitions && ev.competitions[0];
     if (!comp) return null;
@@ -724,63 +754,123 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     }
 
     let competidores = (comp.competitors || []).slice();
-    competidores.sort((a, b) => {
-      const orden = (c) => (c.homeAway === 'home' ? (ordenLocalPrimero ? 0 : 1) : (ordenLocalPrimero ? 1 : 0));
-      return orden(a) - orden(b);
-    });
+    const home = competidores.find(c => c.homeAway === 'home') || competidores[0];
+    const away = competidores.find(c => c.homeAway === 'away') || competidores[1];
+    if (!home || !away) return null;
+
+    const homeScore = state === 'pre' ? '' : (home.score !== undefined ? home.score : '-');
+    const awayScore = state === 'pre' ? '' : (away.score !== undefined ? away.score : '-');
+
+    // Periodos para basketball (una línea resumida)
+    const homePeriodos = (home.linescores || []).map(ls => ls.value !== undefined ? ls.value : '').filter(v => v !== '');
+    const awayPeriodos = (away.linescores || []).map(ls => ls.value !== undefined ? ls.value : '').filter(v => v !== '');
+    const tienePeriodos = state !== 'pre' && (homePeriodos.length > 0 || awayPeriodos.length > 0);
+
+    const filaEstilo = {
+      display: 'grid',
+      gridTemplateColumns: '20px 20px 70px 1fr 36px 8px 36px 1fr auto',
+      alignItems: 'center',
+      gap: '0',
+      padding: '7px 10px',
+      borderBottom: '1px solid rgba(255,255,255,0.04)',
+      opacity: esOculto ? 0.4 : 1,
+      background: state === 'in' ? 'rgba(16, 185, 129, 0.04)' : 'transparent',
+      transition: 'background 0.15s',
+      cursor: 'default',
+      minHeight: '38px'
+    };
 
     return (
-      <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', opacity: esOculto ? 0.45 : 1 }}>
+      <div key={ev.id} className="sd-fila-grid" style={filaEstilo}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+        onMouseLeave={e => e.currentTarget.style.background = state === 'in' ? 'rgba(16, 185, 129, 0.04)' : 'transparent'}
+      >
+        {/* Estrella favorito */}
         {state !== 'post' ? (
           <button
             onClick={() => toggleSeguir(ev, ligaId)}
-            title={esFavorito
-              ? 'Favorito (prioridad alta: suena y la notificación queda fija). Clic para quitar.'
-              : `Marcar favorito (prioridad alta) — alertas: ${tipoAlertas === 'basket' ? '1er cuarto, medio tiempo H y final' : 'final o suspendido'}`}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: esFavorito ? '#f59e0b' : '#475569', padding: '0 2px', lineHeight: 1 }}
+            title={esFavorito ? 'Quitar favorito' : 'Marcar favorito'}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: esFavorito ? '#f59e0b' : '#334155', padding: 0, lineHeight: 1, textAlign: 'center' }}
           >
             {esFavorito ? '★' : '☆'}
           </button>
         ) : (
-          <span style={{ width: '20px' }} />
+          <span />
         )}
+
+        {/* Ocultar */}
         <button
           onClick={() => toggleOcultar(ev)}
-          title={esOculto ? 'Oculto: no notifica. Clic para mostrar y volver a notificar.' : 'Ocultar este juego (no enviará notificaciones)'}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: esOculto ? '#f59e0b' : '#475569', padding: '0 2px', lineHeight: 1 }}
+          title={esOculto ? 'Mostrar juego' : 'Ocultar juego'}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: esOculto ? '#f59e0b' : '#334155', padding: 0, lineHeight: 1, textAlign: 'center' }}
         >
           {esOculto ? '👁' : '🚫'}
         </button>
-        <span style={{ width: '80px', flexShrink: 0, fontSize: '0.72rem', fontWeight: 'bold', color: est.accent }}>
+
+        {/* Estado / Hora */}
+        <span style={{
+          fontSize: '0.7rem',
+          fontWeight: 'bold',
+          color: est.accent,
+          textAlign: 'center',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
           {estadoCorto}
         </span>
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          {competidores.map(c => {
-            const periodos = (c.linescores || []).map(ls => ls.value !== undefined ? ls.value : '').filter(v => v !== '');
-            return (
-              <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0 }}>
-                  {c.team && c.team.logo && (
-                    <img src={c.team.logo} alt="" style={{ width: '17px', height: '17px', objectFit: 'contain' }} />
-                  )}
-                  <span style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: c.winner ? 'bold' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {c.team ? c.team.displayName : '?'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#00d2ff', minWidth: '22px', textAlign: 'right' }}>
-                    {state === 'pre' ? '-' : (c.score !== undefined ? c.score : '-')}
-                  </span>
-                  {state !== 'pre' && periodos.length > 0 && (
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic', letterSpacing: '0.5px' }}>
-                      ({periodos.join(', ')})
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+
+        {/* Equipo local (alineado a la derecha) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', minWidth: 0, paddingRight: '8px' }}>
+          <span style={{ fontSize: '0.82rem', color: '#f8fafc', fontWeight: state === 'post' && parseInt(homeScore) > parseInt(awayScore) ? 'bold' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>
+            {home.team ? home.team.displayName : '?'}
+          </span>
+          {home.team && home.team.logo && (
+            <img src={home.team.logo} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain', flexShrink: 0 }} />
+          )}
         </div>
+
+        {/* Score local */}
+        <span style={{
+          fontWeight: 'bold',
+          fontSize: '0.95rem',
+          color: state === 'in' ? '#6ee7b7' : (state === 'post' ? '#f8fafc' : '#475569'),
+          textAlign: 'center',
+          fontVariantNumeric: 'tabular-nums'
+        }}>
+          {homeScore || '-'}
+        </span>
+
+        {/* Separador */}
+        <span style={{ fontSize: '0.75rem', color: '#334155', textAlign: 'center' }}>-</span>
+
+        {/* Score visitante */}
+        <span style={{
+          fontWeight: 'bold',
+          fontSize: '0.95rem',
+          color: state === 'in' ? '#6ee7b7' : (state === 'post' ? '#f8fafc' : '#475569'),
+          textAlign: 'center',
+          fontVariantNumeric: 'tabular-nums'
+        }}>
+          {awayScore || '-'}
+        </span>
+
+        {/* Equipo visitante (alineado a la izquierda) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', minWidth: 0, paddingLeft: '8px' }}>
+          {away.team && away.team.logo && (
+            <img src={away.team.logo} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain', flexShrink: 0 }} />
+          )}
+          <span style={{ fontSize: '0.82rem', color: '#f8fafc', fontWeight: state === 'post' && parseInt(awayScore) > parseInt(homeScore) ? 'bold' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {away.team ? away.team.displayName : '?'}
+          </span>
+        </div>
+
+        {/* Periodos resumidos */}
+        {tienePeriodos ? (
+          <span style={{ fontSize: '0.65rem', color: '#475569', whiteSpace: 'nowrap', paddingLeft: '8px', fontVariantNumeric: 'tabular-nums' }}>
+            ({homePeriodos.join(', ')}) ({awayPeriodos.join(', ')})
+          </span>
+        ) : <span />}
       </div>
     );
   };
@@ -807,9 +897,10 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
       const q = busqueda.trim().toLowerCase();
       // Si la búsqueda coincide con el nombre de la liga, se muestran todos sus juegos
       const ligaCoincide = q ? (g.label || '').toLowerCase().indexOf(q) !== -1 : false;
-      return { ...g, visibles: filtrarEventos(g.eventos, ligaCoincide) };
+      return { ...g, visibles: ordenarEventos(filtrarEventos(g.eventos, ligaCoincide)) };
     })
-    .filter(g => g.visibles.length > 0);
+    .filter(g => g.visibles.length > 0)
+    .sort((a, b) => prioridadGrupo(a) - prioridadGrupo(b));
 
   const todosLosEventos = grupos.flatMap(g => g.eventos);
   const numSeguidos = Object.keys(seguidos).length;
@@ -823,6 +914,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
         @media (max-width: 760px) {
           .sd-controles { flex-direction: column !important; align-items: stretch !important; }
           .sd-toasts { left: 10px !important; right: 10px !important; max-width: none !important; }
+          .sd-fila-grid { grid-template-columns: 16px 16px 55px 1fr 28px 6px 28px 1fr auto !important; padding: 6px 6px !important; font-size: 0.75rem !important; }
         }
         @keyframes sdAlertaEntrada {
           0% { transform: translateX(120%); opacity: 0; }
@@ -1028,38 +1120,68 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
                 : `No hay juegos en ninguna liga en la fecha ${selectedDate}.`}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               {gruposFiltrados.map(g => {
                 const activosLiga = g.eventos.filter(e => estadoCat(e) !== 'post' && !ocultos[String(e.id)]);
                 const ligaTodaFav = activosLiga.length > 0 && activosLiga.every(e => seguidos[String(e.id)]);
                 const ligaOculta = g.eventos.length > 0 && g.eventos.every(e => ocultos[String(e.id)]);
+                const estaColapsado = !!colapsados[g.liga];
+                const tieneVivo = g.visibles.some(e => ((e.status && e.status.type && e.status.type.state) || 'pre') === 'in');
+                const numLive = g.visibles.filter(e => ((e.status && e.status.type && e.status.type.state) || 'pre') === 'in').length;
                 return (
-                  <div key={g.liga} style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
-                    <div style={{ padding: '9px 14px', background: 'rgba(0, 210, 255, 0.07)', borderBottom: '1px solid rgba(0,210,255,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 'bold', fontSize: '0.88rem', color: '#00d2ff', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.label}</span>
+                  <div key={g.liga} style={{ background: '#0b0f19', borderRadius: '4px', overflow: 'hidden' }}>
+                    {/* Cabecera de liga — clickeable para colapsar */}
+                    <div
+                      onClick={() => toggleColapsar(g.liga)}
+                      style={{
+                        padding: '7px 12px',
+                        background: tieneVivo ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255,255,255,0.03)',
+                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.65rem', color: '#475569', transition: 'transform 0.2s', transform: estaColapsado ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▼</span>
+                        <span style={{ fontWeight: 'bold', fontSize: '0.8rem', color: tieneVivo ? '#6ee7b7' : '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {g.label}
+                        </span>
+                        {numLive > 0 && (
+                          <span style={{ fontSize: '0.6rem', fontWeight: 'bold', color: '#10b981', background: 'rgba(16,185,129,0.15)', padding: '1px 6px', borderRadius: '8px' }}>
+                            {numLive} LIVE
+                          </span>
+                        )}
+                      </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                         {activosLiga.length > 0 && (
                           <button
-                            onClick={() => toggleFavoritosLista(g.eventos, g.liga)}
+                            onClick={(e) => { e.stopPropagation(); toggleFavoritosLista(g.eventos, g.liga); }}
                             title={ligaTodaFav ? 'Quitar favorito a toda la liga' : 'Marcar toda la liga como favorita'}
-                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem', color: ligaTodaFav ? '#f59e0b' : '#475569', padding: 0, lineHeight: 1 }}
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: ligaTodaFav ? '#f59e0b' : '#334155', padding: 0, lineHeight: 1 }}
                           >
                             {ligaTodaFav ? '★' : '☆'}
                           </button>
                         )}
                         <button
-                          onClick={() => toggleOcultosLista(g.eventos)}
-                          title={ligaOculta ? 'Mostrar la liga y volver a notificar' : 'Ocultar toda la liga (sin notificaciones)'}
-                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: ligaOculta ? '#f59e0b' : '#475569', padding: 0, lineHeight: 1 }}
+                          onClick={(e) => { e.stopPropagation(); toggleOcultosLista(g.eventos); }}
+                          title={ligaOculta ? 'Mostrar la liga' : 'Ocultar toda la liga'}
+                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: ligaOculta ? '#f59e0b' : '#334155', padding: 0, lineHeight: 1 }}
                         >
                           {ligaOculta ? '👁' : '🚫'}
                         </button>
-                        <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{g.visibles.length} juego(s)</span>
+                        <span style={{ fontSize: '0.65rem', color: '#475569', minWidth: '18px', textAlign: 'right' }}>{g.visibles.length}</span>
                       </div>
                     </div>
-                    <div>
-                      {g.visibles.map(ev => renderFila(ev, g.liga))}
-                    </div>
+                    {/* Filas de partidos — colapsable */}
+                    {!estaColapsado && (
+                      <div>
+                        {g.visibles.map(ev => renderFila(ev, g.liga))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
