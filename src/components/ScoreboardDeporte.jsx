@@ -733,8 +733,8 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     setColapsados(prev => ({ ...prev, [ligaId]: !prev[ligaId] }));
   };
 
-  // Fila compacta estilo Flashscore: una fila horizontal por partido
-  // Layout: ★ | estado/hora | local logo nombre | score - score | nombre logo visitante | (periodos) | 🚫
+  // Fila estilo Flashscore: DOS filas por partido (una por equipo)
+  // Columnas: ☆ | 🚫 | Estado (span 2 filas) | logo + Equipo | Total (bold) | Q1 | Q2 | Q3 | Q4 | OT
   const renderFila = (ev, ligaId) => {
     const comp = ev.competitions && ev.competitions[0];
     if (!comp) return null;
@@ -750,7 +750,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     } else if (state === 'in') {
       estadoCorto = ev.status.type.shortDetail || 'En juego';
     } else {
-      estadoCorto = ev.status.type.completed === false ? (ev.status.type.shortDetail || 'Final') : 'Final';
+      estadoCorto = ev.status.type.completed === false ? (ev.status.type.shortDetail || 'Final') : 'Finished';
     }
 
     let competidores = (comp.competitors || []).slice();
@@ -758,119 +758,129 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     const away = competidores.find(c => c.homeAway === 'away') || competidores[1];
     if (!home || !away) return null;
 
-    const homeScore = state === 'pre' ? '' : (home.score !== undefined ? home.score : '-');
-    const awayScore = state === 'pre' ? '' : (away.score !== undefined ? away.score : '-');
+    const homeScore = state === 'pre' ? '-' : (home.score !== undefined ? home.score : '-');
+    const awayScore = state === 'pre' ? '-' : (away.score !== undefined ? away.score : '-');
+    const homeWins = state === 'post' && parseInt(homeScore) > parseInt(awayScore);
+    const awayWins = state === 'post' && parseInt(awayScore) > parseInt(homeScore);
 
-    // Periodos para basketball (una línea resumida)
-    const homePeriodos = (home.linescores || []).map(ls => ls.value !== undefined ? ls.value : '').filter(v => v !== '');
-    const awayPeriodos = (away.linescores || []).map(ls => ls.value !== undefined ? ls.value : '').filter(v => v !== '');
-    const tienePeriodos = state !== 'pre' && (homePeriodos.length > 0 || awayPeriodos.length > 0);
+    const homePeriodos = (home.linescores || []).map(ls => ls.value !== undefined ? ls.value : '');
+    const awayPeriodos = (away.linescores || []).map(ls => ls.value !== undefined ? ls.value : '');
+    const numPeriodos = Math.max(homePeriodos.length, awayPeriodos.length, 0);
 
-    const filaEstilo = {
-      display: 'grid',
-      gridTemplateColumns: '20px 20px 70px 1fr 36px 8px 36px 1fr auto',
-      alignItems: 'center',
-      gap: '0',
-      padding: '7px 10px',
-      borderBottom: '1px solid rgba(255,255,255,0.04)',
-      opacity: esOculto ? 0.4 : 1,
-      background: state === 'in' ? 'rgba(16, 185, 129, 0.04)' : 'transparent',
-      transition: 'background 0.15s',
-      cursor: 'default',
-      minHeight: '38px'
-    };
+    // Colores de cuartos
+    const qColor = '#64748b';
+    const qSize = '0.72rem';
+
+    const renderTeamRow = (team, score, periodos, isWinner, isTop) => (
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `1fr 42px ${numPeriodos > 0 ? `repeat(${numPeriodos}, 32px)` : ''}`,
+        alignItems: 'center',
+        gap: '0',
+        padding: isTop ? '6px 0 1px 0' : '1px 0 6px 0',
+      }}>
+        {/* Logo + Nombre equipo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
+          {team.team && team.team.logo && (
+            <img src={team.team.logo} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain', flexShrink: 0 }} />
+          )}
+          <span style={{
+            fontSize: '0.82rem',
+            color: isWinner ? '#f8fafc' : (state === 'post' ? '#94a3b8' : '#f8fafc'),
+            fontWeight: isWinner ? 'bold' : 'normal',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+          }}>
+            {team.team ? team.team.displayName : '?'}
+          </span>
+        </div>
+
+        {/* Total score */}
+        <span style={{
+          fontWeight: 'bold',
+          fontSize: '0.9rem',
+          color: state === 'in' ? '#ef4444' : (isWinner ? '#f8fafc' : (state === 'post' ? '#94a3b8' : '#475569')),
+          textAlign: 'center',
+          fontVariantNumeric: 'tabular-nums'
+        }}>
+          {score}
+        </span>
+
+        {/* Quarter columns */}
+        {Array.from({ length: numPeriodos }, (_, i) => (
+          <span key={i} style={{
+            fontSize: qSize,
+            color: qColor,
+            textAlign: 'center',
+            fontVariantNumeric: 'tabular-nums'
+          }}>
+            {periodos[i] !== undefined && periodos[i] !== '' ? periodos[i] : ''}
+          </span>
+        ))}
+      </div>
+    );
 
     return (
-      <div key={ev.id} className="sd-fila-grid" style={filaEstilo}
+      <div key={ev.id} className="sd-fila-match" style={{
+        display: 'grid',
+        gridTemplateColumns: '22px 22px 72px 1fr',
+        alignItems: 'center',
+        gap: '0',
+        padding: '0 10px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        opacity: esOculto ? 0.4 : 1,
+        background: state === 'in' ? 'rgba(16, 185, 129, 0.04)' : 'transparent',
+        transition: 'background 0.15s',
+      }}
         onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
         onMouseLeave={e => e.currentTarget.style.background = state === 'in' ? 'rgba(16, 185, 129, 0.04)' : 'transparent'}
       >
-        {/* Estrella favorito */}
-        {state !== 'post' ? (
+        {/* Col 1: Estrella favorito (span 2 filas) */}
+        <div style={{ gridRow: '1 / 3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {state !== 'post' ? (
+            <button
+              onClick={() => toggleSeguir(ev, ligaId)}
+              title={esFavorito ? 'Quitar favorito' : 'Marcar favorito'}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: esFavorito ? '#f59e0b' : '#334155', padding: 0, lineHeight: 1 }}
+            >
+              {esFavorito ? '★' : '☆'}
+            </button>
+          ) : (
+            <span style={{ fontSize: '0.9rem', color: '#334155' }}>☆</span>
+          )}
+        </div>
+
+        {/* Col 2: Ocultar (span 2 filas) */}
+        <div style={{ gridRow: '1 / 3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <button
-            onClick={() => toggleSeguir(ev, ligaId)}
-            title={esFavorito ? 'Quitar favorito' : 'Marcar favorito'}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: esFavorito ? '#f59e0b' : '#334155', padding: 0, lineHeight: 1, textAlign: 'center' }}
+            onClick={() => toggleOcultar(ev)}
+            title={esOculto ? 'Mostrar juego' : 'Ocultar juego'}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: esOculto ? '#f59e0b' : '#334155', padding: 0, lineHeight: 1 }}
           >
-            {esFavorito ? '★' : '☆'}
+            {esOculto ? '👁' : '🚫'}
           </button>
-        ) : (
-          <span />
-        )}
-
-        {/* Ocultar */}
-        <button
-          onClick={() => toggleOcultar(ev)}
-          title={esOculto ? 'Mostrar juego' : 'Ocultar juego'}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: esOculto ? '#f59e0b' : '#334155', padding: 0, lineHeight: 1, textAlign: 'center' }}
-        >
-          {esOculto ? '👁' : '🚫'}
-        </button>
-
-        {/* Estado / Hora */}
-        <span style={{
-          fontSize: '0.7rem',
-          fontWeight: 'bold',
-          color: est.accent,
-          textAlign: 'center',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
-        }}>
-          {estadoCorto}
-        </span>
-
-        {/* Equipo local (alineado a la derecha) */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', minWidth: 0, paddingRight: '8px' }}>
-          <span style={{ fontSize: '0.82rem', color: '#f8fafc', fontWeight: state === 'post' && parseInt(homeScore) > parseInt(awayScore) ? 'bold' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>
-            {home.team ? home.team.displayName : '?'}
-          </span>
-          {home.team && home.team.logo && (
-            <img src={home.team.logo} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain', flexShrink: 0 }} />
-          )}
         </div>
 
-        {/* Score local */}
-        <span style={{
-          fontWeight: 'bold',
-          fontSize: '0.95rem',
-          color: state === 'in' ? '#6ee7b7' : (state === 'post' ? '#f8fafc' : '#475569'),
-          textAlign: 'center',
-          fontVariantNumeric: 'tabular-nums'
-        }}>
-          {homeScore || '-'}
-        </span>
-
-        {/* Separador */}
-        <span style={{ fontSize: '0.75rem', color: '#334155', textAlign: 'center' }}>-</span>
-
-        {/* Score visitante */}
-        <span style={{
-          fontWeight: 'bold',
-          fontSize: '0.95rem',
-          color: state === 'in' ? '#6ee7b7' : (state === 'post' ? '#f8fafc' : '#475569'),
-          textAlign: 'center',
-          fontVariantNumeric: 'tabular-nums'
-        }}>
-          {awayScore || '-'}
-        </span>
-
-        {/* Equipo visitante (alineado a la izquierda) */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', minWidth: 0, paddingLeft: '8px' }}>
-          {away.team && away.team.logo && (
-            <img src={away.team.logo} alt="" style={{ width: '16px', height: '16px', objectFit: 'contain', flexShrink: 0 }} />
-          )}
-          <span style={{ fontSize: '0.82rem', color: '#f8fafc', fontWeight: state === 'post' && parseInt(awayScore) > parseInt(homeScore) ? 'bold' : 'normal', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {away.team ? away.team.displayName : '?'}
+        {/* Col 3: Estado (span 2 filas) */}
+        <div style={{ gridRow: '1 / 3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{
+            fontSize: '0.7rem',
+            fontWeight: 'bold',
+            color: est.accent,
+            textAlign: 'center',
+            whiteSpace: 'nowrap',
+            lineHeight: 1.3
+          }}>
+            {estadoCorto}
           </span>
         </div>
 
-        {/* Periodos resumidos */}
-        {tienePeriodos ? (
-          <span style={{ fontSize: '0.65rem', color: '#475569', whiteSpace: 'nowrap', paddingLeft: '8px', fontVariantNumeric: 'tabular-nums' }}>
-            ({homePeriodos.join(', ')}) ({awayPeriodos.join(', ')})
-          </span>
-        ) : <span />}
+        {/* Col 4: Equipo home (fila 1) */}
+        {renderTeamRow(home, homeScore, homePeriodos, homeWins, true)}
+
+        {/* Cols 1-3 son span, así que saltamos a col 4: Equipo away (fila 2) */}
+        <div style={{ gridColumn: '4' }}>
+          {renderTeamRow(away, awayScore, awayPeriodos, awayWins, false)}
+        </div>
       </div>
     );
   };
@@ -914,7 +924,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
         @media (max-width: 760px) {
           .sd-controles { flex-direction: column !important; align-items: stretch !important; }
           .sd-toasts { left: 10px !important; right: 10px !important; max-width: none !important; }
-          .sd-fila-grid { grid-template-columns: 16px 16px 55px 1fr 28px 6px 28px 1fr auto !important; padding: 6px 6px !important; font-size: 0.75rem !important; }
+          .sd-fila-match { grid-template-columns: 18px 18px 58px 1fr !important; padding: 0 6px !important; }
         }
         @keyframes sdAlertaEntrada {
           0% { transform: translateX(120%); opacity: 0; }
