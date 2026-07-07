@@ -1,0 +1,4223 @@
+{
+  "Stages": [
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Knockout",
+      "Events": [
+        {
+          "Eid": "12812993",
+          "Eps": "NS",
+          "Esd": 20260707160000,
+          "T1": [
+            {
+              "ID": "4819",
+              "Nm": "Argentina",
+              "Img": "https://img.sofascore.com/api/v1/team/4819/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4758",
+              "Nm": "Egypt",
+              "Img": "https://img.sofascore.com/api/v1/team/4758/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12812991",
+          "Eps": "NS",
+          "Esd": 20260707200000,
+          "T1": [
+            {
+              "ID": "4699",
+              "Nm": "Switzerland",
+              "Img": "https://img.sofascore.com/api/v1/team/4699/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4820",
+              "Nm": "Colombia",
+              "Img": "https://img.sofascore.com/api/v1/team/4820/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813016",
+          "Eps": "NS",
+          "Esd": 20260709200000,
+          "T1": [
+            {
+              "ID": "4481",
+              "Nm": "France",
+              "Img": "https://img.sofascore.com/api/v1/team/4481/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4778",
+              "Nm": "Morocco",
+              "Img": "https://img.sofascore.com/api/v1/team/4778/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12812994",
+          "Eps": "NS",
+          "Esd": 20260710190000,
+          "T1": [
+            {
+              "ID": "4698",
+              "Nm": "Spain",
+              "Img": "https://img.sofascore.com/api/v1/team/4698/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865206",
+              "Nm": "W94",
+              "Img": "https://img.sofascore.com/api/v1/team/865206/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813017",
+          "Eps": "NS",
+          "Esd": 20260711210000,
+          "T1": [
+            {
+              "ID": "4475",
+              "Nm": "Norway",
+              "Img": "https://img.sofascore.com/api/v1/team/4475/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4713",
+              "Nm": "England",
+              "Img": "https://img.sofascore.com/api/v1/team/4713/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813015",
+          "Eps": "NS",
+          "Esd": 20260712010000,
+          "T1": [
+            {
+              "ID": "865192",
+              "Nm": "W95",
+              "Img": "https://img.sofascore.com/api/v1/team/865192/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865195",
+              "Nm": "W96",
+              "Img": "https://img.sofascore.com/api/v1/team/865195/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813008",
+          "Eps": "NS",
+          "Esd": 20260714190000,
+          "T1": [
+            {
+              "ID": "865193",
+              "Nm": "W97",
+              "Img": "https://img.sofascore.com/api/v1/team/865193/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865196",
+              "Nm": "W98",
+              "Img": "https://img.sofascore.com/api/v1/team/865196/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12812996",
+          "Eps": "NS",
+          "Esd": 20260715190000,
+          "T1": [
+            {
+              "ID": "865188",
+              "Nm": "W99",
+              "Img": "https://img.sofascore.com/api/v1/team/865188/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865191",
+              "Nm": "W100",
+              "Img": "https://img.sofascore.com/api/v1/team/865191/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813003",
+          "Eps": "NS",
+          "Esd": 20260718210000,
+          "T1": [
+            {
+              "ID": "865207",
+              "Nm": "L101",
+              "Img": "https://img.sofascore.com/api/v1/team/865207/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865210",
+              "Nm": "L102",
+              "Img": "https://img.sofascore.com/api/v1/team/865210/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813005",
+          "Eps": "NS",
+          "Esd": 20260719190000,
+          "T1": [
+            {
+              "ID": "865201",
+              "Nm": "W101",
+              "Img": "https://img.sofascore.com/api/v1/team/865201/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865204",
+              "Nm": "W102",
+              "Img": "https://img.sofascore.com/api/v1/team/865204/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813000",
+          "Eps": "FT",
+          "Esd": 20260628190000,
+          "T1": [
+            {
+              "ID": "4736",
+              "Nm": "South Africa",
+              "Img": "https://img.sofascore.com/api/v1/team/4736/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4752",
+              "Nm": "Canada",
+              "Img": "https://img.sofascore.com/api/v1/team/4752/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "12813012",
+          "Eps": "FT",
+          "Esd": 20260629170000,
+          "T1": [
+            {
+              "ID": "4748",
+              "Nm": "Brazil",
+              "Img": "https://img.sofascore.com/api/v1/team/4748/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4770",
+              "Nm": "Japan",
+              "Img": "https://img.sofascore.com/api/v1/team/4770/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "2",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "12813014",
+          "Eps": "AP",
+          "Esd": 20260629203000,
+          "T1": [
+            {
+              "ID": "4711",
+              "Nm": "Germany",
+              "Img": "https://img.sofascore.com/api/v1/team/4711/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4789",
+              "Nm": "Paraguay",
+              "Img": "https://img.sofascore.com/api/v1/team/4789/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "4",
+          "Tr2": "5",
+          "Tr1H1": "0",
+          "Tr1H2": "4",
+          "Tr1OT": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "4",
+          "Tr2OT": "0"
+        },
+        {
+          "Eid": "12812998",
+          "Eps": "AP",
+          "Esd": 20260630010000,
+          "T1": [
+            {
+              "ID": "4705",
+              "Nm": "Netherlands",
+              "Img": "https://img.sofascore.com/api/v1/team/4705/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4778",
+              "Nm": "Morocco",
+              "Img": "https://img.sofascore.com/api/v1/team/4778/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "4",
+          "Tr1H1": "0",
+          "Tr1H2": "3",
+          "Tr1OT": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "4",
+          "Tr2OT": "0"
+        },
+        {
+          "Eid": "12812989",
+          "Eps": "FT",
+          "Esd": 20260630170000,
+          "T1": [
+            {
+              "ID": "4768",
+              "Nm": "Côte d'Ivoire",
+              "Img": "https://img.sofascore.com/api/v1/team/4768/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4475",
+              "Nm": "Norway",
+              "Img": "https://img.sofascore.com/api/v1/team/4475/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "12812995",
+          "Eps": "FT",
+          "Esd": 20260630210000,
+          "T1": [
+            {
+              "ID": "4481",
+              "Nm": "France",
+              "Img": "https://img.sofascore.com/api/v1/team/4481/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4688",
+              "Nm": "Sweden",
+              "Img": "https://img.sofascore.com/api/v1/team/4688/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "12813001",
+          "Eps": "FT",
+          "Esd": 20260701020000,
+          "T1": [
+            {
+              "ID": "4781",
+              "Nm": "Mexico",
+              "Img": "https://img.sofascore.com/api/v1/team/4781/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4757",
+              "Nm": "Ecuador",
+              "Img": "https://img.sofascore.com/api/v1/team/4757/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1H1": "2",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "12813020",
+          "Eps": "FT",
+          "Esd": 20260701160000,
+          "T1": [
+            {
+              "ID": "4713",
+              "Nm": "England",
+              "Img": "https://img.sofascore.com/api/v1/team/4713/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4823",
+              "Nm": "DR Congo",
+              "Img": "https://img.sofascore.com/api/v1/team/4823/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "2",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "12813013",
+          "Eps": "AET",
+          "Esd": 20260701200000,
+          "T1": [
+            {
+              "ID": "4717",
+              "Nm": "Belgium",
+              "Img": "https://img.sofascore.com/api/v1/team/4717/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4739",
+              "Nm": "Senegal",
+              "Img": "https://img.sofascore.com/api/v1/team/4739/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "3",
+          "Tr1OT": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "1",
+          "Tr2OT": "0"
+        },
+        {
+          "Eid": "12812992",
+          "Eps": "FT",
+          "Esd": 20260702000000,
+          "T1": [
+            {
+              "ID": "4724",
+              "Nm": "USA",
+              "Img": "https://img.sofascore.com/api/v1/team/4724/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4479",
+              "Nm": "Bosnia & Herzegovina",
+              "Img": "https://img.sofascore.com/api/v1/team/4479/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "12813004",
+          "Eps": "FT",
+          "Esd": 20260702190000,
+          "T1": [
+            {
+              "ID": "4698",
+              "Nm": "Spain",
+              "Img": "https://img.sofascore.com/api/v1/team/4698/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4718",
+              "Nm": "Austria",
+              "Img": "https://img.sofascore.com/api/v1/team/4718/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "12812997",
+          "Eps": "FT",
+          "Esd": 20260702230000,
+          "T1": [
+            {
+              "ID": "4704",
+              "Nm": "Portugal",
+              "Img": "https://img.sofascore.com/api/v1/team/4704/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4715",
+              "Nm": "Croatia",
+              "Img": "https://img.sofascore.com/api/v1/team/4715/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "12813019",
+          "Eps": "FT",
+          "Esd": 20260703030000,
+          "T1": [
+            {
+              "ID": "4699",
+              "Nm": "Switzerland",
+              "Img": "https://img.sofascore.com/api/v1/team/4699/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4691",
+              "Nm": "Algeria",
+              "Img": "https://img.sofascore.com/api/v1/team/4691/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "12813018",
+          "Eps": "AP",
+          "Esd": 20260703180000,
+          "T1": [
+            {
+              "ID": "4741",
+              "Nm": "Australia",
+              "Img": "https://img.sofascore.com/api/v1/team/4741/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4758",
+              "Nm": "Egypt",
+              "Img": "https://img.sofascore.com/api/v1/team/4758/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "5",
+          "Tr1H1": "0",
+          "Tr1H2": "3",
+          "Tr1OT": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "4",
+          "Tr2OT": "0"
+        },
+        {
+          "Eid": "12812999",
+          "Eps": "AET",
+          "Esd": 20260703220000,
+          "T1": [
+            {
+              "ID": "4819",
+              "Nm": "Argentina",
+              "Img": "https://img.sofascore.com/api/v1/team/4819/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4753",
+              "Nm": "Cabo Verde",
+              "Img": "https://img.sofascore.com/api/v1/team/4753/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "2",
+          "Tr1H1": "1",
+          "Tr1H2": "2",
+          "Tr1OT": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "2",
+          "Tr2OT": "1"
+        },
+        {
+          "Eid": "12813011",
+          "Eps": "FT",
+          "Esd": 20260704013000,
+          "T1": [
+            {
+              "ID": "4820",
+              "Nm": "Colombia",
+              "Img": "https://img.sofascore.com/api/v1/team/4820/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4764",
+              "Nm": "Ghana",
+              "Img": "https://img.sofascore.com/api/v1/team/4764/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "12813009",
+          "Eps": "FT",
+          "Esd": 20260704170000,
+          "T1": [
+            {
+              "ID": "4752",
+              "Nm": "Canada",
+              "Img": "https://img.sofascore.com/api/v1/team/4752/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4778",
+              "Nm": "Morocco",
+              "Img": "https://img.sofascore.com/api/v1/team/4778/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "3",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "3"
+        },
+        {
+          "Eid": "12813010",
+          "Eps": "FT",
+          "Esd": 20260704210000,
+          "T1": [
+            {
+              "ID": "4789",
+              "Nm": "Paraguay",
+              "Img": "https://img.sofascore.com/api/v1/team/4789/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4481",
+              "Nm": "France",
+              "Img": "https://img.sofascore.com/api/v1/team/4481/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "12813006",
+          "Eps": "FT",
+          "Esd": 20260705200000,
+          "T1": [
+            {
+              "ID": "4748",
+              "Nm": "Brazil",
+              "Img": "https://img.sofascore.com/api/v1/team/4748/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4475",
+              "Nm": "Norway",
+              "Img": "https://img.sofascore.com/api/v1/team/4475/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "12813007",
+          "Eps": "FT",
+          "Esd": 20260706010000,
+          "T1": [
+            {
+              "ID": "4781",
+              "Nm": "Mexico",
+              "Img": "https://img.sofascore.com/api/v1/team/4781/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4713",
+              "Nm": "England",
+              "Img": "https://img.sofascore.com/api/v1/team/4713/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "3",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "12812990",
+          "Eps": "FT",
+          "Esd": 20260706190000,
+          "T1": [
+            {
+              "ID": "4704",
+              "Nm": "Portugal",
+              "Img": "https://img.sofascore.com/api/v1/team/4704/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4698",
+              "Nm": "Spain",
+              "Img": "https://img.sofascore.com/api/v1/team/4698/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "12813002",
+          "Eps": "1H",
+          "Esd": 20260707000000,
+          "T1": [
+            {
+              "ID": "4724",
+              "Nm": "USA",
+              "Img": "https://img.sofascore.com/api/v1/team/4724/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4717",
+              "Nm": "Belgium",
+              "Img": "https://img.sofascore.com/api/v1/team/4717/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Group G",
+      "Events": [
+        {
+          "Eid": "15186822",
+          "Eps": "FT",
+          "Esd": 20260627030000,
+          "T1": [
+            {
+              "ID": "4784",
+              "Nm": "New Zealand",
+              "Img": "https://img.sofascore.com/api/v1/team/4784/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4717",
+              "Nm": "Belgium",
+              "Img": "https://img.sofascore.com/api/v1/team/4717/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "5",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "4"
+        },
+        {
+          "Eid": "15186828",
+          "Eps": "FT",
+          "Esd": 20260627030000,
+          "T1": [
+            {
+              "ID": "4758",
+              "Nm": "Egypt",
+              "Img": "https://img.sofascore.com/api/v1/team/4758/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4766",
+              "Nm": "Iran",
+              "Img": "https://img.sofascore.com/api/v1/team/4766/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Group L",
+      "Events": [
+        {
+          "Eid": "15186624",
+          "Eps": "FT",
+          "Esd": 20260627210000,
+          "T1": [
+            {
+              "ID": "4715",
+              "Nm": "Croatia",
+              "Img": "https://img.sofascore.com/api/v1/team/4715/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4764",
+              "Nm": "Ghana",
+              "Img": "https://img.sofascore.com/api/v1/team/4764/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "15186676",
+          "Eps": "FT",
+          "Esd": 20260627210000,
+          "T1": [
+            {
+              "ID": "5164",
+              "Nm": "Panama",
+              "Img": "https://img.sofascore.com/api/v1/team/5164/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4713",
+              "Nm": "England",
+              "Img": "https://img.sofascore.com/api/v1/team/4713/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "2"
+        }
+      ]
+    },
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Group K",
+      "Events": [
+        {
+          "Eid": "15186717",
+          "Eps": "FT",
+          "Esd": 20260627233000,
+          "T1": [
+            {
+              "ID": "4823",
+              "Nm": "DR Congo",
+              "Img": "https://img.sofascore.com/api/v1/team/4823/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4723",
+              "Nm": "Uzbekistan",
+              "Img": "https://img.sofascore.com/api/v1/team/4723/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "3",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "15186696",
+          "Eps": "FT",
+          "Esd": 20260627233000,
+          "T1": [
+            {
+              "ID": "4820",
+              "Nm": "Colombia",
+              "Img": "https://img.sofascore.com/api/v1/team/4820/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4704",
+              "Nm": "Portugal",
+              "Img": "https://img.sofascore.com/api/v1/team/4704/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Group J",
+      "Events": [
+        {
+          "Eid": "15186747",
+          "Eps": "FT",
+          "Esd": 20260628020000,
+          "T1": [
+            {
+              "ID": "4691",
+              "Nm": "Algeria",
+              "Img": "https://img.sofascore.com/api/v1/team/4691/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4718",
+              "Nm": "Austria",
+              "Img": "https://img.sofascore.com/api/v1/team/4718/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "3",
+          "Tr1H1": "1",
+          "Tr1H2": "2",
+          "Tr2H1": "1",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "15186734",
+          "Eps": "FT",
+          "Esd": 20260628020000,
+          "T1": [
+            {
+              "ID": "4771",
+              "Nm": "Jordan",
+              "Img": "https://img.sofascore.com/api/v1/team/4771/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4819",
+              "Nm": "Argentina",
+              "Img": "https://img.sofascore.com/api/v1/team/4819/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "3",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "1"
+        }
+      ]
+    },
+    {
+      "Sid": "390",
+      "Cnm": "Brazil",
+      "Snm": "Brasileirão Série B",
+      "Events": [
+        {
+          "Eid": "15526165",
+          "Eps": "FT",
+          "Esd": 20260705233000,
+          "T1": [
+            {
+              "ID": "2011",
+              "Nm": "Náutico",
+              "Img": "https://img.sofascore.com/api/v1/team/2011/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1980",
+              "Nm": "Juventude",
+              "Img": "https://img.sofascore.com/api/v1/team/1980/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "15526158",
+          "Eps": "FT",
+          "Esd": 20260706220000,
+          "T1": [
+            {
+              "ID": "1979",
+              "Nm": "Botafogo-SP",
+              "Img": "https://img.sofascore.com/api/v1/team/1979/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "7315",
+              "Nm": "Avaí",
+              "Img": "https://img.sofascore.com/api/v1/team/7315/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "15526167",
+          "Eps": "FT",
+          "Esd": 20260706220000,
+          "T1": [
+            {
+              "ID": "2021",
+              "Nm": "Vila Nova FC",
+              "Img": "https://img.sofascore.com/api/v1/team/2021/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "47504",
+              "Nm": "São Bernardo",
+              "Img": "https://img.sofascore.com/api/v1/team/47504/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        }
+      ]
+    },
+    {
+      "Sid": "240",
+      "Cnm": "Ecuador",
+      "Snm": "LigaPro Serie A, Primera Etapa",
+      "Events": [
+        {
+          "Eid": "16404678",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "6001",
+              "Nm": "Macará",
+              "Img": "https://img.sofascore.com/api/v1/team/6001/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5257",
+              "Nm": "LDU",
+              "Img": "https://img.sofascore.com/api/v1/team/5257/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16390587",
+          "Eps": "Postponed",
+          "Esd": 20260705200000,
+          "T1": [
+            {
+              "ID": "5249",
+              "Nm": "Aucas",
+              "Img": "https://img.sofascore.com/api/v1/team/5249/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "188850",
+              "Nm": "Guayaquil City",
+              "Img": "https://img.sofascore.com/api/v1/team/188850/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16423622",
+          "Eps": "FT",
+          "Esd": 20260705220000,
+          "T1": [
+            {
+              "ID": "213638",
+              "Nm": "Delfín",
+              "Img": "https://img.sofascore.com/api/v1/team/213638/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5255",
+              "Nm": "Emelec",
+              "Img": "https://img.sofascore.com/api/v1/team/5255/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16405034",
+          "Eps": "FT",
+          "Esd": 20260706213000,
+          "T1": [
+            {
+              "ID": "21942",
+              "Nm": "Universidad Católica del Ecuador",
+              "Img": "https://img.sofascore.com/api/v1/team/21942/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "134976",
+              "Nm": "Mushuc Runa SC",
+              "Img": "https://img.sofascore.com/api/v1/team/134976/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "3",
+          "Tr1H1": "0",
+          "Tr1H2": "2",
+          "Tr2H1": "1",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "16410825",
+          "Eps": "1H",
+          "Esd": 20260707000000,
+          "T1": [
+            {
+              "ID": "277525",
+              "Nm": "Orense SC",
+              "Img": "https://img.sofascore.com/api/v1/team/277525/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "21941",
+              "Nm": "Técnico Universitario",
+              "Img": "https://img.sofascore.com/api/v1/team/21941/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "62405",
+      "Cnm": "Argentina",
+      "Snm": "Camp. De Reser De Primera Division B Metropolitana",
+      "Events": [
+        {
+          "Eid": "16452815",
+          "Eps": "FT",
+          "Esd": 20260706150000,
+          "T1": [
+            {
+              "ID": "379325",
+              "Nm": "San Martin de Burzaco Reserve",
+              "Img": "https://img.sofascore.com/api/v1/team/379325/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "269862",
+              "Nm": "CSD Flandria Reserve",
+              "Img": "https://img.sofascore.com/api/v1/team/269862/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "3",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "1"
+        }
+      ]
+    },
+    {
+      "Sid": "853",
+      "Cnm": "World",
+      "Snm": "Club Friendly Games",
+      "Events": [
+        {
+          "Eid": "16425391",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "1291",
+              "Nm": "AGF",
+              "Img": "https://img.sofascore.com/api/v1/team/1291/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2346",
+              "Nm": "Motherwell",
+              "Img": "https://img.sofascore.com/api/v1/team/2346/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "4",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "3",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16422869",
+          "Eps": "Canceled",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "6183",
+              "Nm": "FC Altona 93",
+              "Img": "https://img.sofascore.com/api/v1/team/6183/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "323848",
+              "Nm": "1.FC Phönix Lübeck",
+              "Img": "https://img.sofascore.com/api/v1/team/323848/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16331088",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "1238147",
+              "Nm": "SC Altendorf-Ersdorf",
+              "Img": "https://img.sofascore.com/api/v1/team/1238147/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6188",
+              "Nm": "Bonner SC",
+              "Img": "https://img.sofascore.com/api/v1/team/6188/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "14",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "6",
+          "Tr2H2": "8"
+        },
+        {
+          "Eid": "16422870",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "1112943",
+              "Nm": "SSV Kästorf 1922",
+              "Img": "https://img.sofascore.com/api/v1/team/1112943/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5564",
+              "Nm": "VfB Germania Halberstadt",
+              "Img": "https://img.sofascore.com/api/v1/team/5564/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "4",
+          "Tr2": "3",
+          "Tr1H1": "1",
+          "Tr1H2": "3",
+          "Tr2H1": "2",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16422876",
+          "Eps": "FT",
+          "Esd": 20260705123000,
+          "T1": [
+            {
+              "ID": "297890",
+              "Nm": "RKAV Volendam",
+              "Img": "https://img.sofascore.com/api/v1/team/297890/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2968",
+              "Nm": "FC Volendam",
+              "Img": "https://img.sofascore.com/api/v1/team/2968/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "3",
+          "Tr1H1": "0",
+          "Tr1H2": "2",
+          "Tr2H1": "2",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16447053",
+          "Eps": "FT",
+          "Esd": 20260705130000,
+          "T1": [
+            {
+              "ID": "483763",
+              "Nm": "FC Cosmos Koblenz",
+              "Img": "https://img.sofascore.com/api/v1/team/483763/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "309019",
+              "Nm": "Ahrweiler BC 1920",
+              "Img": "https://img.sofascore.com/api/v1/team/309019/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16293567",
+          "Eps": "FT",
+          "Esd": 20260705130000,
+          "T1": [
+            {
+              "ID": "1235780",
+              "Nm": "SC Blau-Weiss Ostenland",
+              "Img": "https://img.sofascore.com/api/v1/team/1235780/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2561",
+              "Nm": "SC Paderborn 07",
+              "Img": "https://img.sofascore.com/api/v1/team/2561/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "18",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "7",
+          "Tr2H2": "11"
+        },
+        {
+          "Eid": "16317784",
+          "Eps": "FT",
+          "Esd": 20260705130000,
+          "T1": [
+            {
+              "ID": "2055",
+              "Nm": "SK Rapid Wien",
+              "Img": "https://img.sofascore.com/api/v1/team/2055/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2230",
+              "Nm": "FK Pardubice",
+              "Img": "https://img.sofascore.com/api/v1/team/2230/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "2",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16447050",
+          "Eps": "FT",
+          "Esd": 20260705130000,
+          "T1": [
+            {
+              "ID": "4505",
+              "Nm": "Wuppertaler SV",
+              "Img": "https://img.sofascore.com/api/v1/team/4505/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "108355",
+              "Nm": "VfB 03 Hilden",
+              "Img": "https://img.sofascore.com/api/v1/team/108355/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "2",
+          "Tr1H1": "2",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16450605",
+          "Eps": "FT",
+          "Esd": 20260705133000,
+          "T1": [
+            {
+              "ID": "335603",
+              "Nm": "DJK Adler Union Frintrop",
+              "Img": "https://img.sofascore.com/api/v1/team/335603/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5848",
+              "Nm": "SV Schermbeck",
+              "Img": "https://img.sofascore.com/api/v1/team/5848/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16422879",
+          "Eps": "FT",
+          "Esd": 20260705133000,
+          "T1": [
+            {
+              "ID": "1161",
+              "Nm": "Rosenborg BK",
+              "Img": "https://img.sofascore.com/api/v1/team/1161/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "661",
+              "Nm": "Molde FK",
+              "Img": "https://img.sofascore.com/api/v1/team/661/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16289301",
+          "Eps": "FT",
+          "Esd": 20260705133000,
+          "T1": [
+            {
+              "ID": "1235444",
+              "Nm": "SV Grun-Weiss Luben",
+              "Img": "https://img.sofascore.com/api/v1/team/1235444/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2547",
+              "Nm": "1. FC Union Berlin",
+              "Img": "https://img.sofascore.com/api/v1/team/2547/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "16",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "11",
+          "Tr2H2": "5"
+        },
+        {
+          "Eid": "16377131",
+          "Eps": "FT",
+          "Esd": 20260705140000,
+          "T1": [
+            {
+              "ID": "266889",
+              "Nm": "FC Kharkiv",
+              "Img": "https://img.sofascore.com/api/v1/team/266889/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2445",
+              "Nm": "BSC Young Boys",
+              "Img": "https://img.sofascore.com/api/v1/team/2445/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "2",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16371862",
+          "Eps": "FT",
+          "Esd": 20260705140000,
+          "T1": [
+            {
+              "ID": "36288",
+              "Nm": "TSV 1860 Rosenheim",
+              "Img": "https://img.sofascore.com/api/v1/team/36288/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1119845",
+              "Nm": "SV Aubing",
+              "Img": "https://img.sofascore.com/api/v1/team/1119845/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "3",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16422887",
+          "Eps": "FT",
+          "Esd": 20260705140000,
+          "T1": [
+            {
+              "ID": "395647",
+              "Nm": "TSV Berg",
+              "Img": "https://img.sofascore.com/api/v1/team/395647/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2580",
+              "Nm": "SSV Ulm 1846",
+              "Img": "https://img.sofascore.com/api/v1/team/2580/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "4",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "16340094",
+          "Eps": "FT",
+          "Esd": 20260705140000,
+          "T1": [
+            {
+              "ID": "108173",
+              "Nm": "TSV Bogen",
+              "Img": "https://img.sofascore.com/api/v1/team/108173/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "75131",
+              "Nm": "SpVgg Hankofen-Hailing",
+              "Img": "https://img.sofascore.com/api/v1/team/75131/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "2",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16340076",
+          "Eps": "FT",
+          "Esd": 20260705140000,
+          "T1": [
+            {
+              "ID": "1238563",
+              "Nm": "TSV Jahn Busnau",
+              "Img": "https://img.sofascore.com/api/v1/team/1238563/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2682",
+              "Nm": "Stuttgarter Kickers",
+              "Img": "https://img.sofascore.com/api/v1/team/2682/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "9",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "5",
+          "Tr2H2": "4"
+        },
+        {
+          "Eid": "16422888",
+          "Eps": "FT",
+          "Esd": 20260705140000,
+          "T1": [
+            {
+              "ID": "1102372",
+              "Nm": "Union Muhlhausen",
+              "Img": "https://img.sofascore.com/api/v1/team/1102372/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2578",
+              "Nm": "FC Rot-Weiß Erfurt",
+              "Img": "https://img.sofascore.com/api/v1/team/2578/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "8",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "7"
+        },
+        {
+          "Eid": "16422896",
+          "Eps": "FT",
+          "Esd": 20260705150000,
+          "T1": [
+            {
+              "ID": "24143",
+              "Nm": "Braunschweig",
+              "Img": "https://img.sofascore.com/api/v1/team/24143/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2557",
+              "Nm": "Eintracht Braunschweig",
+              "Img": "https://img.sofascore.com/api/v1/team/2557/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "7",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "2",
+          "Tr2H2": "5"
+        },
+        {
+          "Eid": "16422897",
+          "Eps": "FT",
+          "Esd": 20260705150000,
+          "T1": [
+            {
+              "ID": "25610",
+              "Nm": "CREDOBUS Mosonmagyaróvári TE",
+              "Img": "https://img.sofascore.com/api/v1/team/25610/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3050",
+              "Nm": "Beşiktaş JK",
+              "Img": "https://img.sofascore.com/api/v1/team/3050/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16422898",
+          "Eps": "Canceled",
+          "Esd": 20260705150000,
+          "T1": [
+            {
+              "ID": "3115",
+              "Nm": "Widzew Łódź",
+              "Img": "https://img.sofascore.com/api/v1/team/3115/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2511",
+              "Nm": "New England Revolution",
+              "Img": "https://img.sofascore.com/api/v1/team/2511/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16422899",
+          "Eps": "FT",
+          "Esd": 20260705150000,
+          "T1": [
+            {
+              "ID": "334956",
+              "Nm": "Wieczysta Kraków",
+              "Img": "https://img.sofascore.com/api/v1/team/334956/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2216",
+              "Nm": "SK Slavia Praha",
+              "Img": "https://img.sofascore.com/api/v1/team/2216/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "2",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16317787",
+          "Eps": "FT",
+          "Esd": 20260705151500,
+          "T1": [
+            {
+              "ID": "2055",
+              "Nm": "SK Rapid Wien",
+              "Img": "https://img.sofascore.com/api/v1/team/2055/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "295403",
+              "Nm": "FC Rapid București",
+              "Img": "https://img.sofascore.com/api/v1/team/295403/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16409617",
+          "Eps": "FT",
+          "Esd": 20260705153000,
+          "T1": [
+            {
+              "ID": "3395",
+              "Nm": "Omonia Nicosia",
+              "Img": "https://img.sofascore.com/api/v1/team/3395/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5202",
+              "Nm": "Hapoel Be'er Sheva",
+              "Img": "https://img.sofascore.com/api/v1/team/5202/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "2",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16422907",
+          "Eps": "FT",
+          "Esd": 20260705160000,
+          "T1": [
+            {
+              "ID": "201881",
+              "Nm": "Beltinci Klima Tratnjek",
+              "Img": "https://img.sofascore.com/api/v1/team/201881/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "213357",
+              "Nm": "NŠ Mura",
+              "Img": "https://img.sofascore.com/api/v1/team/213357/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "4",
+          "Tr2": "1",
+          "Tr1H1": "2",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16425657",
+          "Eps": "FT",
+          "Esd": 20260705160000,
+          "T1": [
+            {
+              "ID": "455100",
+              "Nm": "KVV Sint-Denijs Sport",
+              "Img": "https://img.sofascore.com/api/v1/team/455100/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "371484",
+              "Nm": "KSC Lokeren",
+              "Img": "https://img.sofascore.com/api/v1/team/371484/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "4",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "3"
+        },
+        {
+          "Eid": "16443540",
+          "Eps": "FT",
+          "Esd": 20260705160000,
+          "T1": [
+            {
+              "ID": "2416",
+              "Nm": "NK Olimpija Ljubljana",
+              "Img": "https://img.sofascore.com/api/v1/team/2416/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "35226",
+              "Nm": "NK Rudeš",
+              "Img": "https://img.sofascore.com/api/v1/team/35226/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "3",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16422908",
+          "Eps": "FT",
+          "Esd": 20260705160000,
+          "T1": [
+            {
+              "ID": "2321",
+              "Nm": "Zenit St. Petersburg",
+              "Img": "https://img.sofascore.com/api/v1/team/2321/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3205",
+              "Nm": "Gimnasia y Esgrima",
+              "Img": "https://img.sofascore.com/api/v1/team/3205/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16422872",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "56019",
+              "Nm": "FK Mačva Šabac",
+              "Img": "https://img.sofascore.com/api/v1/team/56019/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "7771",
+              "Nm": "FK Mladost Lučani",
+              "Img": "https://img.sofascore.com/api/v1/team/7771/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16454256",
+          "Eps": "FT",
+          "Esd": 20260706110000,
+          "T1": [
+            {
+              "ID": "36276",
+              "Nm": "Chelyabinsk",
+              "Img": "https://img.sofascore.com/api/v1/team/36276/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "320728",
+              "Nm": "Torpedo Miass",
+              "Img": "https://img.sofascore.com/api/v1/team/320728/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "2",
+          "Tr2H1": "2",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16454255",
+          "Eps": "FT",
+          "Esd": 20260706140000,
+          "T1": [
+            {
+              "ID": "2318",
+              "Nm": "Rotor Volgograd",
+              "Img": "https://img.sofascore.com/api/v1/team/2318/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "285689",
+              "Nm": "Akron Togliatti",
+              "Img": "https://img.sofascore.com/api/v1/team/285689/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "3",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "2",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16447131",
+          "Eps": "FT",
+          "Esd": 20260706150000,
+          "T1": [
+            {
+              "ID": "4901",
+              "Nm": "Cracovia",
+              "Img": "https://img.sofascore.com/api/v1/team/4901/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3086",
+              "Nm": "Başakşehir FK",
+              "Img": "https://img.sofascore.com/api/v1/team/3086/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "1",
+          "Tr1H1": "2",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16447123",
+          "Eps": "FT",
+          "Esd": 20260706153000,
+          "T1": [
+            {
+              "ID": "5152",
+              "Nm": "FK Partizan",
+              "Img": "https://img.sofascore.com/api/v1/team/5152/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5215",
+              "Nm": "Neftçi PFK",
+              "Img": "https://img.sofascore.com/api/v1/team/5215/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16309130",
+          "Eps": "FT",
+          "Esd": 20260706163000,
+          "T1": [
+            {
+              "ID": "1237125",
+              "Nm": "FC Schwaig",
+              "Img": "https://img.sofascore.com/api/v1/team/1237125/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2567",
+              "Nm": "SSV Jahn Regensburg",
+              "Img": "https://img.sofascore.com/api/v1/team/2567/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "2",
+          "Tr1H1": "2",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16456283",
+          "Eps": "FT",
+          "Esd": 20260706183000,
+          "T1": [
+            {
+              "ID": "45005",
+              "Nm": "Colwyn Bay",
+              "Img": "https://img.sofascore.com/api/v1/team/45005/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4914",
+              "Nm": "CPD Y Rhyl 1879",
+              "Img": "https://img.sofascore.com/api/v1/team/4914/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "2",
+          "Tr1H1": "2",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16459491",
+          "Eps": "FT",
+          "Esd": 20260706184500,
+          "T1": [
+            {
+              "ID": "530639",
+              "Nm": "Radstock Town FC",
+              "Img": "https://img.sofascore.com/api/v1/team/530639/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "45008",
+              "Nm": "Frome Town",
+              "Img": "https://img.sofascore.com/api/v1/team/45008/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "6",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "4",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "16459343",
+          "Eps": "NS",
+          "Esd": 20260707070000,
+          "T1": [
+            {
+              "ID": "362016",
+              "Nm": "Dinamo Makhachkala",
+              "Img": "https://img.sofascore.com/api/v1/team/362016/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3205",
+              "Nm": "Gimnasia y Esgrima",
+              "Img": "https://img.sofascore.com/api/v1/team/3205/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16454013",
+          "Eps": "NS",
+          "Esd": 20260707080000,
+          "T1": [
+            {
+              "ID": "1244808",
+              "Nm": "Bourneview Mill FC",
+              "Img": "https://img.sofascore.com/api/v1/team/1244808/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5279",
+              "Nm": "Portadown FC",
+              "Img": "https://img.sofascore.com/api/v1/team/5279/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16446310",
+          "Eps": "NS",
+          "Esd": 20260707090000,
+          "T1": [
+            {
+              "ID": "1305",
+              "Nm": "Hvidovre",
+              "Img": "https://img.sofascore.com/api/v1/team/1305/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "35412",
+              "Nm": "Fremad Amager",
+              "Img": "https://img.sofascore.com/api/v1/team/35412/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16454014",
+          "Eps": "NS",
+          "Esd": 20260707090000,
+          "T1": [
+            {
+              "ID": "23951",
+              "Nm": "MFK Karviná",
+              "Img": "https://img.sofascore.com/api/v1/team/23951/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "7885",
+              "Nm": "MFK Zemplín Michalovce",
+              "Img": "https://img.sofascore.com/api/v1/team/7885/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16446227",
+          "Eps": "NS",
+          "Esd": 20260707090000,
+          "T1": [
+            {
+              "ID": "7919",
+              "Nm": "Podbeskidzie Bielsko-Biała",
+              "Img": "https://img.sofascore.com/api/v1/team/7919/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "323652",
+              "Nm": "Baník Ostrava B",
+              "Img": "https://img.sofascore.com/api/v1/team/323652/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16331085",
+          "Eps": "NS",
+          "Esd": 20260707103000,
+          "T1": [
+            {
+              "ID": "53365",
+              "Nm": "FC Viktoria Köln",
+              "Img": "https://img.sofascore.com/api/v1/team/53365/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "165922",
+              "Nm": "TSV Steinbach Haiger",
+              "Img": "https://img.sofascore.com/api/v1/team/165922/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16456313",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "2355",
+              "Nm": "Aberdeen",
+              "Img": "https://img.sofascore.com/api/v1/team/2355/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2365",
+              "Nm": "Ross County",
+              "Img": "https://img.sofascore.com/api/v1/team/2365/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16447142",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "274971",
+              "Nm": "Arda Kardzhali",
+              "Img": "https://img.sofascore.com/api/v1/team/274971/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5204",
+              "Nm": "Beitar Jerusalem",
+              "Img": "https://img.sofascore.com/api/v1/team/5204/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16454177",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "36381",
+              "Nm": "Buxton FC",
+              "Img": "https://img.sofascore.com/api/v1/team/36381/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2999",
+              "Nm": "Sporting Braga",
+              "Img": "https://img.sofascore.com/api/v1/team/2999/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16454281",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "5287",
+              "Nm": "CFR 1907 Cluj",
+              "Img": "https://img.sofascore.com/api/v1/team/5287/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "262228",
+              "Nm": "FC Noah",
+              "Img": "https://img.sofascore.com/api/v1/team/262228/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16454323",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "362016",
+              "Nm": "Dinamo Makhachkala",
+              "Img": "https://img.sofascore.com/api/v1/team/362016/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3205",
+              "Nm": "Gimnasia y Esgrima",
+              "Img": "https://img.sofascore.com/api/v1/team/3205/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16454326",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "2315",
+              "Nm": "Dynamo Moscow",
+              "Img": "https://img.sofascore.com/api/v1/team/2315/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "24118",
+              "Nm": "Orenburg",
+              "Img": "https://img.sofascore.com/api/v1/team/24118/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16456327",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "294048",
+              "Nm": "FC Kryvbas Kryvyi Rih",
+              "Img": "https://img.sofascore.com/api/v1/team/294048/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5046",
+              "Nm": "Lommel SK",
+              "Img": "https://img.sofascore.com/api/v1/team/5046/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16456330",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "43981",
+              "Nm": "FK Radnički 1923",
+              "Img": "https://img.sofascore.com/api/v1/team/43981/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5143",
+              "Nm": "FK Budućnost Podgorica",
+              "Img": "https://img.sofascore.com/api/v1/team/5143/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16456331",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "201203",
+              "Nm": "FK Septemvri Sofia",
+              "Img": "https://img.sofascore.com/api/v1/team/201203/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "232494",
+              "Nm": "FK Hebar Pazardzhik",
+              "Img": "https://img.sofascore.com/api/v1/team/232494/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16456332",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "282589",
+              "Nm": "FK Yantra Gabrovo",
+              "Img": "https://img.sofascore.com/api/v1/team/282589/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "45657",
+              "Nm": "OFK Spartak Pleven",
+              "Img": "https://img.sofascore.com/api/v1/team/45657/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16456318",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "2317",
+              "Nm": "Fakel Voronezh",
+              "Img": "https://img.sofascore.com/api/v1/team/2317/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "2326",
+              "Nm": "FC Rostov",
+              "Img": "https://img.sofascore.com/api/v1/team/2326/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16299784",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "2541",
+              "Nm": "Hannover 96",
+              "Img": "https://img.sofascore.com/api/v1/team/2541/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "323848",
+              "Nm": "1.FC Phönix Lübeck",
+              "Img": "https://img.sofascore.com/api/v1/team/323848/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16456326",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "273054",
+              "Nm": "Killyleagh Yc",
+              "Img": "https://img.sofascore.com/api/v1/team/273054/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5279",
+              "Nm": "Portadown FC",
+              "Img": "https://img.sofascore.com/api/v1/team/5279/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16456328",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "3106",
+              "Nm": "Legia Warszawa",
+              "Img": "https://img.sofascore.com/api/v1/team/3106/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "5202",
+              "Nm": "Hapoel Be'er Sheva",
+              "Img": "https://img.sofascore.com/api/v1/team/5202/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16457301",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "138564",
+              "Nm": "Obolon Kyiv",
+              "Img": "https://img.sofascore.com/api/v1/team/138564/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "244003",
+              "Nm": "FC Lokomotyv Kyiv",
+              "Img": "https://img.sofascore.com/api/v1/team/244003/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16457116",
+          "Eps": "NS",
+          "Esd": 20260707120000,
+          "T1": [
+            {
+              "ID": "32642",
+              "Nm": "PFK Montana 1921",
+              "Img": "https://img.sofascore.com/api/v1/team/32642/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6245",
+              "Nm": "OFC Vihren Sandanski",
+              "Img": "https://img.sofascore.com/api/v1/team/6245/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sid": "11386",
+      "Cnm": "Argentina",
+      "Snm": "Primera C",
+      "Events": [
+        {
+          "Eid": "15276756",
+          "Eps": "FT",
+          "Esd": 20260705140000,
+          "T1": [
+            {
+              "ID": "269781",
+              "Nm": "Berazategui",
+              "Img": "https://img.sofascore.com/api/v1/team/269781/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "266138",
+              "Nm": "Puerto Nuevo",
+              "Img": "https://img.sofascore.com/api/v1/team/266138/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "15276759",
+          "Eps": "FT",
+          "Esd": 20260705160000,
+          "T1": [
+            {
+              "ID": "184969",
+              "Nm": "Sacachispas",
+              "Img": "https://img.sofascore.com/api/v1/team/184969/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "266185",
+              "Nm": "Juventud Unida San Miguel",
+              "Img": "https://img.sofascore.com/api/v1/team/266185/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "15276755",
+          "Eps": "FT",
+          "Esd": 20260705160000,
+          "T1": [
+            {
+              "ID": "266830",
+              "Nm": "Victoriano Arenas",
+              "Img": "https://img.sofascore.com/api/v1/team/266830/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "266133",
+              "Nm": "Deportivo Paraguayo",
+              "Img": "https://img.sofascore.com/api/v1/team/266133/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "15276764",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "200133",
+              "Nm": "CA Atlas",
+              "Img": "https://img.sofascore.com/api/v1/team/200133/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "266186",
+              "Nm": "Claypole",
+              "Img": "https://img.sofascore.com/api/v1/team/266186/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "2",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "15276765",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "252131",
+              "Nm": "Cañuelas FC",
+              "Img": "https://img.sofascore.com/api/v1/team/252131/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "211939",
+              "Nm": "Central Córdoba de Rosario",
+              "Img": "https://img.sofascore.com/api/v1/team/211939/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "15276761",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "250840",
+              "Nm": "Club Luján",
+              "Img": "https://img.sofascore.com/api/v1/team/250840/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "112495",
+              "Nm": "Fénix",
+              "Img": "https://img.sofascore.com/api/v1/team/112495/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "2",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "15276762",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "266134",
+              "Nm": "General Lamadrid",
+              "Img": "https://img.sofascore.com/api/v1/team/266134/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "270343",
+              "Nm": "El Porvenir",
+              "Img": "https://img.sofascore.com/api/v1/team/270343/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "15276754",
+          "Eps": "FT",
+          "Esd": 20260706180000,
+          "T1": [
+            {
+              "ID": "248380",
+              "Nm": "Centro Español",
+              "Img": "https://img.sofascore.com/api/v1/team/248380/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "262284",
+              "Nm": "Club Mercedes",
+              "Img": "https://img.sofascore.com/api/v1/team/262284/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "3",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "15276766",
+          "Eps": "FT",
+          "Esd": 20260706180000,
+          "T1": [
+            {
+              "ID": "266136",
+              "Nm": "Deportivo Muñiz",
+              "Img": "https://img.sofascore.com/api/v1/team/266136/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "165914",
+              "Nm": "Deportivo Español",
+              "Img": "https://img.sofascore.com/api/v1/team/165914/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "15276760",
+          "Eps": "FT",
+          "Esd": 20260706180000,
+          "T1": [
+            {
+              "ID": "200658",
+              "Nm": "Sportivo Barracas",
+              "Img": "https://img.sofascore.com/api/v1/team/200658/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "266137",
+              "Nm": "Yupanqui",
+              "Img": "https://img.sofascore.com/api/v1/team/266137/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "3",
+          "Tr1H1": "2",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "3"
+        }
+      ]
+    },
+    {
+      "Sid": "40",
+      "Cnm": "Sweden",
+      "Snm": "Allsvenskan",
+      "Events": [
+        {
+          "Eid": "15272445",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "1761",
+              "Nm": "IFK Göteborg",
+              "Img": "https://img.sofascore.com/api/v1/team/1761/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1764",
+              "Nm": "AIK",
+              "Img": "https://img.sofascore.com/api/v1/team/1764/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "15272448",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "1891",
+              "Nm": "Kalmar FF",
+              "Img": "https://img.sofascore.com/api/v1/team/1891/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1766",
+              "Nm": "Örgryte IS",
+              "Img": "https://img.sofascore.com/api/v1/team/1766/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "15272446",
+          "Eps": "FT",
+          "Esd": 20260705143000,
+          "T1": [
+            {
+              "ID": "1762",
+              "Nm": "IF Elfsborg",
+              "Img": "https://img.sofascore.com/api/v1/team/1762/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1758",
+              "Nm": "Hammarby IF",
+              "Img": "https://img.sofascore.com/api/v1/team/1758/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "15272442",
+          "Eps": "FT",
+          "Esd": 20260706170000,
+          "T1": [
+            {
+              "ID": "1760",
+              "Nm": "BK Häcken",
+              "Img": "https://img.sofascore.com/api/v1/team/1760/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1759",
+              "Nm": "Djurgårdens IF",
+              "Img": "https://img.sofascore.com/api/v1/team/1759/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "4",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "2",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "15272441",
+          "Eps": "FT",
+          "Esd": 20260706170000,
+          "T1": [
+            {
+              "ID": "1787",
+              "Nm": "IF Brommapojkarna",
+              "Img": "https://img.sofascore.com/api/v1/team/1787/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1786",
+              "Nm": "GAIS",
+              "Img": "https://img.sofascore.com/api/v1/team/1786/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "22012",
+      "Cnm": "Argentina",
+      "Snm": "Torneo Promocional Amateur, Zona A",
+      "Events": [
+        {
+          "Eid": "16351108",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "507167",
+              "Nm": "Deportivo Provincial",
+              "Img": "https://img.sofascore.com/api/v1/team/507167/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "507164",
+              "Nm": "Club Náutico Hacoaj",
+              "Img": "https://img.sofascore.com/api/v1/team/507164/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16351105",
+          "Eps": "FT",
+          "Esd": 20260706180000,
+          "T1": [
+            {
+              "ID": "373414",
+              "Nm": "Defensores de Glew",
+              "Img": "https://img.sofascore.com/api/v1/team/373414/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "507165",
+              "Nm": "Club Atlético Pilar",
+              "Img": "https://img.sofascore.com/api/v1/team/507165/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "5",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "4",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16351110",
+          "Eps": "FT",
+          "Esd": 20260706180000,
+          "T1": [
+            {
+              "ID": "401406",
+              "Nm": "Estrella de Berisso",
+              "Img": "https://img.sofascore.com/api/v1/team/401406/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "507163",
+              "Nm": "CSD Juventud de Bernal",
+              "Img": "https://img.sofascore.com/api/v1/team/507163/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "2"
+        }
+      ]
+    },
+    {
+      "Sid": "22012",
+      "Cnm": "Argentina",
+      "Snm": "Torneo Promocional Amateur, Zona B",
+      "Events": [
+        {
+          "Eid": "16423815",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "260041",
+              "Nm": "Everton La Plata",
+              "Img": "https://img.sofascore.com/api/v1/team/260041/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "457863",
+              "Nm": "Belgrano de Zárate",
+              "Img": "https://img.sofascore.com/api/v1/team/457863/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "27239",
+      "Cnm": "Argentina",
+      "Snm": "Torneo Juvenil Superliga",
+      "Events": [
+        {
+          "Eid": "16446404",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "499639",
+              "Nm": "Deportivo Armenio U20",
+              "Img": "https://img.sofascore.com/api/v1/team/499639/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "500021",
+              "Nm": "CS Dock Sud U20",
+              "Img": "https://img.sofascore.com/api/v1/team/500021/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16446406",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "498466",
+              "Nm": "Deportivo Camioneros U20",
+              "Img": "https://img.sofascore.com/api/v1/team/498466/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1125638",
+              "Nm": "Claypole U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1125638/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16446407",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "1237679",
+              "Nm": "Deportivo Liniers U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1237679/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "499637",
+              "Nm": "Canuelas FC U20",
+              "Img": "https://img.sofascore.com/api/v1/team/499637/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "5",
+          "Tr2": "1",
+          "Tr1H1": "3",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16446408",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "499640",
+              "Nm": "Los Andes U20",
+              "Img": "https://img.sofascore.com/api/v1/team/499640/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "388721",
+              "Nm": "Arsenal de Sarandí U20",
+              "Img": "https://img.sofascore.com/api/v1/team/388721/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "2",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16446409",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "499643",
+              "Nm": "Real Pilar U20",
+              "Img": "https://img.sofascore.com/api/v1/team/499643/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "555592",
+              "Nm": "Argentino Merlo U20",
+              "Img": "https://img.sofascore.com/api/v1/team/555592/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16446410",
+          "Eps": "FT",
+          "Esd": 20260705120000,
+          "T1": [
+            {
+              "ID": "1237678",
+              "Nm": "San Martin De Burzaco U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1237678/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "499646",
+              "Nm": "Argentino Quilmes U20",
+              "Img": "https://img.sofascore.com/api/v1/team/499646/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "1",
+          "Tr1H1": "2",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16446411",
+          "Eps": "FT",
+          "Esd": 20260705130000,
+          "T1": [
+            {
+              "ID": "498443",
+              "Nm": "CA Atlanta U20",
+              "Img": "https://img.sofascore.com/api/v1/team/498443/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "496530",
+              "Nm": "Nueva Chicago U20",
+              "Img": "https://img.sofascore.com/api/v1/team/496530/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16446413",
+          "Eps": "FT",
+          "Esd": 20260705130000,
+          "T1": [
+            {
+              "ID": "800096",
+              "Nm": "Club Comunicaciones U20",
+              "Img": "https://img.sofascore.com/api/v1/team/800096/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "230723",
+              "Nm": "CSD Flandria U20",
+              "Img": "https://img.sofascore.com/api/v1/team/230723/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "16446412",
+          "Eps": "FT",
+          "Esd": 20260705130000,
+          "T1": [
+            {
+              "ID": "499635",
+              "Nm": "Ituzaingo U20",
+              "Img": "https://img.sofascore.com/api/v1/team/499635/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "499951",
+              "Nm": "Villa San Carlos U20",
+              "Img": "https://img.sofascore.com/api/v1/team/499951/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16450614",
+          "Eps": "NS",
+          "Esd": 20260706130000,
+          "T1": [
+            {
+              "ID": "498771",
+              "Nm": "San Telmo U20",
+              "Img": "https://img.sofascore.com/api/v1/team/498771/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "499642",
+              "Nm": "Acassuso U20",
+              "Img": "https://img.sofascore.com/api/v1/team/499642/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16452792",
+          "Eps": "NS",
+          "Esd": 20260706140000,
+          "T1": [
+            {
+              "ID": "1244735",
+              "Nm": "Barrancas U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1244735/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1239046",
+              "Nm": "El Porvenir U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1239046/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16452798",
+          "Eps": "NS",
+          "Esd": 20260706160000,
+          "T1": [
+            {
+              "ID": "1244736",
+              "Nm": "Deportivo Paraguayo U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1244736/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1244737",
+              "Nm": "Yupanqui U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1244737/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16452804",
+          "Eps": "FT",
+          "Esd": 20260706160000,
+          "T1": [
+            {
+              "ID": "935459",
+              "Nm": "Sacachispas U20",
+              "Img": "https://img.sofascore.com/api/v1/team/935459/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1244738",
+              "Nm": "Defensores de Glew U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1244738/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "3",
+          "Tr1H1": "1",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "16452811",
+          "Eps": "NS",
+          "Esd": 20260706170000,
+          "T1": [
+            {
+              "ID": "1242025",
+              "Nm": "Ezeiza U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1242025/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1244739",
+              "Nm": "CA Lugano U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1244739/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sid": "31821",
+      "Cnm": "Argentina Amateur",
+      "Snm": "Liga Regional San Francisco, Oeste",
+      "Events": [
+        {
+          "Eid": "16386989",
+          "Eps": "FT",
+          "Esd": 20260705190058,
+          "T1": [
+            {
+              "ID": "1163184",
+              "Nm": "Atlético Santa Rosa",
+              "Img": "https://img.sofascore.com/api/v1/team/1163184/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163181",
+              "Nm": "Ateneo Juvenil Acción (SR)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163181/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16386991",
+          "Eps": "FT",
+          "Esd": 20260705190058,
+          "T1": [
+            {
+              "ID": "495859",
+              "Nm": "Bernardino Rivadavia",
+              "Img": "https://img.sofascore.com/api/v1/team/495859/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163189",
+              "Nm": "Sarmiento (ST)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163189/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "6",
+          "Tr2": "0",
+          "Tr1H1": "4",
+          "Tr1H2": "2",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16386987",
+          "Eps": "FT",
+          "Esd": 20260705190058,
+          "T1": [
+            {
+              "ID": "1163182",
+              "Nm": "Cultural (A)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163182/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163188",
+              "Nm": "Vélez Sársfield (Tránsito)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163188/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "5",
+          "Tr2": "0",
+          "Tr1H1": "2",
+          "Tr1H2": "3",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16386990",
+          "Eps": "FT",
+          "Esd": 20260705190058,
+          "T1": [
+            {
+              "ID": "1163183",
+              "Nm": "Pueblos Unidos",
+              "Img": "https://img.sofascore.com/api/v1/team/1163183/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163186",
+              "Nm": "24 de Septiembre (A)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163186/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "1",
+          "Tr1H1": "2",
+          "Tr1H2": "1",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "31821",
+      "Cnm": "Argentina Amateur",
+      "Snm": "Liga Regional San Francisco, Noroeste",
+      "Events": [
+        {
+          "Eid": "16386974",
+          "Eps": "FT",
+          "Esd": 20260705190000,
+          "T1": [
+            {
+              "ID": "930890",
+              "Nm": "Atlético Miramar",
+              "Img": "https://img.sofascore.com/api/v1/team/930890/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163168",
+              "Nm": "Sportivo Balnearia",
+              "Img": "https://img.sofascore.com/api/v1/team/1163168/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16386976",
+          "Eps": "FT",
+          "Esd": 20260705190000,
+          "T1": [
+            {
+              "ID": "1163154",
+              "Nm": "Independiente Balnearia",
+              "Img": "https://img.sofascore.com/api/v1/team/1163154/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163165",
+              "Nm": "Guido Spano Marull",
+              "Img": "https://img.sofascore.com/api/v1/team/1163165/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16386975",
+          "Eps": "FT",
+          "Esd": 20260705190000,
+          "T1": [
+            {
+              "ID": "1163164",
+              "Nm": "Sociedad Cultural La Para",
+              "Img": "https://img.sofascore.com/api/v1/team/1163164/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163167",
+              "Nm": "Sportivo Belgrano (LP)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163167/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "4",
+          "Tr2": "1",
+          "Tr1H1": "3",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        }
+      ]
+    },
+    {
+      "Sid": "31821",
+      "Cnm": "Argentina Amateur",
+      "Snm": "Liga Regional San Francisco, Sur",
+      "Events": [
+        {
+          "Eid": "16386984",
+          "Eps": "FT",
+          "Esd": 20260705190048,
+          "T1": [
+            {
+              "ID": "1163170",
+              "Nm": "Filodramatico Alicia",
+              "Img": "https://img.sofascore.com/api/v1/team/1163170/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163173",
+              "Nm": "Alianza Carrilobo",
+              "Img": "https://img.sofascore.com/api/v1/team/1163173/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        },
+        {
+          "Eid": "16386977",
+          "Eps": "FT",
+          "Esd": 20260705190048,
+          "T1": [
+            {
+              "ID": "1163172",
+              "Nm": "Huracán de Las Varillas",
+              "Img": "https://img.sofascore.com/api/v1/team/1163172/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "495855",
+              "Nm": "Almafuerte",
+              "Img": "https://img.sofascore.com/api/v1/team/495855/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "2",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "2"
+        },
+        {
+          "Eid": "16386980",
+          "Eps": "FT",
+          "Esd": 20260705190048,
+          "T1": [
+            {
+              "ID": "504772",
+              "Nm": "Sportivo Club Sacanta",
+              "Img": "https://img.sofascore.com/api/v1/team/504772/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163175",
+              "Nm": "Granaderos Las Varas",
+              "Img": "https://img.sofascore.com/api/v1/team/1163175/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16386979",
+          "Eps": "FT",
+          "Esd": 20260705190048,
+          "T1": [
+            {
+              "ID": "1163174",
+              "Nm": "Sportivo Pozo del Molle",
+              "Img": "https://img.sofascore.com/api/v1/team/1163174/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163176",
+              "Nm": "Union de Alicia",
+              "Img": "https://img.sofascore.com/api/v1/team/1163176/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16386981",
+          "Eps": "FT",
+          "Esd": 20260705190048,
+          "T1": [
+            {
+              "ID": "1163169",
+              "Nm": "Unión Deportiva Laspiur",
+              "Img": "https://img.sofascore.com/api/v1/team/1163169/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "504773",
+              "Nm": "AD El Arañado",
+              "Img": "https://img.sofascore.com/api/v1/team/504773/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1H1": "2",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "1"
+        }
+      ]
+    },
+    {
+      "Sid": "31821",
+      "Cnm": "Argentina Amateur",
+      "Snm": "Liga Regional San Francisco, Norte",
+      "Events": [
+        {
+          "Eid": "16295558",
+          "Eps": "FT",
+          "Esd": 20260705190043,
+          "T1": [
+            {
+              "ID": "340831",
+              "Nm": "9 De Julio De Freyre",
+              "Img": "https://img.sofascore.com/api/v1/team/340831/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163142",
+              "Nm": "Porteña Asociación",
+              "Img": "https://img.sofascore.com/api/v1/team/1163142/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1H1": "2",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16295562",
+          "Eps": "FT",
+          "Esd": 20260705190043,
+          "T1": [
+            {
+              "ID": "1135123",
+              "Nm": "9 de Julio de Morteros",
+              "Img": "https://img.sofascore.com/api/v1/team/1135123/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "495862",
+              "Nm": "Tiro Federal Morteros",
+              "Img": "https://img.sofascore.com/api/v1/team/495862/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "1",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16295563",
+          "Eps": "FT",
+          "Esd": 20260705190043,
+          "T1": [
+            {
+              "ID": "401110",
+              "Nm": "Deportivo Brinkmann",
+              "Img": "https://img.sofascore.com/api/v1/team/401110/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163143",
+              "Nm": "Juniors de Suardi",
+              "Img": "https://img.sofascore.com/api/v1/team/1163143/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "0",
+          "Tr1H1": "1",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16295559",
+          "Eps": "FT",
+          "Esd": 20260705190043,
+          "T1": [
+            {
+              "ID": "930851",
+              "Nm": "Sportivo Suardi",
+              "Img": "https://img.sofascore.com/api/v1/team/930851/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163141",
+              "Nm": "San Jorge de Brinkmann",
+              "Img": "https://img.sofascore.com/api/v1/team/1163141/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "31821",
+      "Cnm": "Argentina Amateur",
+      "Snm": "Liga Regional San Francisco, Centro",
+      "Events": [
+        {
+          "Eid": "16410938",
+          "Eps": "FT",
+          "Esd": 20260705190002,
+          "T1": [
+            {
+              "ID": "1163148",
+              "Nm": "8 de Diciembre (VC)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163148/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "504778",
+              "Nm": "CD Cultural La Francia",
+              "Img": "https://img.sofascore.com/api/v1/team/504778/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "8",
+          "Tr1H1": "0",
+          "Tr1H2": "3",
+          "Tr2H1": "5",
+          "Tr2H2": "3"
+        },
+        {
+          "Eid": "16410937",
+          "Eps": "FT",
+          "Esd": 20260705190002,
+          "T1": [
+            {
+              "ID": "1163150",
+              "Nm": "Proyecto Crecer (SF)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163150/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163152",
+              "Nm": "Colonia Marina FC",
+              "Img": "https://img.sofascore.com/api/v1/team/1163152/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "1",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16410935",
+          "Eps": "FT",
+          "Esd": 20260705190002,
+          "T1": [
+            {
+              "ID": "504769",
+              "Nm": "Sociedad Sportiva Devoto",
+              "Img": "https://img.sofascore.com/api/v1/team/504769/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1163149",
+              "Nm": "La Milka (SF)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163149/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1H1": "0",
+          "Tr1H2": "0",
+          "Tr2H1": "0",
+          "Tr2H2": "0"
+        },
+        {
+          "Eid": "16410936",
+          "Eps": "NS",
+          "Esd": 20260707000000,
+          "T1": [
+            {
+              "ID": "1163153",
+              "Nm": "Antartida Argentina (SF)",
+              "Img": "https://img.sofascore.com/api/v1/team/1163153/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "65664",
+              "Nm": "Sportivo Belgrano",
+              "Img": "https://img.sofascore.com/api/v1/team/65664/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

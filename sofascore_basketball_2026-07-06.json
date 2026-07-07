@@ -1,0 +1,2895 @@
+{
+  "Stages": [
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Group G",
+      "Events": [
+        {
+          "Eid": "15186822",
+          "Eps": "FT",
+          "Esd": 20260627030000,
+          "T1": [
+            {
+              "ID": "4784",
+              "Nm": "New Zealand",
+              "Img": "https://img.sofascore.com/api/v1/team/4784/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4717",
+              "Nm": "Belgium",
+              "Img": "https://img.sofascore.com/api/v1/team/4717/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "5",
+          "Tr1Q1": "0",
+          "Tr1Q2": "1",
+          "Tr2Q1": "1",
+          "Tr2Q2": "4"
+        },
+        {
+          "Eid": "15186828",
+          "Eps": "FT",
+          "Esd": 20260627030000,
+          "T1": [
+            {
+              "ID": "4758",
+              "Nm": "Egypt",
+              "Img": "https://img.sofascore.com/api/v1/team/4758/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4766",
+              "Nm": "Iran",
+              "Img": "https://img.sofascore.com/api/v1/team/4766/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "1",
+          "Tr1Q1": "1",
+          "Tr1Q2": "0",
+          "Tr2Q1": "1",
+          "Tr2Q2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Group L",
+      "Events": [
+        {
+          "Eid": "15186624",
+          "Eps": "FT",
+          "Esd": 20260627210000,
+          "T1": [
+            {
+              "ID": "4715",
+              "Nm": "Croatia",
+              "Img": "https://img.sofascore.com/api/v1/team/4715/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4764",
+              "Nm": "Ghana",
+              "Img": "https://img.sofascore.com/api/v1/team/4764/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1Q1": "1",
+          "Tr1Q2": "1",
+          "Tr2Q1": "0",
+          "Tr2Q2": "1"
+        },
+        {
+          "Eid": "15186676",
+          "Eps": "FT",
+          "Esd": 20260627210000,
+          "T1": [
+            {
+              "ID": "5164",
+              "Nm": "Panama",
+              "Img": "https://img.sofascore.com/api/v1/team/5164/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4713",
+              "Nm": "England",
+              "Img": "https://img.sofascore.com/api/v1/team/4713/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "2",
+          "Tr1Q1": "0",
+          "Tr1Q2": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "2"
+        }
+      ]
+    },
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Group K",
+      "Events": [
+        {
+          "Eid": "15186717",
+          "Eps": "FT",
+          "Esd": 20260627233000,
+          "T1": [
+            {
+              "ID": "4823",
+              "Nm": "DR Congo",
+              "Img": "https://img.sofascore.com/api/v1/team/4823/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4723",
+              "Nm": "Uzbekistan",
+              "Img": "https://img.sofascore.com/api/v1/team/4723/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "1",
+          "Tr1Q1": "0",
+          "Tr1Q2": "3",
+          "Tr2Q1": "1",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "15186696",
+          "Eps": "FT",
+          "Esd": 20260627233000,
+          "T1": [
+            {
+              "ID": "4820",
+              "Nm": "Colombia",
+              "Img": "https://img.sofascore.com/api/v1/team/4820/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4704",
+              "Nm": "Portugal",
+              "Img": "https://img.sofascore.com/api/v1/team/4704/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1Q1": "0",
+          "Tr1Q2": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Group J",
+      "Events": [
+        {
+          "Eid": "15186747",
+          "Eps": "FT",
+          "Esd": 20260628020000,
+          "T1": [
+            {
+              "ID": "4691",
+              "Nm": "Algeria",
+              "Img": "https://img.sofascore.com/api/v1/team/4691/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4718",
+              "Nm": "Austria",
+              "Img": "https://img.sofascore.com/api/v1/team/4718/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "3",
+          "Tr1Q1": "1",
+          "Tr1Q2": "2",
+          "Tr2Q1": "1",
+          "Tr2Q2": "2"
+        },
+        {
+          "Eid": "15186734",
+          "Eps": "FT",
+          "Esd": 20260628020000,
+          "T1": [
+            {
+              "ID": "4771",
+              "Nm": "Jordan",
+              "Img": "https://img.sofascore.com/api/v1/team/4771/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4819",
+              "Nm": "Argentina",
+              "Img": "https://img.sofascore.com/api/v1/team/4819/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "3",
+          "Tr1Q1": "0",
+          "Tr1Q2": "1",
+          "Tr2Q1": "2",
+          "Tr2Q2": "1"
+        }
+      ]
+    },
+    {
+      "Sid": "16",
+      "Cnm": "World",
+      "Snm": "World Championship, Knockout",
+      "Events": [
+        {
+          "Eid": "12813000",
+          "Eps": "FT",
+          "Esd": 20260628190000,
+          "T1": [
+            {
+              "ID": "4736",
+              "Nm": "South Africa",
+              "Img": "https://img.sofascore.com/api/v1/team/4736/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4752",
+              "Nm": "Canada",
+              "Img": "https://img.sofascore.com/api/v1/team/4752/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1Q1": "0",
+          "Tr1Q2": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "1"
+        },
+        {
+          "Eid": "12813012",
+          "Eps": "FT",
+          "Esd": 20260629170000,
+          "T1": [
+            {
+              "ID": "4748",
+              "Nm": "Brazil",
+              "Img": "https://img.sofascore.com/api/v1/team/4748/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4770",
+              "Nm": "Japan",
+              "Img": "https://img.sofascore.com/api/v1/team/4770/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1Q1": "0",
+          "Tr1Q2": "2",
+          "Tr2Q1": "1",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "12813014",
+          "Eps": "AP",
+          "Esd": 20260629203000,
+          "T1": [
+            {
+              "ID": "4711",
+              "Nm": "Germany",
+              "Img": "https://img.sofascore.com/api/v1/team/4711/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4789",
+              "Nm": "Paraguay",
+              "Img": "https://img.sofascore.com/api/v1/team/4789/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "4",
+          "Tr2": "5",
+          "Tr1Q1": "0",
+          "Tr1Q2": "1",
+          "Tr1OT": "0",
+          "Tr2Q1": "1",
+          "Tr2Q2": "0",
+          "Tr2OT": "0"
+        },
+        {
+          "Eid": "12812998",
+          "Eps": "AP",
+          "Esd": 20260630010000,
+          "T1": [
+            {
+              "ID": "4705",
+              "Nm": "Netherlands",
+              "Img": "https://img.sofascore.com/api/v1/team/4705/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4778",
+              "Nm": "Morocco",
+              "Img": "https://img.sofascore.com/api/v1/team/4778/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "4",
+          "Tr1Q1": "0",
+          "Tr1Q2": "1",
+          "Tr1OT": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "1",
+          "Tr2OT": "0"
+        },
+        {
+          "Eid": "12812989",
+          "Eps": "FT",
+          "Esd": 20260630170000,
+          "T1": [
+            {
+              "ID": "4768",
+              "Nm": "Côte d'Ivoire",
+              "Img": "https://img.sofascore.com/api/v1/team/4768/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4475",
+              "Nm": "Norway",
+              "Img": "https://img.sofascore.com/api/v1/team/4475/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1Q1": "0",
+          "Tr1Q2": "1",
+          "Tr2Q1": "1",
+          "Tr2Q2": "1"
+        },
+        {
+          "Eid": "12812995",
+          "Eps": "FT",
+          "Esd": 20260630210000,
+          "T1": [
+            {
+              "ID": "4481",
+              "Nm": "France",
+              "Img": "https://img.sofascore.com/api/v1/team/4481/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4688",
+              "Nm": "Sweden",
+              "Img": "https://img.sofascore.com/api/v1/team/4688/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "0",
+          "Tr1Q1": "1",
+          "Tr1Q2": "2",
+          "Tr2Q1": "0",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "12813001",
+          "Eps": "FT",
+          "Esd": 20260701020000,
+          "T1": [
+            {
+              "ID": "4781",
+              "Nm": "Mexico",
+              "Img": "https://img.sofascore.com/api/v1/team/4781/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4757",
+              "Nm": "Ecuador",
+              "Img": "https://img.sofascore.com/api/v1/team/4757/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1Q1": "2",
+          "Tr1Q2": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "12813020",
+          "Eps": "FT",
+          "Esd": 20260701160000,
+          "T1": [
+            {
+              "ID": "4713",
+              "Nm": "England",
+              "Img": "https://img.sofascore.com/api/v1/team/4713/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4823",
+              "Nm": "DR Congo",
+              "Img": "https://img.sofascore.com/api/v1/team/4823/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1Q1": "0",
+          "Tr1Q2": "2",
+          "Tr2Q1": "1",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "12813013",
+          "Eps": "AET",
+          "Esd": 20260701200000,
+          "T1": [
+            {
+              "ID": "4717",
+              "Nm": "Belgium",
+              "Img": "https://img.sofascore.com/api/v1/team/4717/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4739",
+              "Nm": "Senegal",
+              "Img": "https://img.sofascore.com/api/v1/team/4739/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "2",
+          "Tr1Q1": "0",
+          "Tr1Q2": "2",
+          "Tr1OT": "1",
+          "Tr2Q1": "1",
+          "Tr2Q2": "1",
+          "Tr2OT": "0"
+        },
+        {
+          "Eid": "12812992",
+          "Eps": "FT",
+          "Esd": 20260702000000,
+          "T1": [
+            {
+              "ID": "4724",
+              "Nm": "USA",
+              "Img": "https://img.sofascore.com/api/v1/team/4724/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4479",
+              "Nm": "Bosnia & Herzegovina",
+              "Img": "https://img.sofascore.com/api/v1/team/4479/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1Q1": "1",
+          "Tr1Q2": "1",
+          "Tr2Q1": "0",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "12813004",
+          "Eps": "FT",
+          "Esd": 20260702190000,
+          "T1": [
+            {
+              "ID": "4698",
+              "Nm": "Spain",
+              "Img": "https://img.sofascore.com/api/v1/team/4698/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4718",
+              "Nm": "Austria",
+              "Img": "https://img.sofascore.com/api/v1/team/4718/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "0",
+          "Tr1Q1": "1",
+          "Tr1Q2": "2",
+          "Tr2Q1": "0",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "12812997",
+          "Eps": "FT",
+          "Esd": 20260702230000,
+          "T1": [
+            {
+              "ID": "4704",
+              "Nm": "Portugal",
+              "Img": "https://img.sofascore.com/api/v1/team/4704/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4715",
+              "Nm": "Croatia",
+              "Img": "https://img.sofascore.com/api/v1/team/4715/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "1",
+          "Tr1Q1": "0",
+          "Tr1Q2": "2",
+          "Tr2Q1": "0",
+          "Tr2Q2": "1"
+        },
+        {
+          "Eid": "12813019",
+          "Eps": "FT",
+          "Esd": 20260703030000,
+          "T1": [
+            {
+              "ID": "4699",
+              "Nm": "Switzerland",
+              "Img": "https://img.sofascore.com/api/v1/team/4699/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4691",
+              "Nm": "Algeria",
+              "Img": "https://img.sofascore.com/api/v1/team/4691/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "0",
+          "Tr1Q1": "1",
+          "Tr1Q2": "1",
+          "Tr2Q1": "0",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "12813018",
+          "Eps": "AP",
+          "Esd": 20260703180000,
+          "T1": [
+            {
+              "ID": "4741",
+              "Nm": "Australia",
+              "Img": "https://img.sofascore.com/api/v1/team/4741/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4758",
+              "Nm": "Egypt",
+              "Img": "https://img.sofascore.com/api/v1/team/4758/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "5",
+          "Tr1Q1": "0",
+          "Tr1Q2": "1",
+          "Tr1OT": "0",
+          "Tr2Q1": "1",
+          "Tr2Q2": "0",
+          "Tr2OT": "0"
+        },
+        {
+          "Eid": "12812999",
+          "Eps": "AET",
+          "Esd": 20260703220000,
+          "T1": [
+            {
+              "ID": "4819",
+              "Nm": "Argentina",
+              "Img": "https://img.sofascore.com/api/v1/team/4819/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4753",
+              "Nm": "Cabo Verde",
+              "Img": "https://img.sofascore.com/api/v1/team/4753/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "3",
+          "Tr2": "2",
+          "Tr1Q1": "1",
+          "Tr1Q2": "0",
+          "Tr1OT": "2",
+          "Tr2Q1": "0",
+          "Tr2Q2": "1",
+          "Tr2OT": "1"
+        },
+        {
+          "Eid": "12813011",
+          "Eps": "FT",
+          "Esd": 20260704013000,
+          "T1": [
+            {
+              "ID": "4820",
+              "Nm": "Colombia",
+              "Img": "https://img.sofascore.com/api/v1/team/4820/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4764",
+              "Nm": "Ghana",
+              "Img": "https://img.sofascore.com/api/v1/team/4764/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "0",
+          "Tr1Q1": "1",
+          "Tr1Q2": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "0"
+        },
+        {
+          "Eid": "12813009",
+          "Eps": "FT",
+          "Esd": 20260704170000,
+          "T1": [
+            {
+              "ID": "4752",
+              "Nm": "Canada",
+              "Img": "https://img.sofascore.com/api/v1/team/4752/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4778",
+              "Nm": "Morocco",
+              "Img": "https://img.sofascore.com/api/v1/team/4778/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "3",
+          "Tr1Q1": "0",
+          "Tr1Q2": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "3"
+        },
+        {
+          "Eid": "12813010",
+          "Eps": "FT",
+          "Esd": 20260704210000,
+          "T1": [
+            {
+              "ID": "4789",
+              "Nm": "Paraguay",
+              "Img": "https://img.sofascore.com/api/v1/team/4789/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4481",
+              "Nm": "France",
+              "Img": "https://img.sofascore.com/api/v1/team/4481/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1Q1": "0",
+          "Tr1Q2": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "1"
+        },
+        {
+          "Eid": "12813006",
+          "Eps": "FT",
+          "Esd": 20260705200000,
+          "T1": [
+            {
+              "ID": "4748",
+              "Nm": "Brazil",
+              "Img": "https://img.sofascore.com/api/v1/team/4748/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4475",
+              "Nm": "Norway",
+              "Img": "https://img.sofascore.com/api/v1/team/4475/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "1",
+          "Tr2": "2",
+          "Tr1Q1": "0",
+          "Tr1Q2": "1",
+          "Tr2Q1": "0",
+          "Tr2Q2": "2"
+        },
+        {
+          "Eid": "12813007",
+          "Eps": "FT",
+          "Esd": 20260706010000,
+          "T1": [
+            {
+              "ID": "4781",
+              "Nm": "Mexico",
+              "Img": "https://img.sofascore.com/api/v1/team/4781/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4713",
+              "Nm": "England",
+              "Img": "https://img.sofascore.com/api/v1/team/4713/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "2",
+          "Tr2": "3",
+          "Tr1Q1": "1",
+          "Tr1Q2": "1",
+          "Tr2Q1": "2",
+          "Tr2Q2": "1"
+        },
+        {
+          "Eid": "12812990",
+          "Eps": "FT",
+          "Esd": 20260706190000,
+          "T1": [
+            {
+              "ID": "4704",
+              "Nm": "Portugal",
+              "Img": "https://img.sofascore.com/api/v1/team/4704/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4698",
+              "Nm": "Spain",
+              "Img": "https://img.sofascore.com/api/v1/team/4698/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1Q1": "0",
+          "Tr1Q2": "0",
+          "Tr2Q1": "0",
+          "Tr2Q2": "1"
+        },
+        {
+          "Eid": "12813002",
+          "Eps": "Q1",
+          "Esd": 20260707000000,
+          "T1": [
+            {
+              "ID": "4724",
+              "Nm": "USA",
+              "Img": "https://img.sofascore.com/api/v1/team/4724/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4717",
+              "Nm": "Belgium",
+              "Img": "https://img.sofascore.com/api/v1/team/4717/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1",
+          "Tr1Q1": "0",
+          "Tr2Q1": "1"
+        },
+        {
+          "Eid": "12812993",
+          "Eps": "NS",
+          "Esd": 20260707160000,
+          "T1": [
+            {
+              "ID": "4819",
+              "Nm": "Argentina",
+              "Img": "https://img.sofascore.com/api/v1/team/4819/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4758",
+              "Nm": "Egypt",
+              "Img": "https://img.sofascore.com/api/v1/team/4758/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12812991",
+          "Eps": "NS",
+          "Esd": 20260707200000,
+          "T1": [
+            {
+              "ID": "4699",
+              "Nm": "Switzerland",
+              "Img": "https://img.sofascore.com/api/v1/team/4699/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4820",
+              "Nm": "Colombia",
+              "Img": "https://img.sofascore.com/api/v1/team/4820/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813016",
+          "Eps": "NS",
+          "Esd": 20260709200000,
+          "T1": [
+            {
+              "ID": "4481",
+              "Nm": "France",
+              "Img": "https://img.sofascore.com/api/v1/team/4481/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4778",
+              "Nm": "Morocco",
+              "Img": "https://img.sofascore.com/api/v1/team/4778/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12812994",
+          "Eps": "NS",
+          "Esd": 20260710190000,
+          "T1": [
+            {
+              "ID": "4698",
+              "Nm": "Spain",
+              "Img": "https://img.sofascore.com/api/v1/team/4698/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865206",
+              "Nm": "W94",
+              "Img": "https://img.sofascore.com/api/v1/team/865206/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813017",
+          "Eps": "NS",
+          "Esd": 20260711210000,
+          "T1": [
+            {
+              "ID": "4475",
+              "Nm": "Norway",
+              "Img": "https://img.sofascore.com/api/v1/team/4475/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "4713",
+              "Nm": "England",
+              "Img": "https://img.sofascore.com/api/v1/team/4713/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813015",
+          "Eps": "NS",
+          "Esd": 20260712010000,
+          "T1": [
+            {
+              "ID": "865192",
+              "Nm": "W95",
+              "Img": "https://img.sofascore.com/api/v1/team/865192/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865195",
+              "Nm": "W96",
+              "Img": "https://img.sofascore.com/api/v1/team/865195/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813008",
+          "Eps": "NS",
+          "Esd": 20260714190000,
+          "T1": [
+            {
+              "ID": "865193",
+              "Nm": "W97",
+              "Img": "https://img.sofascore.com/api/v1/team/865193/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865196",
+              "Nm": "W98",
+              "Img": "https://img.sofascore.com/api/v1/team/865196/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12812996",
+          "Eps": "NS",
+          "Esd": 20260715190000,
+          "T1": [
+            {
+              "ID": "865188",
+              "Nm": "W99",
+              "Img": "https://img.sofascore.com/api/v1/team/865188/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865191",
+              "Nm": "W100",
+              "Img": "https://img.sofascore.com/api/v1/team/865191/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813003",
+          "Eps": "NS",
+          "Esd": 20260718210000,
+          "T1": [
+            {
+              "ID": "865207",
+              "Nm": "L101",
+              "Img": "https://img.sofascore.com/api/v1/team/865207/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865210",
+              "Nm": "L102",
+              "Img": "https://img.sofascore.com/api/v1/team/865210/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "12813005",
+          "Eps": "NS",
+          "Esd": 20260719190000,
+          "T1": [
+            {
+              "ID": "865201",
+              "Nm": "W101",
+              "Img": "https://img.sofascore.com/api/v1/team/865201/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "865204",
+              "Nm": "W102",
+              "Img": "https://img.sofascore.com/api/v1/team/865204/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sid": "16741",
+      "Cnm": "Australia",
+      "Snm": "NBL1 Central, Women",
+      "Events": [
+        {
+          "Eid": "15347007",
+          "Eps": "FT",
+          "Esd": 20260706090000,
+          "T1": [
+            {
+              "ID": "377807",
+              "Nm": "Woodville Warriors",
+              "Img": "https://img.sofascore.com/api/v1/team/377807/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "377800",
+              "Nm": "Forestville Eagles",
+              "Img": "https://img.sofascore.com/api/v1/team/377800/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "72",
+          "Tr2": "67",
+          "Tr1Q1": "20",
+          "Tr1Q2": "16",
+          "Tr1Q3": "21",
+          "Tr1Q4": "15",
+          "Tr2Q1": "22",
+          "Tr2Q2": "9",
+          "Tr2Q3": "20",
+          "Tr2Q4": "16"
+        }
+      ]
+    },
+    {
+      "Sid": "17343",
+      "Cnm": "El Salvador",
+      "Snm": "LMB, Apertura, Playoffs",
+      "Events": [
+        {
+          "Eid": "16408072",
+          "Eps": "NS",
+          "Esd": 20260707011500,
+          "T1": [
+            {
+              "ID": "342997",
+              "Nm": "A.Lobos BKB",
+              "Img": "https://img.sofascore.com/api/v1/team/342997/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "410482",
+              "Nm": "Metapán BC",
+              "Img": "https://img.sofascore.com/api/v1/team/410482/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sid": "30408",
+      "Cnm": "Brazil Amateur",
+      "Snm": "U20 Paulista, Fase de Classificação",
+      "Events": [
+        {
+          "Eid": "16389512",
+          "Eps": "NS",
+          "Esd": 20260706200000,
+          "T1": [
+            {
+              "ID": "1138882",
+              "Nm": "Paulistano U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1138882/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1177497",
+              "Nm": "AD Santo André U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1177497/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16389515",
+          "Eps": "NS",
+          "Esd": 20260706220000,
+          "T1": [
+            {
+              "ID": "1138880",
+              "Nm": "AB Araraquara U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1138880/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1177494",
+              "Nm": "Rio Claro U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1177494/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16389514",
+          "Eps": "NS",
+          "Esd": 20260706220000,
+          "T1": [
+            {
+              "ID": "1177491",
+              "Nm": "EC Pinheiros U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1177491/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1177496",
+              "Nm": "Basquete Santos U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1177496/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16389513",
+          "Eps": "NS",
+          "Esd": 20260706220000,
+          "T1": [
+            {
+              "ID": "1138904",
+              "Nm": "São José dos Campos U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1138904/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1177495",
+              "Nm": "Mogi das Cruzes U20",
+              "Img": "https://img.sofascore.com/api/v1/team/1177495/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sid": "27491",
+      "Cnm": "Greece Amateur",
+      "Snm": "Tournoua Agiou Nikolaou",
+      "Events": [
+        {
+          "Eid": "16416550",
+          "Eps": "FT",
+          "Esd": 20260705143000,
+          "T1": [
+            {
+              "ID": "1100961",
+              "Nm": "Warriors",
+              "Img": "https://img.sofascore.com/api/v1/team/1100961/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1100951",
+              "Nm": "Grill Team",
+              "Img": "https://img.sofascore.com/api/v1/team/1100951/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "50",
+          "Tr2": "60",
+          "Tr1Q1": "15",
+          "Tr1Q2": "9",
+          "Tr1Q3": "14",
+          "Tr1Q4": "12",
+          "Tr2Q1": "9",
+          "Tr2Q2": "10",
+          "Tr2Q3": "20",
+          "Tr2Q4": "21"
+        },
+        {
+          "Eid": "16416578",
+          "Eps": "FT",
+          "Esd": 20260705160000,
+          "T1": [
+            {
+              "ID": "1100959",
+              "Nm": "Assist",
+              "Img": "https://img.sofascore.com/api/v1/team/1100959/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1241348",
+              "Nm": "Avengers",
+              "Img": "https://img.sofascore.com/api/v1/team/1241348/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "73",
+          "Tr2": "61",
+          "Tr1Q1": "17",
+          "Tr1Q2": "17",
+          "Tr1Q3": "22",
+          "Tr1Q4": "17",
+          "Tr2Q1": "10",
+          "Tr2Q2": "17",
+          "Tr2Q3": "21",
+          "Tr2Q4": "13"
+        },
+        {
+          "Eid": "16452163",
+          "Eps": "FT",
+          "Esd": 20260705171500,
+          "T1": [
+            {
+              "ID": "1100957",
+              "Nm": "Valentino",
+              "Img": "https://img.sofascore.com/api/v1/team/1100957/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1241349",
+              "Nm": "Axtarman",
+              "Img": "https://img.sofascore.com/api/v1/team/1241349/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "87",
+          "Tr2": "74"
+        },
+        {
+          "Eid": "16451263",
+          "Eps": "NS",
+          "Esd": 20260706153000,
+          "T1": [
+            {
+              "ID": "1241346",
+              "Nm": "Hot Shots",
+              "Img": "https://img.sofascore.com/api/v1/team/1241346/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1100951",
+              "Nm": "Grill Team",
+              "Img": "https://img.sofascore.com/api/v1/team/1100951/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16451264",
+          "Eps": "NS",
+          "Esd": 20260706170000,
+          "T1": [
+            {
+              "ID": "1100953",
+              "Nm": "Ouzo Kazan",
+              "Img": "https://img.sofascore.com/api/v1/team/1100953/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1241345",
+              "Nm": "Foufoutos",
+              "Img": "https://img.sofascore.com/api/v1/team/1241345/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sid": "10461",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, Americas Qualifiers, Rd1, Group A",
+      "Events": [
+        {
+          "Eid": "14660036",
+          "Eps": "Q1",
+          "Esd": 20260707000000,
+          "T1": [
+            {
+              "ID": "36223",
+              "Nm": "Dominican Republic",
+              "Img": "https://img.sofascore.com/api/v1/team/36223/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "222789",
+              "Nm": "Nicaragua",
+              "Img": "https://img.sofascore.com/api/v1/team/222789/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "15",
+          "Tr2": "6",
+          "Tr1Q1": "15",
+          "Tr2Q1": "6"
+        },
+        {
+          "Eid": "14660035",
+          "Eps": "NS",
+          "Esd": 20260707020000,
+          "T1": [
+            {
+              "ID": "36224",
+              "Nm": "Mexico",
+              "Img": "https://img.sofascore.com/api/v1/team/36224/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6141",
+              "Nm": "USA",
+              "Img": "https://img.sofascore.com/api/v1/team/6141/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sid": "10461",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, Americas Qualifiers, Rd1, Group B",
+      "Events": [
+        {
+          "Eid": "14660037",
+          "Eps": "Q3",
+          "Esd": 20260706231000,
+          "T1": [
+            {
+              "ID": "72794",
+              "Nm": "Bahamas",
+              "Img": "https://img.sofascore.com/api/v1/team/72794/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6136",
+              "Nm": "Puerto Rico",
+              "Img": "https://img.sofascore.com/api/v1/team/6136/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "49",
+          "Tr2": "59",
+          "Tr1Q1": "23",
+          "Tr1Q2": "24",
+          "Tr1Q3": "2",
+          "Tr2Q1": "34",
+          "Tr2Q2": "23",
+          "Tr2Q3": "2"
+        },
+        {
+          "Eid": "14660039",
+          "Eps": "Q3",
+          "Esd": 20260706231000,
+          "T1": [
+            {
+              "ID": "22380",
+              "Nm": "Canada",
+              "Img": "https://img.sofascore.com/api/v1/team/22380/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "72796",
+              "Nm": "Jamaica",
+              "Img": "https://img.sofascore.com/api/v1/team/72796/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "64",
+          "Tr2": "43",
+          "Tr1Q1": "32",
+          "Tr1Q2": "25",
+          "Tr1Q3": "7",
+          "Tr2Q1": "15",
+          "Tr2Q2": "25",
+          "Tr2Q3": "3"
+        }
+      ]
+    },
+    {
+      "Sid": "10461",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, Americas Qualifiers, Rd1, Group C",
+      "Events": [
+        {
+          "Eid": "14660031",
+          "Eps": "FT",
+          "Esd": 20260706211000,
+          "T1": [
+            {
+              "ID": "6142",
+              "Nm": "Venezuela",
+              "Img": "https://img.sofascore.com/api/v1/team/6142/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "164502",
+              "Nm": "Chile",
+              "Img": "https://img.sofascore.com/api/v1/team/164502/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "66",
+          "Tr2": "78",
+          "Tr1Q1": "14",
+          "Tr1Q2": "17",
+          "Tr1Q3": "18",
+          "Tr1Q4": "17",
+          "Tr2Q1": "22",
+          "Tr2Q2": "22",
+          "Tr2Q3": "13",
+          "Tr2Q4": "21"
+        },
+        {
+          "Eid": "14660029",
+          "Eps": "Q1",
+          "Esd": 20260707001000,
+          "T1": [
+            {
+              "ID": "224252",
+              "Nm": "Colombia",
+              "Img": "https://img.sofascore.com/api/v1/team/224252/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6126",
+              "Nm": "Brazil",
+              "Img": "https://img.sofascore.com/api/v1/team/6126/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "0",
+          "Tr1Q1": "0",
+          "Tr2Q1": "0"
+        }
+      ]
+    },
+    {
+      "Sid": "10461",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, Americas Qualifiers, Rd1, Group D",
+      "Events": [
+        {
+          "Eid": "14660033",
+          "Eps": "FT",
+          "Esd": 20260705214000,
+          "T1": [
+            {
+              "ID": "36225",
+              "Nm": "Uruguay",
+              "Img": "https://img.sofascore.com/api/v1/team/36225/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "36222",
+              "Nm": "Cuba",
+              "Img": "https://img.sofascore.com/api/v1/team/36222/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "99",
+          "Tr2": "70",
+          "Tr1Q1": "30",
+          "Tr1Q2": "26",
+          "Tr1Q3": "21",
+          "Tr1Q4": "22",
+          "Tr2Q1": "14",
+          "Tr2Q2": "22",
+          "Tr2Q3": "16",
+          "Tr2Q4": "18"
+        },
+        {
+          "Eid": "14660032",
+          "Eps": "FT",
+          "Esd": 20260706001000,
+          "T1": [
+            {
+              "ID": "6135",
+              "Nm": "Panama",
+              "Img": "https://img.sofascore.com/api/v1/team/6135/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6124",
+              "Nm": "Argentina",
+              "Img": "https://img.sofascore.com/api/v1/team/6124/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "71",
+          "Tr2": "96",
+          "Tr1Q1": "18",
+          "Tr1Q2": "19",
+          "Tr1Q3": "19",
+          "Tr1Q4": "15",
+          "Tr2Q1": "26",
+          "Tr2Q2": "25",
+          "Tr2Q3": "29",
+          "Tr2Q4": "16"
+        }
+      ]
+    },
+    {
+      "Sid": "16739",
+      "Cnm": "Australia",
+      "Snm": "NBL1, Central",
+      "Events": [
+        {
+          "Eid": "15346608",
+          "Eps": "FT",
+          "Esd": 20260706110000,
+          "T1": [
+            {
+              "ID": "377789",
+              "Nm": "Woodville Warriors",
+              "Img": "https://img.sofascore.com/api/v1/team/377789/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "377785",
+              "Nm": "Forestville Eagles",
+              "Img": "https://img.sofascore.com/api/v1/team/377785/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "78",
+          "Tr2": "87",
+          "Tr1Q1": "22",
+          "Tr1Q2": "23",
+          "Tr1Q3": "20",
+          "Tr1Q4": "13",
+          "Tr2Q1": "27",
+          "Tr2Q2": "21",
+          "Tr2Q3": "24",
+          "Tr2Q4": "15"
+        }
+      ]
+    },
+    {
+      "Sid": "10486",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, Asian & Oceanian Qualifiers, Gr. A",
+      "Events": [
+        {
+          "Eid": "14140690",
+          "Eps": "FT",
+          "Esd": 20260706070000,
+          "T1": [
+            {
+              "ID": "6133",
+              "Nm": "New Zealand",
+              "Img": "https://img.sofascore.com/api/v1/team/6133/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "304972",
+              "Nm": "Guam",
+              "Img": "https://img.sofascore.com/api/v1/team/304972/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "129",
+          "Tr2": "75",
+          "Tr1Q1": "35",
+          "Tr1Q2": "28",
+          "Tr1Q3": "35",
+          "Tr1Q4": "31",
+          "Tr2Q1": "24",
+          "Tr2Q2": "14",
+          "Tr2Q3": "13",
+          "Tr2Q4": "24"
+        },
+        {
+          "Eid": "14140689",
+          "Eps": "FT",
+          "Esd": 20260706103000,
+          "T1": [
+            {
+              "ID": "6125",
+              "Nm": "Australia",
+              "Img": "https://img.sofascore.com/api/v1/team/6125/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "55351",
+              "Nm": "Philippines",
+              "Img": "https://img.sofascore.com/api/v1/team/55351/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "92",
+          "Tr2": "49",
+          "Tr1Q1": "33",
+          "Tr1Q2": "8",
+          "Tr1Q3": "22",
+          "Tr1Q4": "29",
+          "Tr2Q1": "14",
+          "Tr2Q2": "13",
+          "Tr2Q3": "10",
+          "Tr2Q4": "12"
+        }
+      ]
+    },
+    {
+      "Sid": "10486",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, Asian & Oceanian Qualifiers, Gr. B",
+      "Events": [
+        {
+          "Eid": "14140692",
+          "Eps": "FT",
+          "Esd": 20260706060000,
+          "T1": [
+            {
+              "ID": "6127",
+              "Nm": "China",
+              "Img": "https://img.sofascore.com/api/v1/team/6127/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "55345",
+              "Nm": "Chinese Taipei",
+              "Img": "https://img.sofascore.com/api/v1/team/55345/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "92",
+          "Tr2": "74",
+          "Tr1Q1": "25",
+          "Tr1Q2": "29",
+          "Tr1Q3": "18",
+          "Tr1Q4": "20",
+          "Tr2Q1": "13",
+          "Tr2Q2": "15",
+          "Tr2Q3": "20",
+          "Tr2Q4": "26"
+        },
+        {
+          "Eid": "14140691",
+          "Eps": "FT",
+          "Esd": 20260706103000,
+          "T1": [
+            {
+              "ID": "22382",
+              "Nm": "South Korea",
+              "Img": "https://img.sofascore.com/api/v1/team/22382/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6130",
+              "Nm": "Japan",
+              "Img": "https://img.sofascore.com/api/v1/team/6130/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "81",
+          "Tr2": "79",
+          "Tr1Q1": "25",
+          "Tr1Q2": "10",
+          "Tr1Q3": "20",
+          "Tr1Q4": "26",
+          "Tr2Q1": "25",
+          "Tr2Q2": "12",
+          "Tr2Q3": "17",
+          "Tr2Q4": "25"
+        }
+      ]
+    },
+    {
+      "Sid": "10486",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, Asian & Oceanian Qualifiers, Gr. C",
+      "Events": [
+        {
+          "Eid": "14140685",
+          "Eps": "FT",
+          "Esd": 20260705133000,
+          "T1": [
+            {
+              "ID": "55347",
+              "Nm": "Syria",
+              "Img": "https://img.sofascore.com/api/v1/team/55347/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "24305",
+              "Nm": "Iran",
+              "Img": "https://img.sofascore.com/api/v1/team/24305/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "52",
+          "Tr2": "73",
+          "Tr1Q1": "5",
+          "Tr1Q2": "15",
+          "Tr1Q3": "10",
+          "Tr1Q4": "22",
+          "Tr2Q1": "17",
+          "Tr2Q2": "14",
+          "Tr2Q3": "23",
+          "Tr2Q4": "19"
+        },
+        {
+          "Eid": "14140686",
+          "Eps": "FT",
+          "Esd": 20260705163000,
+          "T1": [
+            {
+              "ID": "39422",
+              "Nm": "Jordan",
+              "Img": "https://img.sofascore.com/api/v1/team/39422/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "245129",
+              "Nm": "Iraq",
+              "Img": "https://img.sofascore.com/api/v1/team/245129/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "106",
+          "Tr2": "67",
+          "Tr1Q1": "27",
+          "Tr1Q2": "33",
+          "Tr1Q3": "24",
+          "Tr1Q4": "22",
+          "Tr2Q1": "10",
+          "Tr2Q2": "23",
+          "Tr2Q3": "20",
+          "Tr2Q4": "14"
+        }
+      ]
+    },
+    {
+      "Sid": "10486",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, Asian & Oceanian Qualifiers, Gr. D",
+      "Events": [
+        {
+          "Eid": "14140687",
+          "Eps": "FT",
+          "Esd": 20260705150000,
+          "T1": [
+            {
+              "ID": "55339",
+              "Nm": "India",
+              "Img": "https://img.sofascore.com/api/v1/team/55339/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6131",
+              "Nm": "Lebanon",
+              "Img": "https://img.sofascore.com/api/v1/team/6131/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "72",
+          "Tr2": "98",
+          "Tr1Q1": "15",
+          "Tr1Q2": "23",
+          "Tr1Q3": "16",
+          "Tr1Q4": "18",
+          "Tr2Q1": "28",
+          "Tr2Q2": "20",
+          "Tr2Q3": "27",
+          "Tr2Q4": "23"
+        },
+        {
+          "Eid": "14140688",
+          "Eps": "FT",
+          "Esd": 20260705150000,
+          "T1": [
+            {
+              "ID": "105669",
+              "Nm": "Saudi Arabia",
+              "Img": "https://img.sofascore.com/api/v1/team/105669/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6137",
+              "Nm": "Qatar",
+              "Img": "https://img.sofascore.com/api/v1/team/6137/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "73",
+          "Tr2": "76",
+          "Tr1Q1": "18",
+          "Tr1Q2": "15",
+          "Tr1Q3": "21",
+          "Tr1Q4": "19",
+          "Tr2Q1": "17",
+          "Tr2Q2": "15",
+          "Tr2Q3": "15",
+          "Tr2Q4": "29"
+        }
+      ]
+    },
+    {
+      "Sid": "10437",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, European Qualifiers, Group A",
+      "Events": [
+        {
+          "Eid": "14508833",
+          "Eps": "FT",
+          "Esd": 20260705130000,
+          "T1": [
+            {
+              "ID": "86344",
+              "Nm": "Denmark",
+              "Img": "https://img.sofascore.com/api/v1/team/86344/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "25377",
+              "Nm": "Ukraine",
+              "Img": "https://img.sofascore.com/api/v1/team/25377/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "69",
+          "Tr2": "99",
+          "Tr1Q1": "25",
+          "Tr1Q2": "12",
+          "Tr1Q3": "19",
+          "Tr1Q4": "13",
+          "Tr2Q1": "22",
+          "Tr2Q2": "31",
+          "Tr2Q3": "24",
+          "Tr2Q4": "22"
+        },
+        {
+          "Eid": "14521566",
+          "Eps": "AET",
+          "Esd": 20260705153000,
+          "T1": [
+            {
+              "ID": "39835",
+              "Nm": "Georgia",
+              "Img": "https://img.sofascore.com/api/v1/team/39835/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6252",
+              "Nm": "Spain",
+              "Img": "https://img.sofascore.com/api/v1/team/6252/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "91",
+          "Tr2": "89",
+          "Tr1Q1": "14",
+          "Tr1Q2": "24",
+          "Tr1Q3": "19",
+          "Tr1Q4": "26",
+          "Tr1OT": "8",
+          "Tr2Q1": "32",
+          "Tr2Q2": "20",
+          "Tr2Q3": "19",
+          "Tr2Q4": "12",
+          "Tr2OT": "6"
+        }
+      ]
+    },
+    {
+      "Sid": "10437",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, European Qualifiers, Group B",
+      "Events": [
+        {
+          "Eid": "14521567",
+          "Eps": "FT",
+          "Esd": 20260705163000,
+          "T1": [
+            {
+              "ID": "6128",
+              "Nm": "Greece",
+              "Img": "https://img.sofascore.com/api/v1/team/6128/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "7497",
+              "Nm": "Portugal",
+              "Img": "https://img.sofascore.com/api/v1/team/7497/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "56",
+          "Tr2": "71",
+          "Tr1Q1": "15",
+          "Tr1Q2": "8",
+          "Tr1Q3": "19",
+          "Tr1Q4": "14",
+          "Tr2Q1": "19",
+          "Tr2Q2": "9",
+          "Tr2Q3": "25",
+          "Tr2Q4": "18"
+        },
+        {
+          "Eid": "14508837",
+          "Eps": "FT",
+          "Esd": 20260705183000,
+          "T1": [
+            {
+              "ID": "39836",
+              "Nm": "Montenegro",
+              "Img": "https://img.sofascore.com/api/v1/team/39836/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "61590",
+              "Nm": "Romania",
+              "Img": "https://img.sofascore.com/api/v1/team/61590/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "65",
+          "Tr2": "64",
+          "Tr1Q1": "17",
+          "Tr1Q2": "11",
+          "Tr1Q3": "27",
+          "Tr1Q4": "10",
+          "Tr2Q1": "14",
+          "Tr2Q2": "15",
+          "Tr2Q3": "21",
+          "Tr2Q4": "14"
+        }
+      ]
+    },
+    {
+      "Sid": "10437",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, European Qualifiers, Group C",
+      "Events": [
+        {
+          "Eid": "14520869",
+          "Eps": "FT",
+          "Esd": 20260706160000,
+          "T1": [
+            {
+              "ID": "6253",
+              "Nm": "Türkiye",
+              "Img": "https://img.sofascore.com/api/v1/team/6253/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "61584",
+              "Nm": "Switzerland",
+              "Img": "https://img.sofascore.com/api/v1/team/61584/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "95",
+          "Tr2": "72",
+          "Tr1Q1": "22",
+          "Tr1Q2": "25",
+          "Tr1Q3": "29",
+          "Tr1Q4": "19",
+          "Tr2Q1": "19",
+          "Tr2Q2": "22",
+          "Tr2Q3": "11",
+          "Tr2Q4": "20"
+        },
+        {
+          "Eid": "14521568",
+          "Eps": "FT",
+          "Esd": 20260706180000,
+          "T1": [
+            {
+              "ID": "6139",
+              "Nm": "Serbia",
+              "Img": "https://img.sofascore.com/api/v1/team/6139/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "25370",
+              "Nm": "Bosnia & Herzegovina",
+              "Img": "https://img.sofascore.com/api/v1/team/25370/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "94",
+          "Tr2": "81",
+          "Tr1Q1": "27",
+          "Tr1Q2": "27",
+          "Tr1Q3": "21",
+          "Tr1Q4": "19",
+          "Tr2Q1": "15",
+          "Tr2Q2": "20",
+          "Tr2Q3": "24",
+          "Tr2Q4": "22"
+        }
+      ]
+    },
+    {
+      "Sid": "10437",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, European Qualifiers, Group D",
+      "Events": [
+        {
+          "Eid": "14521569",
+          "Eps": "FT",
+          "Esd": 20260705140000,
+          "T1": [
+            {
+              "ID": "25372",
+              "Nm": "Great Britain",
+              "Img": "https://img.sofascore.com/api/v1/team/25372/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "61574",
+              "Nm": "Iceland",
+              "Img": "https://img.sofascore.com/api/v1/team/61574/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "86",
+          "Tr2": "88",
+          "Tr1Q1": "24",
+          "Tr1Q2": "25",
+          "Tr1Q3": "20",
+          "Tr1Q4": "17",
+          "Tr2Q1": "19",
+          "Tr2Q2": "22",
+          "Tr2Q3": "21",
+          "Tr2Q4": "26"
+        },
+        {
+          "Eid": "14521570",
+          "Eps": "FT",
+          "Esd": 20260705180000,
+          "T1": [
+            {
+              "ID": "6129",
+              "Nm": "Italy",
+              "Img": "https://img.sofascore.com/api/v1/team/6129/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "6132",
+              "Nm": "Lithuania",
+              "Img": "https://img.sofascore.com/api/v1/team/6132/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "87",
+          "Tr2": "84",
+          "Tr1Q1": "22",
+          "Tr1Q2": "18",
+          "Tr1Q3": "19",
+          "Tr1Q4": "28",
+          "Tr2Q1": "25",
+          "Tr2Q2": "12",
+          "Tr2Q3": "24",
+          "Tr2Q4": "23"
+        }
+      ]
+    },
+    {
+      "Sid": "10437",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, European Qualifiers, Group E",
+      "Events": [
+        {
+          "Eid": "14521571",
+          "Eps": "FT",
+          "Esd": 20260706170000,
+          "T1": [
+            {
+              "ID": "6249",
+              "Nm": "Germany",
+              "Img": "https://img.sofascore.com/api/v1/team/6249/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "61582",
+              "Nm": "Cyprus",
+              "Img": "https://img.sofascore.com/api/v1/team/61582/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "111",
+          "Tr2": "79",
+          "Tr1Q1": "22",
+          "Tr1Q2": "34",
+          "Tr1Q3": "30",
+          "Tr1Q4": "25",
+          "Tr2Q1": "21",
+          "Tr2Q2": "10",
+          "Tr2Q3": "25",
+          "Tr2Q4": "23"
+        },
+        {
+          "Eid": "14520875",
+          "Eps": "FT",
+          "Esd": 20260706180000,
+          "T1": [
+            {
+              "ID": "7493",
+              "Nm": "Croatia",
+              "Img": "https://img.sofascore.com/api/v1/team/7493/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "7967",
+              "Nm": "Israel",
+              "Img": "https://img.sofascore.com/api/v1/team/7967/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "103",
+          "Tr2": "75",
+          "Tr1Q1": "25",
+          "Tr1Q2": "22",
+          "Tr1Q3": "27",
+          "Tr1Q4": "29",
+          "Tr2Q1": "12",
+          "Tr2Q2": "19",
+          "Tr2Q3": "20",
+          "Tr2Q4": "24"
+        }
+      ]
+    },
+    {
+      "Sid": "10437",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, European Qualifiers, Group F",
+      "Events": [
+        {
+          "Eid": "14520889",
+          "Eps": "FT",
+          "Esd": 20260706160000,
+          "T1": [
+            {
+              "ID": "7496",
+              "Nm": "Poland",
+              "Img": "https://img.sofascore.com/api/v1/team/7496/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "54343",
+              "Nm": "Netherlands",
+              "Img": "https://img.sofascore.com/api/v1/team/54343/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "92",
+          "Tr2": "84",
+          "Tr1Q1": "18",
+          "Tr1Q2": "28",
+          "Tr1Q3": "27",
+          "Tr1Q4": "19",
+          "Tr2Q1": "16",
+          "Tr2Q2": "28",
+          "Tr2Q3": "21",
+          "Tr2Q4": "19"
+        },
+        {
+          "Eid": "14520885",
+          "Eps": "FT",
+          "Esd": 20260706163000,
+          "T1": [
+            {
+              "ID": "7495",
+              "Nm": "Latvia",
+              "Img": "https://img.sofascore.com/api/v1/team/7495/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "61580",
+              "Nm": "Austria",
+              "Img": "https://img.sofascore.com/api/v1/team/61580/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "112",
+          "Tr2": "66",
+          "Tr1Q1": "22",
+          "Tr1Q2": "32",
+          "Tr1Q3": "30",
+          "Tr1Q4": "28",
+          "Tr2Q1": "22",
+          "Tr2Q2": "20",
+          "Tr2Q3": "9",
+          "Tr2Q4": "15"
+        }
+      ]
+    },
+    {
+      "Sid": "10437",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, European Qualifiers, Group G",
+      "Events": [
+        {
+          "Eid": "14520891",
+          "Eps": "FT",
+          "Esd": 20260706160000,
+          "T1": [
+            {
+              "ID": "25376",
+              "Nm": "Hungary",
+              "Img": "https://img.sofascore.com/api/v1/team/25376/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "25369",
+              "Nm": "Belgium",
+              "Img": "https://img.sofascore.com/api/v1/team/25369/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "85",
+          "Tr2": "70",
+          "Tr1Q1": "23",
+          "Tr1Q2": "23",
+          "Tr1Q3": "16",
+          "Tr1Q4": "23",
+          "Tr2Q1": "19",
+          "Tr2Q2": "17",
+          "Tr2Q3": "21",
+          "Tr2Q4": "13"
+        },
+        {
+          "Eid": "14521572",
+          "Eps": "FT",
+          "Esd": 20260706183000,
+          "T1": [
+            {
+              "ID": "6248",
+              "Nm": "France",
+              "Img": "https://img.sofascore.com/api/v1/team/6248/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "25374",
+              "Nm": "Finland",
+              "Img": "https://img.sofascore.com/api/v1/team/25374/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "98",
+          "Tr2": "69",
+          "Tr1Q1": "31",
+          "Tr1Q2": "18",
+          "Tr1Q3": "28",
+          "Tr1Q4": "21",
+          "Tr2Q1": "16",
+          "Tr2Q2": "14",
+          "Tr2Q3": "17",
+          "Tr2Q4": "22"
+        }
+      ]
+    },
+    {
+      "Sid": "10437",
+      "Cnm": "International",
+      "Snm": "FIBA World Cup, European Qualifiers, Group H",
+      "Events": [
+        {
+          "Eid": "14521574",
+          "Eps": "FT",
+          "Esd": 20260706150000,
+          "T1": [
+            {
+              "ID": "7494",
+              "Nm": "Czechia",
+              "Img": "https://img.sofascore.com/api/v1/team/7494/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "25373",
+              "Nm": "Estonia",
+              "Img": "https://img.sofascore.com/api/v1/team/25373/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "75",
+          "Tr2": "73",
+          "Tr1Q1": "24",
+          "Tr1Q2": "17",
+          "Tr1Q3": "11",
+          "Tr1Q4": "23",
+          "Tr2Q1": "20",
+          "Tr2Q2": "17",
+          "Tr2Q3": "16",
+          "Tr2Q4": "20"
+        },
+        {
+          "Eid": "14521573",
+          "Eps": "FT",
+          "Esd": 20260706180000,
+          "T1": [
+            {
+              "ID": "6140",
+              "Nm": "Slovenia",
+              "Img": "https://img.sofascore.com/api/v1/team/6140/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "54317",
+              "Nm": "Sweden",
+              "Img": "https://img.sofascore.com/api/v1/team/54317/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "79",
+          "Tr2": "88",
+          "Tr1Q1": "24",
+          "Tr1Q2": "21",
+          "Tr1Q3": "13",
+          "Tr1Q4": "21",
+          "Tr2Q1": "30",
+          "Tr2Q2": "20",
+          "Tr2Q3": "19",
+          "Tr2Q4": "19"
+        }
+      ]
+    },
+    {
+      "Sid": "486",
+      "Cnm": "USA",
+      "Snm": "WNBA",
+      "Events": [
+        {
+          "Eid": "15415790",
+          "Eps": "FT",
+          "Esd": 20260705190000,
+          "T1": [
+            {
+              "ID": "1166445",
+              "Nm": "Toronto Tempo",
+              "Img": "https://img.sofascore.com/api/v1/team/1166445/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3450",
+              "Nm": "Dallas Wings",
+              "Img": "https://img.sofascore.com/api/v1/team/3450/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "76",
+          "Tr2": "89",
+          "Tr1Q1": "19",
+          "Tr1Q2": "23",
+          "Tr1Q3": "17",
+          "Tr1Q4": "17",
+          "Tr2Q1": "30",
+          "Tr2Q2": "17",
+          "Tr2Q3": "24",
+          "Tr2Q4": "18"
+        },
+        {
+          "Eid": "15415791",
+          "Eps": "FT",
+          "Esd": 20260705230000,
+          "T1": [
+            {
+              "ID": "35550",
+              "Nm": "Las Vegas Aces",
+              "Img": "https://img.sofascore.com/api/v1/team/35550/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3452",
+              "Nm": "Indiana Fever",
+              "Img": "https://img.sofascore.com/api/v1/team/3452/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "68",
+          "Tr2": "84",
+          "Tr1Q1": "24",
+          "Tr1Q2": "17",
+          "Tr1Q3": "14",
+          "Tr1Q4": "13",
+          "Tr2Q1": "23",
+          "Tr2Q2": "19",
+          "Tr2Q3": "26",
+          "Tr2Q4": "16"
+        },
+        {
+          "Eid": "15415792",
+          "Eps": "Q2",
+          "Esd": 20260706233000,
+          "T1": [
+            {
+              "ID": "3454",
+              "Nm": "Washington Mystics",
+              "Img": "https://img.sofascore.com/api/v1/team/3454/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "1041936",
+              "Nm": "Golden State Valkyries",
+              "Img": "https://img.sofascore.com/api/v1/team/1041936/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "31",
+          "Tr2": "29",
+          "Tr1Q1": "15",
+          "Tr1Q2": "16",
+          "Tr2Q1": "11",
+          "Tr2Q2": "18"
+        },
+        {
+          "Eid": "15415793",
+          "Eps": "Q1",
+          "Esd": 20260707000000,
+          "T1": [
+            {
+              "ID": "3440",
+              "Nm": "Minnesota Lynx",
+              "Img": "https://img.sofascore.com/api/v1/team/3440/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "35547",
+              "Nm": "Connecticut Sun",
+              "Img": "https://img.sofascore.com/api/v1/team/35547/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "4",
+          "Tr2": "11",
+          "Tr1Q1": "4",
+          "Tr2Q1": "11"
+        },
+        {
+          "Eid": "15415794",
+          "Eps": "NS",
+          "Esd": 20260707020000,
+          "T1": [
+            {
+              "ID": "3447",
+              "Nm": "Los Angeles Sparks",
+              "Img": "https://img.sofascore.com/api/v1/team/3447/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3448",
+              "Nm": "Seattle Storm",
+              "Img": "https://img.sofascore.com/api/v1/team/3448/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sid": "10415",
+      "Cnm": "USA",
+      "Snm": "NBA Summer League",
+      "Events": [
+        {
+          "Eid": "16402872",
+          "Eps": "FT",
+          "Esd": 20260705190000,
+          "T1": [
+            {
+              "ID": "3410",
+              "Nm": "Milwaukee Bucks",
+              "Img": "https://img.sofascore.com/api/v1/team/3410/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3436",
+              "Nm": "Brooklyn Nets",
+              "Img": "https://img.sofascore.com/api/v1/team/3436/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "69",
+          "Tr2": "89",
+          "Tr1Q1": "24",
+          "Tr1Q2": "12",
+          "Tr1Q3": "18",
+          "Tr1Q4": "15",
+          "Tr2Q1": "29",
+          "Tr2Q2": "27",
+          "Tr2Q3": "16",
+          "Tr2Q4": "17"
+        },
+        {
+          "Eid": "16402873",
+          "Eps": "AET",
+          "Esd": 20260705203000,
+          "T1": [
+            {
+              "ID": "3427",
+              "Nm": "Los Angeles Lakers",
+              "Img": "https://img.sofascore.com/api/v1/team/3427/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3435",
+              "Nm": "Miami Heat",
+              "Img": "https://img.sofascore.com/api/v1/team/3435/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "93",
+          "Tr2": "91",
+          "Tr1Q1": "17",
+          "Tr1Q2": "22",
+          "Tr1Q3": "25",
+          "Tr1Q4": "23",
+          "Tr1OT": "4",
+          "Tr2Q1": "26",
+          "Tr2Q2": "23",
+          "Tr2Q3": "25",
+          "Tr2Q4": "13",
+          "Tr2OT": "4"
+        },
+        {
+          "Eid": "16411123",
+          "Eps": "FT",
+          "Esd": 20260705210000,
+          "T1": [
+            {
+              "ID": "3413",
+              "Nm": "Sacramento Kings",
+              "Img": "https://img.sofascore.com/api/v1/team/3413/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3428",
+              "Nm": "Golden State Warriors",
+              "Img": "https://img.sofascore.com/api/v1/team/3428/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "91",
+          "Tr2": "85",
+          "Tr1Q1": "16",
+          "Tr1Q2": "26",
+          "Tr1Q3": "28",
+          "Tr1Q4": "21",
+          "Tr2Q1": "22",
+          "Tr2Q2": "30",
+          "Tr2Q3": "19",
+          "Tr2Q4": "14"
+        },
+        {
+          "Eid": "16411124",
+          "Eps": "FT",
+          "Esd": 20260705230000,
+          "T1": [
+            {
+              "ID": "3428",
+              "Nm": "Golden State Warriors",
+              "Img": "https://img.sofascore.com/api/v1/team/3428/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3429",
+              "Nm": "San Antonio Spurs",
+              "Img": "https://img.sofascore.com/api/v1/team/3429/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "98",
+          "Tr2": "69",
+          "Tr1Q1": "24",
+          "Tr1Q2": "21",
+          "Tr1Q3": "27",
+          "Tr1Q4": "26",
+          "Tr2Q1": "15",
+          "Tr2Q2": "11",
+          "Tr2Q3": "20",
+          "Tr2Q4": "23"
+        },
+        {
+          "Eid": "16403187",
+          "Eps": "Q3",
+          "Esd": 20260706230000,
+          "T1": [
+            {
+              "ID": "3418",
+              "Nm": "Oklahoma City Thunder",
+              "Img": "https://img.sofascore.com/api/v1/team/3418/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3423",
+              "Nm": "Atlanta Hawks",
+              "Img": "https://img.sofascore.com/api/v1/team/3423/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "43",
+          "Tr2": "36",
+          "Tr1Q1": "26",
+          "Tr1Q2": "17",
+          "Tr1Q3": "0",
+          "Tr2Q1": "11",
+          "Tr2Q2": "25",
+          "Tr2Q3": "0"
+        },
+        {
+          "Eid": "16403123",
+          "Eps": "Q2",
+          "Esd": 20260706233000,
+          "T1": [
+            {
+              "ID": "3429",
+              "Nm": "San Antonio Spurs",
+              "Img": "https://img.sofascore.com/api/v1/team/3429/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3427",
+              "Nm": "Los Angeles Lakers",
+              "Img": "https://img.sofascore.com/api/v1/team/3427/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "34",
+          "Tr2": "25",
+          "Tr1Q1": "21",
+          "Tr1Q2": "13",
+          "Tr2Q1": "15",
+          "Tr2Q2": "10"
+        },
+        {
+          "Eid": "16411125",
+          "Eps": "Q1",
+          "Esd": 20260707000000,
+          "T1": [
+            {
+              "ID": "3436",
+              "Nm": "Brooklyn Nets",
+              "Img": "https://img.sofascore.com/api/v1/team/3436/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3428",
+              "Nm": "Golden State Warriors",
+              "Img": "https://img.sofascore.com/api/v1/team/3428/image/small",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "8",
+          "Tr2": "11",
+          "Tr1Q1": "8",
+          "Tr2Q1": "11"
+        },
+        {
+          "Eid": "16403188",
+          "Eps": "NS",
+          "Esd": 20260707010000,
+          "T1": [
+            {
+              "ID": "3434",
+              "Nm": "Utah Jazz",
+              "Img": "https://img.sofascore.com/api/v1/team/3434/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3415",
+              "Nm": "Memphis Grizzlies",
+              "Img": "https://img.sofascore.com/api/v1/team/3415/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16411126",
+          "Eps": "NS",
+          "Esd": 20260707020000,
+          "T1": [
+            {
+              "ID": "3428",
+              "Nm": "Golden State Warriors",
+              "Img": "https://img.sofascore.com/api/v1/team/3428/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3435",
+              "Nm": "Miami Heat",
+              "Img": "https://img.sofascore.com/api/v1/team/3435/image/small",
+              "Abr": ""
+            }
+          ]
+        },
+        {
+          "Eid": "16403136",
+          "Eps": "NS",
+          "Esd": 20260707020000,
+          "T1": [
+            {
+              "ID": "3413",
+              "Nm": "Sacramento Kings",
+              "Img": "https://img.sofascore.com/api/v1/team/3413/image/small",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "3410",
+              "Nm": "Milwaukee Bucks",
+              "Img": "https://img.sofascore.com/api/v1/team/3410/image/small",
+              "Abr": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

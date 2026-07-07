@@ -1,0 +1,53 @@
+{
+  "Stages": [
+    {
+      "Sid": "chgki2a",
+      "Cnm": "Unknown Tournament",
+      "Snm": "Unknown Tournament",
+      "Events": [
+        {
+          "Eid": "tbTsReVa",
+          "Eps": "FT",
+          "Esd": 20260706000000,
+          "T1": [
+            {
+              "ID": "6xk2081",
+              "Nm": "?",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "bqrtf9q",
+              "Nm": "?",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1"
+        },
+        {
+          "Eid": "xhRXm8PG",
+          "Eps": "13",
+          "Esd": 20260706000000,
+          "T1": [
+            {
+              "ID": "o2evm9s",
+              "Nm": "?",
+              "Abr": ""
+            }
+          ],
+          "T2": [
+            {
+              "ID": "aq8piso",
+              "Nm": "?",
+              "Abr": ""
+            }
+          ],
+          "Tr1": "0",
+          "Tr2": "1"
+        }
+      ]
+    }
+  ]
+}
