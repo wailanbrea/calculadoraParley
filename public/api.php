@@ -557,6 +557,12 @@ if ($action === 'sync_mlb_bases') {
         clearstatcache(true, $basesFile);
     }
     
+    echo json_encode([
+        "success" => true,
+        "synchronized" => $syncCount,
+        "already_imported" => $alreadyCount,
+        "dates_synced" => $datesToSync,
+        "fetch_errors" => $fetchErrors,
         "message" => "Sincronización completada. $syncCount juegos nuevos importados.",
         "games" => $existing
     ]);
