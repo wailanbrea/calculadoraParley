@@ -516,7 +516,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
       .then(data => {
         if (!data || !Array.isArray(data.Stages)) throw new Error('Respuesta Livescore inválida');
         return data.Stages.map(st => ({
-          liga: 'ls-' + (st.Sid || Math.random()),
+          liga: 'ls-' + (st.Sid || '') + '-' + (st.Snm || Math.random()),
           label: [st.Cnm, st.Snm].filter(Boolean).join(' — '),
           eventos: (st.Events || []).map(adaptarEventoLivescore).sort((a, b) => new Date(a.date) - new Date(b.date))
         })).filter(g => g.eventos.length > 0);
