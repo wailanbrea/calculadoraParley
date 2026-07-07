@@ -1,0 +1,14 @@
+{
+  "name": "calcparley-crawler",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Crawler de marcadores en vivo (Sofascore) para CalculadoraParley. Corre 24/7 en el VPS.",
+  "scripts": {
+    "start": "node runner.js",
+    "once": "node crawl_sofascore.js"
+  },
+  "dependencies": {
+    "playwright": "^1.49.1"
+  }
+}

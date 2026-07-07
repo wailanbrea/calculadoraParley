@@ -19,6 +19,11 @@ import_token.txt
 cache_ls_*.json
 .playwright-mcp/
 
+# Marcadores en vivo generados por el crawler en el VPS (se generan solos cada 2 min,
+# ya no se transportan por Git)
+sofascore_*.json
+flashscore_*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
