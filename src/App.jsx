@@ -7,6 +7,7 @@ import FraccionarTickets from './components/FraccionarTickets';
 import BasesAlcanzadas from './components/BasesAlcanzadas';
 import ScoreboardDeporte from './components/ScoreboardDeporte';
 import AlertasGlobales from './components/AlertasGlobales';
+import ScoreboardComparator from './components/ScoreboardComparator';
 
 const LIGAS_BASKET = [
   { id: 'basketball/nba', label: 'NBA' },
@@ -279,6 +280,10 @@ export default function App() {
             agrupado
             livescore="soccer"
           />
+        )}
+        
+        {activePage === 'comparator' && (
+          <ScoreboardComparator />
         )}
         
         {activePage === 'settings' && (

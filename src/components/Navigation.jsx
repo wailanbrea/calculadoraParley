@@ -74,6 +74,15 @@ export default function Navigation({ activePage, setActivePage }) {
           </li>
           <li className="nav-item">
             <button
+              className={`nav-link ${activePage === 'comparator' ? 'active' : ''}`}
+              onClick={() => setActivePage('comparator')}
+            >
+              <span style={{ fontSize: '1.2rem', width: '24px', textAlign: 'center' }}>🔍</span>
+              Comparador
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
               className={`nav-link ${activePage === 'settings' ? 'active' : ''}`}
               onClick={() => setActivePage('settings')}
             >
