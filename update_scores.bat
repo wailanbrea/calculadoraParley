@@ -14,8 +14,19 @@ if exist "C:\xampp\htdocs\calcparley" (
 
 echo Directorio de destino detectado: %WEB_DIR%
 
-:: Cambiar al directorio con entorno de Playwright y ejecutar crawler
+:: Cambiar al directorio con entorno de Playwright y ejecutar crawlers
 cd /d C:\xampp\php\www\BSportsBook
-node crawl_sofascore.js %TODAY% "%WEB_DIR%\sofascore_basketball_%TODAY%.json"
+
+echo Ejecutando crawler Sofascore para Baloncesto...
+node crawl_sofascore.js %TODAY% basketball "%WEB_DIR%\sofascore_basketball_%TODAY%.json"
+
+echo Ejecutando crawler Flashscore para Baloncesto...
+node crawl_flashscore.js %TODAY% basketball "%WEB_DIR%\flashscore_basketball_%TODAY%.json"
+
+echo Ejecutando crawler Sofascore para Soccer...
+node crawl_sofascore.js %TODAY% football "%WEB_DIR%\sofascore_soccer_%TODAY%.json"
+
+echo Ejecutando crawler Flashscore para Soccer...
+node crawl_flashscore.js %TODAY% football "%WEB_DIR%\flashscore_soccer_%TODAY%.json"
 
 echo [%date% %time%] Actualizacion completada.

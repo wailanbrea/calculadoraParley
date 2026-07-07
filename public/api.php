@@ -557,15 +557,393 @@ if ($action === 'sync_mlb_bases') {
         clearstatcache(true, $basesFile);
     }
     
-    echo json_encode([
-        "success" => true,
-        "synchronized" => $syncCount,
-        "already_imported" => $alreadyCount,
-        "dates_synced" => $datesToSync,
-        "fetch_errors" => $fetchErrors,
         "message" => "Sincronización completada. $syncCount juegos nuevos importados.",
         "games" => $existing
     ]);
+    exit;
+}
+
+// Helpers para el Comparador Multi-API
+function cleanTeamName($name) {
+    $name = strtolower($name);
+    $name = str_replace(
+        ['á','é','í','ó','ú','ñ','ü','í','Í'],
+        ['a','e','i','o','u','n','u','i','I'],
+        $name
+    );
+    // Eliminar sufijos comunes y textos descriptivos
+    $name = preg_replace('/\b(basketball|baloncesto|fc|cf|club|deportivo|atletico|real|sd|ud|cd|spid|youth|women|femenino|masculino|u20|u19|u18|b\b)\b/i', '', $name);
+    $name = preg_replace('/[^a-z0-9]/', '', $name);
+    return trim($name);
+}
+
+function matchTeams($name1, $name2) {
+    $c1 = cleanTeamName($name1);
+    $c2 = cleanTeamName($name2);
+    if ($c1 === $c2) return true;
+    if (empty($c1) || empty($c2)) return false;
+    if (strpos($c1, $c2) !== false || strpos($c2, $c1) !== false) return true;
+    
+    similar_text($c1, $c2, $percent);
+    return $percent > 72;
+}
+
+function findMatchingEvent($events, $home, $away, &$matchedIndex = null) {
+    foreach ($events as $index => $ev) {
+        $evHome = $ev['home'] ?? '';
+        $evAway = $ev['away'] ?? '';
+        if ((matchTeams($evHome, $home) && matchTeams($evAway, $away)) ||
+            (matchTeams($evHome, $away) && matchTeams($evAway, $home))) {
+            $matchedIndex = $index;
+            return $ev;
+        }
+    }
+    return null;
+}
+
+function flattenCrawledFeed($filePath, $sportType) {
+    if (!file_exists($filePath)) return [];
+    $data = json_decode(file_get_contents($filePath), true);
+    if (!$data || empty($data['Stages'])) return [];
+    
+    $events = [];
+    foreach ($data['Stages'] as $stage) {
+        $leagueName = [($stage['Cnm'] ?? ''), ($stage['Snm'] ?? '')];
+        $leagueLabel = implode(' — ', array_filter($leagueName));
+        
+        foreach ($stage['Events'] ?? [] as $e) {
+            $home = $e['T1'][0]['Nm'] ?? 'Home';
+            $away = $e['T2'][0]['Nm'] ?? 'Away';
+            
+            $homeQuarters = [];
+            $awayQuarters = [];
+            
+            if ($sportType === 'basketball') {
+                for ($q = 1; $q <= 4; $q++) {
+                    if (isset($e["Tr1Q{$q}"])) $homeQuarters[] = (string)$e["Tr1Q{$q}"];
+                    if (isset($e["Tr2Q{$q}"])) $awayQuarters[] = (string)$e["Tr2Q{$q}"];
+                }
+                if (isset($e["Tr1OT"])) $homeQuarters[] = (string)$e["Tr1OT"];
+                if (isset($e["Tr2OT"])) $awayQuarters[] = (string)$e["Tr2OT"];
+            } else {
+                if (isset($e["Tr1H1"])) $homeQuarters[] = (string)$e["Tr1H1"];
+                if (isset($e["Tr1H2"])) $homeQuarters[] = (string)$e["Tr1H2"];
+                if (isset($e["Tr1OT"])) $homeQuarters[] = (string)$e["Tr1OT"];
+                
+                if (isset($e["Tr2H1"])) $awayQuarters[] = (string)$e["Tr2H1"];
+                if (isset($e["Tr2H2"])) $awayQuarters[] = (string)$e["Tr2H2"];
+                if (isset($e["Tr2OT"])) $awayQuarters[] = (string)$e["Tr2OT"];
+            }
+            
+            $events[] = [
+                'home' => $home,
+                'away' => $away,
+                'league' => $leagueLabel,
+                'status' => $e['Eps'] ?? 'NS',
+                'homeScore' => $e['Tr1'] ?? '',
+                'awayScore' => $e['Tr2'] ?? '',
+                'homeQuarters' => $homeQuarters,
+                'awayQuarters' => $awayQuarters
+            ];
+        }
+    }
+    return $events;
+}
+
+function getEspnEvents($sport, $leagues, $dateRaw, $isSoccer = false) {
+    $events = [];
+    foreach ($leagues as $l) {
+        $url = "https://site.api.espn.com/apis/site/v2/sports/{$sport}/{$l}/scoreboard?dates={$dateRaw}";
+        $res = fetchExternalJson($url);
+        if ($res) {
+            $data = json_decode($res, true);
+            foreach ($data['events'] ?? [] as $ev) {
+                $comp = $ev['competitions'][0] ?? null;
+                if (!$comp) continue;
+                
+                $home = null;
+                $away = null;
+                foreach ($comp['competitors'] ?? [] as $c) {
+                    if ($c['homeAway'] === 'home') $home = $c;
+                    else $away = $c;
+                }
+                if (!$home || !$away) continue;
+                
+                $homeScores = [];
+                $awayScores = [];
+                foreach ($home['linescores'] ?? [] as $ls) {
+                    $homeScores[] = isset($ls['value']) ? (string)$ls['value'] : '';
+                }
+                foreach ($away['linescores'] ?? [] as $ls) {
+                    $awayScores[] = isset($ls['value']) ? (string)$ls['value'] : '';
+                }
+                
+                $events[] = [
+                    'home' => $home['team']['displayName'] ?? '',
+                    'away' => $away['team']['displayName'] ?? '',
+                    'league' => $ev['season']['displayName'] ?? ($isSoccer ? 'Soccer' : 'Basketball'),
+                    'status' => $ev['status']['type']['shortDetail'] ?? '',
+                    'homeScore' => $home['score'] ?? '',
+                    'awayScore' => $away['score'] ?? '',
+                    'homeQuarters' => $homeScores,
+                    'awayQuarters' => $awayScores
+                ];
+            }
+        }
+    }
+    return $events;
+}
+
+// Acción: get_basketball_comparison
+if ($action === 'get_basketball_comparison') {
+    $dateParam = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+    $dateRaw = str_replace('-', '', $dateParam);
+    
+    $cacheDir = dirname(__DIR__);
+    $sofaPath = $cacheDir . "/sofascore_basketball_{$dateParam}.json";
+    $flashPath = $cacheDir . "/flashscore_basketball_{$dateParam}.json";
+    
+    $sofaEvents = flattenCrawledFeed($sofaPath, 'basketball');
+    $flashEvents = flattenCrawledFeed($flashPath, 'basketball');
+    $espnEvents = getEspnEvents('basketball', ['nba', 'wnba', 'fiba'], $dateRaw);
+    
+    $unified = [];
+    $usedFlash = [];
+    $usedEspn = [];
+    
+    // Usar Sofascore como base primaria
+    foreach ($sofaEvents as $sofa) {
+        $flashMatch = findMatchingEvent($flashEvents, $sofa['home'], $sofa['away'], $flashIdx);
+        if ($flashMatch !== null) $usedFlash[$flashIdx] = true;
+        
+        $espnMatch = findMatchingEvent($espnEvents, $sofa['home'], $sofa['away'], $espnIdx);
+        if ($espnMatch !== null) $usedEspn[$espnIdx] = true;
+        
+        $unified[] = [
+          'home' => $sofa['home'],
+          'away' => $sofa['away'],
+          'league' => $sofa['league'],
+          'sofascore' => $sofa,
+          'flashscore' => $flashMatch,
+          'espn' => $espnMatch
+        ];
+    }
+    
+    // Agregar juegos de Flashscore que no estuvieran en Sofascore
+    foreach ($flashEvents as $idx => $flash) {
+        if (isset($usedFlash[$idx])) continue;
+        
+        $espnMatch = findMatchingEvent($espnEvents, $flash['home'], $flash['away'], $espnIdx);
+        if ($espnMatch !== null) $usedEspn[$espnIdx] = true;
+        
+        $unified[] = [
+          'home' => $flash['home'],
+          'away' => $flash['away'],
+          'league' => $flash['league'],
+          'sofascore' => null,
+          'flashscore' => $flash,
+          'espn' => $espnMatch
+        ];
+    }
+    
+    // Agregar juegos de ESPN restantes
+    foreach ($espnEvents as $idx => $espn) {
+        if (isset($usedEspn[$idx])) continue;
+        
+        $unified[] = [
+          'home' => $espn['home'],
+          'away' => $espn['away'],
+          'league' => $espn['league'],
+          'sofascore' => null,
+          'flashscore' => null,
+          'espn' => $espn
+        ];
+    }
+    
+    echo json_encode($unified, JSON_PRETTY_PRINT);
+    exit;
+}
+
+// Acción: get_soccer_comparison
+if ($action === 'get_soccer_comparison') {
+    $dateParam = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+    $dateRaw = str_replace('-', '', $dateParam);
+    
+    $cacheDir = dirname(__DIR__);
+    $sofaPath = $cacheDir . "/sofascore_soccer_{$dateParam}.json";
+    $flashPath = $cacheDir . "/flashscore_soccer_{$dateParam}.json";
+    
+    $sofaEvents = flattenCrawledFeed($sofaPath, 'soccer');
+    $flashEvents = flattenCrawledFeed($flashPath, 'soccer');
+    
+    // ESPN Soccer Leagues
+    $espnEvents = getEspnEvents('soccer', ['esp.1', 'eng.1', 'usa.1'], $dateRaw, true);
+    
+    $unified = [];
+    $usedFlash = [];
+    $usedEspn = [];
+    
+    foreach ($sofaEvents as $sofa) {
+        $flashMatch = findMatchingEvent($flashEvents, $sofa['home'], $sofa['away'], $flashIdx);
+        if ($flashMatch !== null) $usedFlash[$flashIdx] = true;
+        
+        $espnMatch = findMatchingEvent($espnEvents, $sofa['home'], $sofa['away'], $espnIdx);
+        if ($espnMatch !== null) $usedEspn[$espnIdx] = true;
+        
+        $unified[] = [
+          'home' => $sofa['home'],
+          'away' => $sofa['away'],
+          'league' => $sofa['league'],
+          'sofascore' => $sofa,
+          'flashscore' => $flashMatch,
+          'espn' => $espnMatch
+        ];
+    }
+    
+    foreach ($flashEvents as $idx => $flash) {
+        if (isset($usedFlash[$idx])) continue;
+        
+        $espnMatch = findMatchingEvent($espnEvents, $flash['home'], $flash['away'], $espnIdx);
+        if ($espnMatch !== null) $usedEspn[$espnIdx] = true;
+        
+        $unified[] = [
+          'home' => $flash['home'],
+          'away' => $flash['away'],
+          'league' => $flash['league'],
+          'sofascore' => null,
+          'flashscore' => $flash,
+          'espn' => $espnMatch
+        ];
+    }
+    
+    foreach ($espnEvents as $idx => $espn) {
+        if (isset($usedEspn[$idx])) continue;
+        
+        $unified[] = [
+          'home' => $espn['home'],
+          'away' => $espn['away'],
+          'league' => $espn['league'],
+          'sofascore' => null,
+          'flashscore' => null,
+          'espn' => $espn
+        ];
+    }
+    
+    echo json_encode($unified, JSON_PRETTY_PRINT);
+    exit;
+}
+
+// Acción: get_mlb_comparison
+if ($action === 'get_mlb_comparison') {
+    $dateParam = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+    $dateRaw = str_replace('-', '', $dateParam);
+    
+    // 1. Cargar MLB.com local
+    $mlbGames = [];
+    if (file_exists($basesFile)) {
+        $basesContent = file_get_contents($basesFile);
+        $basesData = json_decode($basesContent, true);
+        if (is_array($basesData)) {
+            foreach ($basesData as $game) {
+                // Filtrar por fecha
+                $gameDateSlash = str_replace('-', '/', $dateParam);
+                if (isset($game['date']) && $game['date'] === $gameDateSlash) {
+                    $boxscores = $game['boxscores'] ?? [];
+                    $away = $boxscores[0] ?? null;
+                    $home = $boxscores[1] ?? null;
+                    if ($away && $home) {
+                        $awayLineup = $away['lineup'] ?? [];
+                        $homeLineup = $home['lineup'] ?? [];
+                        
+                        $awayHits = array_sum(array_column(array_column($awayLineup, 'stats'), 'h'));
+                        $homeHits = array_sum(array_column(array_column($homeLineup, 'stats'), 'h'));
+                        
+                        $mlbGames[] = [
+                            'gameId' => $game['gameId'],
+                            'home' => $home['teamName'],
+                            'away' => $away['teamName'],
+                            'status' => 'Final',
+                            'homeRuns' => $home['runs'] ?? 0,
+                            'awayRuns' => $away['runs'] ?? 0,
+                            'homeHits' => $homeHits,
+                            'awayHits' => $awayHits
+                        ];
+                    }
+                }
+            }
+        }
+    }
+    
+    // 2. Cargar ESPN MLB
+    $espnGames = [];
+    $url = "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates={$dateRaw}";
+    $res = fetchExternalJson($url);
+    if ($res) {
+        $data = json_decode($res, true);
+        foreach ($data['events'] ?? [] as $ev) {
+            $comp = $ev['competitions'][0] ?? null;
+            if (!$comp) continue;
+            
+            $home = null;
+            $away = null;
+            foreach ($comp['competitors'] ?? [] as $c) {
+                if ($c['homeAway'] === 'home') $home = $c;
+                else $away = $c;
+            }
+            if (!$home || !$away) continue;
+            
+            // Buscar hits en las estadísticas de ESPN si están disponibles
+            $homeHits = 0;
+            $awayHits = 0;
+            foreach ($home['statistics'] ?? [] as $stat) {
+                if (($stat['name'] ?? '') === 'hits') $homeHits = (int)$stat['displayValue'];
+            }
+            foreach ($away['statistics'] ?? [] as $stat) {
+                if (($stat['name'] ?? '') === 'hits') $awayHits = (int)$stat['displayValue'];
+            }
+            
+            $espnGames[] = [
+                'home' => $home['team']['displayName'] ?? '',
+                'away' => $away['team']['displayName'] ?? '',
+                'status' => $ev['status']['type']['shortDetail'] ?? '',
+                'homeRuns' => (int)($home['score'] ?? 0),
+                'awayRuns' => (int)($away['score'] ?? 0),
+                'homeHits' => $homeHits,
+                'awayHits' => $awayHits
+            ];
+        }
+    }
+    
+    // 3. Cruzar ambos
+    $unified = [];
+    $usedEspn = [];
+    
+    foreach ($mlbGames as $mlb) {
+        $espnMatch = findMatchingEvent($espnGames, $mlb['home'], $mlb['away'], $espnIdx);
+        if ($espnMatch !== null) $usedEspn[$espnIdx] = true;
+        
+        $unified[] = [
+            'home' => $mlb['home'],
+            'away' => $mlb['away'],
+            'status' => $mlb['status'],
+            'mlb' => $mlb,
+            'espn' => $espnMatch
+        ];
+    }
+    
+    foreach ($espnGames as $idx => $espn) {
+        if (isset($usedEspn[$idx])) continue;
+        
+        $unified[] = [
+            'home' => $espn['home'],
+            'away' => $espn['away'],
+            'status' => $espn['status'],
+            'mlb' => null,
+            'espn' => $espn
+        ];
+    }
+    
+    echo json_encode($unified, JSON_PRETTY_PRINT);
     exit;
 }
 

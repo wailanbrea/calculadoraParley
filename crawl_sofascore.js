@@ -2,17 +2,20 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 
-// Obtener fecha del argumento o usar la de hoy
+// Obtener parámetros
 const dateArg = process.argv[2];
+const sportArg = process.argv[3]; // basketball | football
+const outputArg = process.argv[4];
+
 const todayStr = new Date().toISOString().split('T')[0];
 const targetDate = dateArg || todayStr;
+const sport = (sportArg || 'basketball').toLowerCase();
 
 // Formato de salida
-const outputArg = process.argv[3];
-const defaultOutputPath = path.join(process.cwd(), `sofascore_basketball_${targetDate}.json`);
+const defaultOutputPath = path.join(process.cwd(), `sofascore_${sport}_${targetDate}.json`);
 const outputPath = outputArg || defaultOutputPath;
 
-console.log(`Crawl Sofascore for Basketball on date: ${targetDate}`);
+console.log(`Crawl Sofascore for Sport: ${sport} on date: ${targetDate}`);
 console.log(`Target output path: ${outputPath}`);
 
 function mapSofascoreStatusToLivescore(status) {
@@ -22,11 +25,17 @@ function mapSofascoreStatusToLivescore(status) {
   if (code === 100) return 'FT'; // Finished
   if (code === 0) return 'NS';   // Not Started
   
-  // Mapeo de cuartos en progreso
-  if (desc.includes('1st')) return 'Q1';
-  if (desc.includes('2nd')) return 'Q2';
-  if (desc.includes('3rd')) return 'Q3';
-  if (desc.includes('4th')) return 'Q4';
+  if (sport === 'basketball') {
+    if (desc.includes('1st')) return 'Q1';
+    if (desc.includes('2nd')) return 'Q2';
+    if (desc.includes('3rd')) return 'Q3';
+    if (desc.includes('4th')) return 'Q4';
+  } else {
+    // Soccer
+    if (desc.includes('1st')) return '1H';
+    if (desc.includes('2nd')) return '2H';
+  }
+  
   if (desc.includes('Halftime') || desc.includes('HT')) return 'HT';
   if (desc.includes('Overtime') || desc.includes('OT')) return 'OT';
   
@@ -62,7 +71,7 @@ async function run() {
     }
   });
 
-  const targetUrl = `https://www.sofascore.com/basketball/${targetDate}`;
+  const targetUrl = `https://www.sofascore.com/${sport}/${targetDate}`;
   console.log(`Navigating to Sofascore: ${targetUrl}`);
   await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
   
@@ -102,6 +111,7 @@ async function run() {
       ? new Date(event.startTimestamp * 1000).toISOString().replace(/[-T:]/g, '').split('.')[0]
       : targetDate.replace(/-/g, '') + '000000';
       
+    // Mapeo básico de evento
     const mappedEvent = {
       Eid: String(event.id),
       Eps: eps,
@@ -119,21 +129,42 @@ async function run() {
         Abr: event.awayTeam?.abbreviation || ''
       }],
       Tr1: event.homeScore?.current !== undefined ? String(event.homeScore.current) : undefined,
-      Tr2: event.awayScore?.current !== undefined ? String(event.awayScore.current) : undefined,
-      
-      // Mapear cuartos individuales (Sofascore) a Livescore properties
-      Tr1Q1: event.homeScore?.period1 !== undefined ? String(event.homeScore.period1) : undefined,
-      Tr1Q2: event.homeScore?.period2 !== undefined ? String(event.homeScore.period2) : undefined,
-      Tr1Q3: event.homeScore?.period3 !== undefined ? String(event.homeScore.period3) : undefined,
-      Tr1Q4: event.homeScore?.period4 !== undefined ? String(event.homeScore.period4) : undefined,
-      Tr1OT: event.homeScore?.overtime !== undefined ? String(event.homeScore.overtime) : undefined,
-      
-      Tr2Q1: event.awayScore?.period1 !== undefined ? String(event.awayScore.period1) : undefined,
-      Tr2Q2: event.awayScore?.period2 !== undefined ? String(event.awayScore.period2) : undefined,
-      Tr2Q3: event.awayScore?.period3 !== undefined ? String(event.awayScore.period3) : undefined,
-      Tr2Q4: event.awayScore?.period4 !== undefined ? String(event.awayScore.period4) : undefined,
-      Tr2OT: event.awayScore?.overtime !== undefined ? String(event.awayScore.overtime) : undefined
+      Tr2: event.awayScore?.current !== undefined ? String(event.awayScore.current) : undefined
     };
+    
+    if (sport === 'basketball') {
+      // Mapear cuartos individuales (Basketball)
+      mappedEvent.Tr1Q1 = event.homeScore?.period1 !== undefined ? String(event.homeScore.period1) : undefined;
+      mappedEvent.Tr1Q2 = event.homeScore?.period2 !== undefined ? String(event.homeScore.period2) : undefined;
+      mappedEvent.Tr1Q3 = event.homeScore?.period3 !== undefined ? String(event.homeScore.period3) : undefined;
+      mappedEvent.Tr1Q4 = event.homeScore?.period4 !== undefined ? String(event.homeScore.period4) : undefined;
+      mappedEvent.Tr1OT = event.homeScore?.overtime !== undefined ? String(event.homeScore.overtime) : undefined;
+      
+      mappedEvent.Tr2Q1 = event.awayScore?.period1 !== undefined ? String(event.awayScore.period1) : undefined;
+      mappedEvent.Tr2Q2 = event.awayScore?.period2 !== undefined ? String(event.awayScore.period2) : undefined;
+      mappedEvent.Tr2Q3 = event.awayScore?.period3 !== undefined ? String(event.awayScore.period3) : undefined;
+      mappedEvent.Tr2Q4 = event.awayScore?.period4 !== undefined ? String(event.awayScore.period4) : undefined;
+      mappedEvent.Tr2OT = event.awayScore?.overtime !== undefined ? String(event.awayScore.overtime) : undefined;
+    } else {
+      // Mapear mitades individuales (Soccer/Football)
+      const h1_1 = event.homeScore?.period1;
+      const h2_1 = event.homeScore?.current !== undefined && h1_1 !== undefined 
+        ? event.homeScore.current - h1_1 
+        : undefined;
+        
+      const h1_2 = event.awayScore?.period1;
+      const h2_2 = event.awayScore?.current !== undefined && h1_2 !== undefined 
+        ? event.awayScore.current - h1_2 
+        : undefined;
+
+      mappedEvent.Tr1H1 = h1_1 !== undefined ? String(h1_1) : undefined;
+      mappedEvent.Tr1H2 = h2_1 !== undefined ? String(h2_1) : undefined;
+      mappedEvent.Tr1OT = event.homeScore?.overtime !== undefined ? String(event.homeScore.overtime) : undefined;
+      
+      mappedEvent.Tr2H1 = h1_2 !== undefined ? String(h1_2) : undefined;
+      mappedEvent.Tr2H2 = h2_2 !== undefined ? String(h2_2) : undefined;
+      mappedEvent.Tr2OT = event.awayScore?.overtime !== undefined ? String(event.awayScore.overtime) : undefined;
+    }
     
     stagesMap[stageKey].Events.push(mappedEvent);
   }
