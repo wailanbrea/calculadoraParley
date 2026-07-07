@@ -85,6 +85,7 @@ export default function AlertasGlobales() {
   const tituloOriginalRef = useRef(document.title);
   const sinVerRef = useRef(0);
   const corriendoRef = useRef(false);
+  const discrepanciesRef = useRef(new Set());
 
   const sonarCampana = () => {
     try {
@@ -287,10 +288,90 @@ export default function AlertasGlobales() {
       .catch(() => { /* reintenta en el próximo ciclo */ });
   };
 
+  const revisarDiscrepancias = () => {
+    const sports = [
+      { id: 'basketball', action: 'get_basketball_comparison', label: 'Baloncesto' },
+      { id: 'soccer', action: 'get_soccer_comparison', label: 'Soccer' },
+      { id: 'mlb', action: 'get_mlb_comparison', label: 'MLB' }
+    ];
+
+    return Promise.all(sports.map(sp => {
+      return fetch(`./api.php?action=${sp.action}`)
+        .then(r => {
+          if (!r.ok) throw new Error("HTTP error " + r.status);
+          return r.json();
+        })
+        .then(data => {
+          if (!Array.isArray(data)) return;
+          
+          data.forEach(game => {
+            const home = game.home;
+            const away = game.away;
+            
+            if (sp.id === 'mlb') {
+              const mlb = game.mlb;
+              const espn = game.espn;
+              if (mlb && espn) {
+                const mlbRuns = `${mlb.awayRuns}-${mlb.homeRuns}`;
+                const espnRuns = `${espn.awayRuns}-${espn.homeRuns}`;
+                
+                if (mlbRuns !== espnRuns) {
+                  const key = `mlb_${home}_${away}_${mlbRuns}_${espnRuns}`;
+                  if (!discrepanciesRef.current.has(key)) {
+                    discrepanciesRef.current.add(key);
+                    dispararAlerta({
+                      tipo: 'mlb',
+                      titulo: `⚠️ Diferencia MLB: ${away} vs ${home}`,
+                      texto: `Carreras difieren. MLB.com: ${mlbRuns} vs ESPN: ${espnRuns}`,
+                      esFavorito: true
+                    });
+                  }
+                }
+              }
+            } else {
+              const sofa = game.sofascore;
+              const flash = game.flashscore;
+              const espn = game.espn;
+              
+              const sources = [
+                sofa ? { name: 'Sofascore', score: `${sofa.homeScore}-${sofa.awayScore}` } : null,
+                flash ? { name: 'Flashscore', score: `${flash.homeScore}-${flash.awayScore}` } : null,
+                espn ? { name: 'ESPN', score: `${espn.homeScore}-${espn.awayScore}` } : null
+              ].filter(Boolean);
+              
+              if (sources.length >= 2) {
+                const distinctScores = [...new Set(sources.map(s => s.score))];
+                if (distinctScores.length > 1) {
+                  const details = sources.map(s => `${s.name}: ${s.score}`).join(' | ');
+                  const key = `${sp.id}_${home}_${away}_${distinctScores.join('_')}`;
+                  
+                  if (!discrepanciesRef.current.has(key)) {
+                    discrepanciesRef.current.add(key);
+                    dispararAlerta({
+                      tipo: sp.id,
+                      titulo: `⚠️ Diferencia ${sp.label}: ${home} vs ${away}`,
+                      texto: `Resultados difieren: ${details}`,
+                      esFavorito: true
+                    });
+                  }
+                }
+              }
+            }
+          });
+        })
+        .catch(() => {});
+    }));
+  };
+
   const revisarTodo = () => {
     if (corriendoRef.current) return;
     corriendoRef.current = true;
-    Promise.all([revisarDeporte('soccer'), revisarDeporte('basket'), revisarMlb()])
+    Promise.all([
+      revisarDeporte('soccer'), 
+      revisarDeporte('basket'), 
+      revisarMlb(),
+      revisarDiscrepancias()
+    ])
       .finally(() => { corriendoRef.current = false; });
   };
 
