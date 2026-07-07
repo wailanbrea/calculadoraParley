@@ -1010,6 +1010,12 @@ body {
   gap: 2rem;
 }
 
+.scoreboard-comparator-page {
+  min-height: 100vh;
+  margin: -2.5rem;
+  background: #060813;
+}
+
 @media (max-width: 768px) {
   .calc-parley-layout {
     grid-template-columns: 1fr;
@@ -1040,6 +1046,9 @@ body {
     margin-left: 0;
     width: 100%;
     padding: 1.5rem;
+  }
+  .scoreboard-comparator-page {
+    margin: -1.5rem;
   }
   .game-card-header {
     grid-template-columns: 1fr;

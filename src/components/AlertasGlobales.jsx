@@ -333,10 +333,14 @@ export default function AlertasGlobales() {
               const flash = game.flashscore;
               const espn = game.espn;
               
+              // Solo fuentes con marcador real: una fuente vacía (juego no iniciado
+              // o con retraso) no debe disparar alertas de discrepancia falsas.
+              const conMarcador = (s) => s && s.homeScore !== '' && s.awayScore !== '' &&
+                s.homeScore !== undefined && s.awayScore !== undefined;
               const sources = [
-                sofa ? { name: 'Sofascore', score: `${sofa.homeScore}-${sofa.awayScore}` } : null,
-                flash ? { name: 'Flashscore', score: `${flash.homeScore}-${flash.awayScore}` } : null,
-                espn ? { name: 'ESPN', score: `${espn.homeScore}-${espn.awayScore}` } : null
+                conMarcador(sofa) ? { name: 'Sofascore', score: `${sofa.homeScore}-${sofa.awayScore}` } : null,
+                conMarcador(flash) ? { name: 'Flashscore', score: `${flash.homeScore}-${flash.awayScore}` } : null,
+                conMarcador(espn) ? { name: 'ESPN', score: `${espn.homeScore}-${espn.awayScore}` } : null
               ].filter(Boolean);
               
               if (sources.length >= 2) {
