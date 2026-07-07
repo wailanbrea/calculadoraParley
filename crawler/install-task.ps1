@@ -36,14 +36,15 @@ $settings = New-ScheduledTaskSettingsSet `
     -RestartInterval (New-TimeSpan -Minutes 1) `
     -RestartCount 999
 
-# Credenciales para "run whether logged on or not" (usa el navegador ya descargado
-# en el perfil de Administrator).
-$cred = Get-Credential -UserName 'Administrator' -Message 'Contraseña de Administrator (para que la tarea corra sin sesión iniciada)'
+# S4U ("Service for User"): corre AUNQUE nadie esté logueado, SIN guardar contraseña.
+# Usa la cuenta que ejecuta este script (debe ser Administrator), con su perfil cargado,
+# así encuentra el navegador ya descargado en su AppData.
+$whoami = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name  # p.ej. VPS\Administrator
+$principal = New-ScheduledTaskPrincipal -UserId $whoami -LogonType S4U -RunLevel Highest
 
 Register-ScheduledTask -TaskName $taskName `
     -Action $action -Trigger $trigger -Settings $settings `
-    -RunLevel Highest `
-    -User $cred.UserName -Password $cred.GetNetworkCredential().Password `
+    -Principal $principal `
     -Description 'Actualiza marcadores de basketball (Sofascore) cada 2 min. 24/7 en el VPS.' `
     -Force | Out-Null
 
