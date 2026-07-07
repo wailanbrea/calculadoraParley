@@ -24,6 +24,9 @@ cache_ls_*.json
 sofascore_*.json
 flashscore_*.json
 
+# Ruta de navegadores de Playwright (específica de cada máquina, la escribe install-task.ps1)
+crawler/browsers-path.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -30,6 +30,16 @@ function log(msg) {
   console.log(`[${new Date().toLocaleString()}] ${msg}`);
 }
 
+// Ruta de los navegadores de Playwright. Cuando la tarea corre como SYSTEM no ve la
+// cache del perfil de usuario, así que install-task.ps1 la guarda en browsers-path.txt
+// y aquí se la pasamos al crawler por PLAYWRIGHT_BROWSERS_PATH.
+function browsersPath() {
+  try {
+    const p = fs.readFileSync(path.join(__dirname, 'browsers-path.txt'), 'utf8').trim();
+    return p || null;
+  } catch (e) { return null; }
+}
+
 // Borra los sofascore_basketball_*.json de más de 2 días para no acumular basura.
 function limpiarViejos() {
   try {
@@ -53,8 +63,13 @@ function ejecutarCrawl() {
   const salida = path.join(PROJECT_DIR, `sofascore_basketball_${fecha}.json`);
   log(`Actualizando basketball ${fecha}…`);
 
+  const childEnv = { ...process.env };
+  const bp = browsersPath();
+  if (bp) childEnv.PLAYWRIGHT_BROWSERS_PATH = bp;
+
   const proc = spawn(process.execPath, [path.join(__dirname, 'crawl_sofascore.js'), fecha, salida], {
     stdio: 'inherit',
+    env: childEnv,
   });
 
   const killer = setTimeout(() => {

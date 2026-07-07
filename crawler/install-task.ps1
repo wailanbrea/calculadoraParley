@@ -11,6 +11,12 @@
 $ErrorActionPreference = 'Stop'
 $taskName = 'CalcParleyCrawler'
 
+# Debe correr en una consola ELEVADA (Ejecutar como administrador)
+$me = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $me.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    throw "Abre PowerShell COMO ADMINISTRADOR (clic derecho -> Ejecutar como administrador) y vuelve a correr esto."
+}
+
 # Rutas derivadas de la ubicación de este script (independiente de dónde esté el proyecto)
 $scriptDir = $PSScriptRoot
 $runner    = Join-Path $scriptDir 'runner.js'
@@ -36,11 +42,20 @@ $settings = New-ScheduledTaskSettingsSet `
     -RestartInterval (New-TimeSpan -Minutes 1) `
     -RestartCount 999
 
-# S4U ("Service for User"): corre AUNQUE nadie esté logueado, SIN guardar contraseña.
-# Usa la cuenta que ejecuta este script (debe ser Administrator), con su perfil cargado,
-# así encuentra el navegador ya descargado en su AppData.
-$whoami = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name  # p.ej. VPS\Administrator
-$principal = New-ScheduledTaskPrincipal -UserId $whoami -LogonType S4U -RunLevel Highest
+# Corre como SYSTEM: siempre activo, sin contraseña y sin la sesión de nadie.
+# SYSTEM no ve el navegador descargado en el perfil de Administrator, así que apuntamos
+# PLAYWRIGHT_BROWSERS_PATH (a nivel de máquina) a esa cache ya existente.
+$browsersPath = Join-Path $env:LOCALAPPDATA 'ms-playwright'
+if (-not (Test-Path $browsersPath)) {
+    Write-Warning "No se encontro la cache de navegadores en $browsersPath. Si la tarea no actualiza, corre: npx playwright install chromium"
+}
+[Environment]::SetEnvironmentVariable('PLAYWRIGHT_BROWSERS_PATH', $browsersPath, 'Machine')
+# runner.js lee este archivo y se lo pasa al crawler (método garantizado, no depende
+# de que el servicio de tareas recoja la variable de máquina al instante).
+Set-Content -Path (Join-Path $scriptDir 'browsers-path.txt') -Value $browsersPath -Encoding ASCII
+Write-Host "PLAYWRIGHT_BROWSERS_PATH = $browsersPath"
+
+$principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
 
 Register-ScheduledTask -TaskName $taskName `
     -Action $action -Trigger $trigger -Settings $settings `
