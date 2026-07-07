@@ -33,8 +33,12 @@ function mapSofascoreStatusToLivescore(status) {
 
 async function run() {
   const browser = await chromium.launch({ headless: true });
+  // timezoneId en la zona de los usuarios (RD/AST): así Sofascore agrupa los partidos
+  // por el mismo día que ve el usuario, sin importar la zona horaria del VPS.
   const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+    timezoneId: process.env.CRAWL_TZ || 'America/Santo_Domingo',
+    locale: 'en-US'
   });
   const page = await context.newPage();
 

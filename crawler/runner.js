@@ -19,11 +19,12 @@ const PROJECT_DIR = path.resolve(__dirname, '..');
 const INTERVAL_MIN = Number(process.env.CRAWL_INTERVAL_MIN || 2);
 const TIMEOUT_SEC = Number(process.env.CRAWL_TIMEOUT_SEC || 90);
 
+// Fecha "de hoy" en la zona de los usuarios (RD/AST por defecto), INDEPENDIENTE de la
+// zona horaria del VPS. Así el nombre del archivo coincide con la fecha que pide la
+// página (que usa el navegador del usuario). Configurable con CRAWL_TZ.
+const TZ = process.env.CRAWL_TZ || 'America/Santo_Domingo';
 function hoyISO() {
-  const d = new Date();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${mm}-${dd}`;
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
 }
 
 function log(msg) {
