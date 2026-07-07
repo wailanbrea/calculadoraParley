@@ -587,6 +587,23 @@ function cmp_dateParam() {
     return $date;
 }
 
+function cmp_isPastDate($date) {
+    return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) && $date < cmp_todayIso();
+}
+
+function cmp_isLiveStatus($status) {
+    $status = strtoupper(trim((string)$status));
+    if ($status === '') return false;
+    return !in_array($status, ['NS', 'FT', 'AET', 'AP', 'POSTPONED', 'CANCELLED', 'CANCELED', 'ABANDONED'], true);
+}
+
+function cmp_shouldSkipStalePastLive($file, $date, $status) {
+    if (!$date || !cmp_isPastDate($date) || !cmp_isLiveStatus($status)) return false;
+    clearstatcache(true, $file);
+    $mtime = @filemtime($file);
+    return $mtime && (time() - $mtime) > 30 * 60;
+}
+
 // Normaliza un nombre de equipo para poder cruzarlo entre fuentes
 function cmp_normalizeName($name) {
     $name = function_exists('mb_strtolower') ? mb_strtolower(trim($name), 'UTF-8') : strtolower(trim($name));
@@ -647,7 +664,7 @@ function cmp_teamsMatch($a, $b) {
 
 // Lee un archivo en formato Livescore ({Stages:[{Events:[...]}]}) generado por los
 // crawlers y lo aplana a una lista de juegos normalizados.
-function cmp_loadStagesFile($file, $sport) {
+function cmp_loadStagesFile($file, $sport, $date = null) {
     if (!file_exists($file)) return [];
     clearstatcache(true, $file);
     $json = json_decode(file_get_contents($file), true);
@@ -665,6 +682,11 @@ function cmp_loadStagesFile($file, $sport) {
         foreach ($events as $ev) {
             $home = isset($ev['T1'][0]['Nm']) ? $ev['T1'][0]['Nm'] : '?';
             $away = isset($ev['T2'][0]['Nm']) ? $ev['T2'][0]['Nm'] : '?';
+            $status = isset($ev['Eps']) ? (string)$ev['Eps'] : 'NS';
+
+            if (cmp_shouldSkipStalePastLive($file, $date, $status)) {
+                continue;
+            }
 
             $hQ = [];
             $aQ = [];
@@ -686,7 +708,7 @@ function cmp_loadStagesFile($file, $sport) {
                     'awayScore' => isset($ev['Tr2']) ? trim((string)$ev['Tr2']) : '',
                     'homeQuarters' => $hQ,
                     'awayQuarters' => $aQ,
-                    'status' => isset($ev['Eps']) ? (string)$ev['Eps'] : 'NS'
+                    'status' => $status
                 ]
             ];
         }
@@ -976,8 +998,8 @@ if ($action === 'get_basketball_comparison' || $action === 'get_soccer_compariso
 
     cmp_cleanOldCaches();
 
-    $sofa = cmp_loadStagesFile("$dir/sofascore_{$sport}_{$date}.json", $sport);
-    $flash = cmp_loadStagesFile("$dir/flashscore_{$sport}_{$date}.json", $sport);
+    $sofa = cmp_loadStagesFile("$dir/sofascore_{$sport}_{$date}.json", $sport, $date);
+    $flash = cmp_loadStagesFile("$dir/flashscore_{$sport}_{$date}.json", $sport, $date);
     $espn = cmp_espnGames($sport, $date);
 
     $emptyRow = ['home' => '', 'away' => '', 'league' => '', '_women' => false, 'sofascore' => null, 'flashscore' => null, 'espn' => null];

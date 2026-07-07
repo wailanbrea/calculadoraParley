@@ -28,6 +28,12 @@ function hoyISO() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
 }
 
+function desplazarFechaISO(fecha, dias) {
+  const [year, month, day] = fecha.split('-').map(Number);
+  const dt = new Date(Date.UTC(year, month - 1, day + dias, 12, 0, 0));
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(dt);
+}
+
 function log(msg) {
   console.log(`[${new Date().toLocaleString()}] ${msg}`);
 }
@@ -94,16 +100,20 @@ async function ejecutarCiclo() {
   const bp = browsersPath();
   if (bp) childEnv.PLAYWRIGHT_BROWSERS_PATH = bp;
 
+  const ayer = desplazarFechaISO(fecha, -1);
   const jobs = [
-    ['crawl_sofascore.js',  'basketball', `sofascore_basketball_${fecha}.json`],
-    ['crawl_flashscore.js', 'basketball', `flashscore_basketball_${fecha}.json`],
-    ['crawl_sofascore.js',  'football',   `sofascore_soccer_${fecha}.json`],
-    ['crawl_flashscore.js', 'football',   `flashscore_soccer_${fecha}.json`],
+    // Basketball puede terminar despues de medianoche; refrescar ayer evita estados live viejos.
+    ['crawl_sofascore.js',  'basketball', ayer,  `sofascore_basketball_${ayer}.json`],
+    ['crawl_flashscore.js', 'basketball', ayer,  `flashscore_basketball_${ayer}.json`],
+    ['crawl_sofascore.js',  'basketball', fecha, `sofascore_basketball_${fecha}.json`],
+    ['crawl_flashscore.js', 'basketball', fecha, `flashscore_basketball_${fecha}.json`],
+    ['crawl_sofascore.js',  'football',   fecha, `sofascore_soccer_${fecha}.json`],
+    ['crawl_flashscore.js', 'football',   fecha, `flashscore_soccer_${fecha}.json`],
   ];
 
-  for (const [script, sport, archivo] of jobs) {
+  for (const [script, sport, fechaJob, archivo] of jobs) {
     const salida = path.join(PROJECT_DIR, archivo);
-    await correrCrawl(script, fecha, sport, salida, childEnv);
+    await correrCrawl(script, fechaJob, sport, salida, childEnv);
   }
 
   limpiarViejos();
