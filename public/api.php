@@ -367,10 +367,11 @@ if ($action === 'proxy_livescore') {
     $cacheDir = dirname(__DIR__);
     $cacheFile = $cacheDir . "/cache_ls_{$sport}_{$dateRaw}_{$tz}.json";
 
-    // Si es baloncesto y existe un archivo de sofascore cargado para esa fecha, servirlo directamente
-    if ($sport === 'basketball') {
+    // Si es baloncesto o soccer y existe un archivo de sofascore cargado para esa fecha, servirlo directamente
+    if ($sport === 'basketball' || $sport === 'football' || $sport === 'soccer') {
         $formattedDate = substr($dateRaw, 0, 4) . '-' . substr($dateRaw, 4, 2) . '-' . substr($dateRaw, 6, 2);
-        $sofascoreFile = $cacheDir . "/sofascore_basketball_{$formattedDate}.json";
+        $fileSportName = ($sport === 'basketball') ? 'basketball' : 'soccer';
+        $sofascoreFile = $cacheDir . "/sofascore_{$fileSportName}_{$formattedDate}.json";
         if (file_exists($sofascoreFile)) {
             echo file_get_contents($sofascoreFile);
             exit;
@@ -776,33 +777,12 @@ function cmp_eventLocalDate($dateTime) {
 }
 
 function cmp_espnBasketballLeagues() {
-    $fallback = [
-        'nba', 'wnba', 'mens-college-basketball', 'womens-college-basketball',
+    return [
+        'nba', 'wnba', 'mens-college-basketball', 'fiba',
+        'mens-olympics-basketball', 'womens-olympics-basketball', 'nbl',
         'nba-summer-las-vegas', 'nba-summer-utah', 'nba-summer-california', 'nba-development',
-        'fiba', 'mens-olympics-basketball', 'womens-olympics-basketball', 'nbl',
         'nba-summer-golden-state', 'nba-summer-orlando', 'nba-summer-sacramento'
     ];
-
-    $index = cmp_fetchJsonCached(
-        'https://sports.core.api.espn.com/v2/sports/basketball/leagues?limit=200',
-        'espn_basketball_leagues_index',
-        86400
-    );
-    if (!$index || !isset($index['items']) || !is_array($index['items'])) {
-        return $fallback;
-    }
-
-    $slugs = [];
-    foreach ($index['items'] as $item) {
-        if (!isset($item['$ref'])) continue;
-        $league = cmp_fetchJsonCached($item['$ref'], 'espn_basketball_league_' . md5($item['$ref']), 86400);
-        if ($league && isset($league['slug']) && $league['slug'] !== '') {
-            $slugs[] = $league['slug'];
-        }
-    }
-
-    $slugs = array_values(array_unique($slugs));
-    return count($slugs) > 0 ? $slugs : $fallback;
 }
 
 // Trae los juegos de ESPN para las ligas configuradas y los normaliza al mismo
@@ -899,7 +879,9 @@ function cmp_espnGames($sport, $dateIso) {
     foreach ($leaguesBySport[$sport] as $league) {
         foreach ($dateCandidates as $dateYmd) {
             $url = "https://site.api.espn.com/apis/site/v2/sports/{$sport}/{$league}/scoreboard?dates={$dateYmd}";
-            $json = cmp_fetchJsonCached($url, "espn_{$sport}_{$league}_{$dateYmd}");
+            $todayYmd = date('Ymd');
+            $ttl = ($dateYmd === $todayYmd) ? 120 : 86400;
+            $json = cmp_fetchJsonCached($url, "espn_{$sport}_{$league}_{$dateYmd}", $ttl);
             if (!$json || !isset($json['events']) || !is_array($json['events'])) continue;
 
             $leagueName = isset($json['leagues'][0]['abbreviation']) ? $json['leagues'][0]['abbreviation'] : strtoupper($league);

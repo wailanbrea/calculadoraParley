@@ -77,7 +77,7 @@ async function fetchScheduledEvents(page) {
       return res.json();
     }
 
-    const categoriesResponse = await fetchJson(`/api/v1/sport/${sport}/categories`);
+    const categoriesResponse = await fetchJson(`https://api.sofascore.com/api/v1/sport/${sport}/categories`);
     const categories = Array.isArray(categoriesResponse.categories) ? categoriesResponse.categories : [];
     const events = [];
     const failures = [];
@@ -87,7 +87,7 @@ async function fetchScheduledEvents(page) {
       while (cursor < categories.length) {
         const category = categories[cursor++];
         try {
-          const json = await fetchJson(`/api/v1/category/${category.id}/scheduled-events/${date}`);
+          const json = await fetchJson(`https://api.sofascore.com/api/v1/category/${category.id}/scheduled-events/${date}`);
           if (Array.isArray(json.events)) {
             events.push(...json.events);
           }
@@ -117,7 +117,8 @@ async function run() {
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
       timezoneId: TZ,
-      locale: 'en-US'
+      locale: 'en-US',
+      bypassCSP: true
     });
     const page = await context.newPage();
 
