@@ -81,6 +81,12 @@ function nombreEquipoLs(t) {
 
 export default function AlertasGlobales() {
   const [toasts, setToasts] = useState([]);
+  // Preferencias de notificación (persisten en localStorage; los controles viven en la
+  // barra lateral y avisan los cambios con el evento 'calcparley-prefs'):
+  //  - silenciado: no muestra nada.
+  //  - soloFavoritos: solo avisa los juegos marcados con ★.
+  const silenciadoRef = useRef(localStorage.getItem('alertasSilenciado') === '1');
+  const soloFavRef = useRef(localStorage.getItem('alertasSoloFavoritos') === '1');
   const audioCtxRef = useRef(null);
   const tituloOriginalRef = useRef(document.title);
   const sinVerRef = useRef(0);
@@ -112,6 +118,11 @@ export default function AlertasGlobales() {
   };
 
   const dispararAlerta = ({ tipo, titulo, texto, esFavorito, pk }) => {
+    // Filtros de preferencia. El seguimiento de hitos (seen) ya se actualizó antes de
+    // llamar aquí, así que al reactivar no llega una avalancha de atrasadas.
+    if (silenciadoRef.current) return;
+    if (soloFavRef.current && !esFavorito) return;
+
     const a = {
       id: Date.now() + Math.random(),
       time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
@@ -147,6 +158,14 @@ export default function AlertasGlobales() {
         };
       } catch (e) { /* sin soporte */ }
     }
+
+    // Guardar en el historial persistente (máx 60, más recientes primero)
+    try {
+      const hist = JSON.parse(localStorage.getItem('historialAlertas') || '[]');
+      hist.unshift({ id: a.id, time: a.time, titulo, texto, fav: !!esFavorito, tipo, ts: Date.now() });
+      localStorage.setItem('historialAlertas', JSON.stringify(hist.slice(0, 60)));
+      window.dispatchEvent(new Event('calcparley-historial'));
+    } catch (e) { /* nada */ }
 
     // Avisar a los módulos para sus historiales de "Alertas recientes"
     try { window.dispatchEvent(new CustomEvent('calcparley-alerta', { detail: a })); } catch (e) { /* nada */ }
@@ -394,10 +413,18 @@ export default function AlertasGlobales() {
     document.addEventListener('visibilitychange', alVolver);
     window.addEventListener('focus', alVolver);
 
+    // Los controles del sidebar cambian las preferencias en localStorage y avisan aquí.
+    const releerPrefs = () => {
+      silenciadoRef.current = localStorage.getItem('alertasSilenciado') === '1';
+      soloFavRef.current = localStorage.getItem('alertasSoloFavoritos') === '1';
+    };
+    window.addEventListener('calcparley-prefs', releerPrefs);
+
     return () => {
       clearInterval(t);
       document.removeEventListener('visibilitychange', alVolver);
       window.removeEventListener('focus', alVolver);
+      window.removeEventListener('calcparley-prefs', releerPrefs);
     };
   }, []);
 

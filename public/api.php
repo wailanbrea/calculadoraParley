@@ -345,6 +345,83 @@ function fetchExternalJson($url, &$error = null) {
     return $res;
 }
 
+// Llama a api-basketball (api-sports) y mapea al formato Livescore que usa el frontend.
+// Devuelve ['Stages'=>[...], '_live'=>bool] o null en caso de error.
+function fetchApiBasketball($fecha, $key, &$error = null) {
+    $error = null;
+    if (!function_exists('curl_init')) { $error = 'sin cURL'; return null; }
+    $url = "https://v1.basketball.api-sports.io/games?date={$fecha}&timezone=America/Santo_Domingo";
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 6,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_HTTPHEADER => ["x-apisports-key: {$key}"],
+    ]);
+    $res = curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr = curl_error($ch);
+    curl_close($ch);
+    if ($res === false || $code !== 200) { $error = $curlErr !== '' ? $curlErr : "HTTP $code"; return null; }
+    $json = json_decode($res, true);
+    if (!isset($json['response']) || !is_array($json['response'])) {
+        $errs = isset($json['errors']) ? json_encode($json['errors']) : 'respuesta inesperada';
+        $error = "api-basketball: $errs";
+        return null;
+    }
+    return mapApiBasketball($json['response']);
+}
+
+function mapApiBasketball($games) {
+    // Estados de api-basketball -> códigos que entiende el frontend.
+    $mapEstado = function ($short) {
+        $s = strtoupper((string)($short ?? 'NS'));
+        $m = ['AOT'=>'FT','FT'=>'FT','AWD'=>'FT','NS'=>'NS','POST'=>'Postp','CANC'=>'Canc','SUSP'=>'Susp','ABD'=>'Aband'];
+        return isset($m[$s]) ? $m[$s] : $s; // Q1..Q4, HT, OT, BT quedan igual
+    };
+    $stages = [];
+    $live = false;
+    foreach ($games as $g) {
+        $liga = isset($g['league']['name']) ? $g['league']['name'] : 'Liga';
+        $pais = isset($g['country']['name']) ? $g['country']['name'] : 'World';
+        $clave = $pais . ' — ' . $liga;
+        if (!isset($stages[$clave])) {
+            $stages[$clave] = ['Sid'=>(string)(isset($g['league']['id']) ? $g['league']['id'] : mt_rand()), 'Cnm'=>$pais, 'Snm'=>$liga, 'Events'=>[]];
+        }
+        $eps = $mapEstado(isset($g['status']['short']) ? $g['status']['short'] : 'NS');
+        if (!in_array($eps, ['NS','FT','Postp','Canc','Susp','Aband'], true)) $live = true;
+
+        $ts = isset($g['timestamp']) ? (int)$g['timestamp'] : 0;
+        if ($ts > 0) {
+            $dt = new DateTime('@' . $ts);
+            $dt->setTimezone(new DateTimeZone('America/Santo_Domingo'));
+            $esd = (int) $dt->format('YmdHis');
+        } else {
+            $esd = (int) (str_replace('-', '', substr(isset($g['date']) ? $g['date'] : '', 0, 10)) . '000000');
+        }
+        $home = isset($g['teams']['home']) ? $g['teams']['home'] : [];
+        $away = isset($g['teams']['away']) ? $g['teams']['away'] : [];
+        $sh = isset($g['scores']['home']) ? $g['scores']['home'] : [];
+        $sa = isset($g['scores']['away']) ? $g['scores']['away'] : [];
+
+        $ev = [
+            'Eid' => (string)(isset($g['id']) ? $g['id'] : ''),
+            'Eps' => $eps,
+            'Esd' => $esd,
+            'T1' => [['Nm'=>isset($home['name']) ? $home['name'] : '?', 'Img'=>isset($home['logo']) ? $home['logo'] : null]],
+            'T2' => [['Nm'=>isset($away['name']) ? $away['name'] : '?', 'Img'=>isset($away['logo']) ? $away['logo'] : null]],
+        ];
+        if (isset($sh['total']) && $sh['total'] !== null) $ev['Tr1'] = (string)$sh['total'];
+        if (isset($sa['total']) && $sa['total'] !== null) $ev['Tr2'] = (string)$sa['total'];
+        foreach (['quarter_1'=>'Q1','quarter_2'=>'Q2','quarter_3'=>'Q3','quarter_4'=>'Q4','over_time'=>'OT'] as $k=>$q) {
+            if (isset($sh[$k]) && $sh[$k] !== null) $ev['Tr1'.$q] = (string)$sh[$k];
+            if (isset($sa[$k]) && $sa[$k] !== null) $ev['Tr2'.$q] = (string)$sa[$k];
+        }
+        $stages[$clave]['Events'][] = $ev;
+    }
+    return ['Stages'=>array_values($stages), '_live'=>$live];
+}
+
 // Acción: proxy_livescore — reenvía la API pública de Livescore.com (bloquea CORS del
 // navegador, así que el servidor la consulta con caché de ~55s para no abusar)
 if ($action === 'proxy_livescore') {
@@ -366,10 +443,59 @@ if ($action === 'proxy_livescore') {
 
     $cacheDir = dirname(__DIR__);
     $cacheFile = $cacheDir . "/cache_ls_{$sport}_{$dateRaw}_{$tz}.json";
+    $formattedDate = substr($dateRaw, 0, 4) . '-' . substr($dateRaw, 4, 2) . '-' . substr($dateRaw, 6, 2);
+
+    // BASKETBALL vía api-basketball (api-sports) si hay una key configurada. Fuente
+    // confiable (JSON, sin scraping). Diseñado para el plan gratis (100 req/día):
+    //  - Caché de 5 min con juegos en vivo, 15 min sin juegos (una llamada trae TODOS
+    //    los juegos del día; los usuarios comparten el caché, no suman requests).
+    //  - Tope duro de 95 llamadas/día: al llegar, sirve el último dato en vez de gastar
+    //    cuota o dar error. Configurable con las constantes de abajo.
+    // Extrae la key aunque el archivo traiga texto de más: toma el primer token
+    // alfanumérico de 20-64 chars (formato de las keys de api-sports).
+    $apiKeyRaw = @file_get_contents($cacheDir . '/apisports_key.txt');
+    $apiKey = (is_string($apiKeyRaw) && preg_match('/[A-Za-z0-9]{20,64}/', $apiKeyRaw, $mk)) ? $mk[0] : '';
+    if ($sport === 'basketball' && $apiKey !== '') {
+        $ttlLive = 300;    // 5 min con juegos en vivo
+        $ttlIdle = 900;    // 15 min sin juegos
+        $topeDiario = 95;  // margen bajo los 100/día del plan gratis
+
+        $cf = $cacheDir . "/cache_apibasket_{$formattedDate}.json";
+        $cached = file_exists($cf) ? json_decode(file_get_contents($cf), true) : null;
+        $tieneCache = is_array($cached) && isset($cached['Stages']);
+
+        if ($tieneCache) {
+            $ttl = !empty($cached['_live']) ? $ttlLive : $ttlIdle;
+            if ((time() - filemtime($cf)) < $ttl) {
+                echo json_encode(['Stages' => $cached['Stages']]);
+                exit;
+            }
+        }
+
+        // Contador diario para no exceder la cuota gratis
+        $countFile = $cacheDir . '/cache_apibasket_count.json';
+        $hoy = date('Ymd');
+        $cnt = @json_decode(@file_get_contents($countFile), true);
+        if (!is_array($cnt) || (isset($cnt['d']) ? $cnt['d'] : '') !== $hoy) $cnt = ['d' => $hoy, 'n' => 0];
+
+        if ($cnt['n'] < $topeDiario) {
+            $abErr = null;
+            $mapped = fetchApiBasketball($formattedDate, $apiKey, $abErr);
+            if ($mapped !== null) {
+                file_put_contents($cf, json_encode($mapped), LOCK_EX);
+                $cnt['n']++;
+                file_put_contents($countFile, json_encode($cnt), LOCK_EX);
+                echo json_encode(['Stages' => $mapped['Stages']]);
+                exit;
+            }
+        }
+        // Cuota agotada o error: servir el último caché aunque esté viejo
+        if ($tieneCache) { echo json_encode(['Stages' => $cached['Stages']]); exit; }
+        // Sin caché: cae al flujo normal (sofascore/Livescore) más abajo
+    }
 
     // Si es baloncesto o soccer y existe un archivo de sofascore cargado para esa fecha, servirlo directamente
     if ($sport === 'basketball' || $sport === 'football' || $sport === 'soccer') {
-        $formattedDate = substr($dateRaw, 0, 4) . '-' . substr($dateRaw, 4, 2) . '-' . substr($dateRaw, 6, 2);
         $fileSportName = ($sport === 'basketball') ? 'basketball' : 'soccer';
         $sofascoreFile = $cacheDir . "/sofascore_{$fileSportName}_{$formattedDate}.json";
         if (file_exists($sofascoreFile)) {

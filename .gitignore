@@ -33,7 +33,6 @@ cache_apibasket_*.json
 
 # Veredictos del módulo de verificación de resultados (runtime, no versionar)
 verificacion_resultados.json
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

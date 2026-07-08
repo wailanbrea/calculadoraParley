@@ -1,4 +1,5 @@
 import React from 'react';
+import NotificacionesControles from './NotificacionesControles';
 
 export default function Navigation({ activePage, setActivePage }) {
   return (
@@ -95,6 +96,8 @@ export default function Navigation({ activePage, setActivePage }) {
           </li>
         </ul>
       </nav>
+
+      <NotificacionesControles />
     </aside>
   );
 }
