@@ -4,7 +4,7 @@ import Dashboard from './components/Dashboard';
 import Settings from './components/Settings';
 import CalculadoraParley from './components/CalculadoraParley';
 import FraccionarTickets from './components/FraccionarTickets';
-import BasesAlcanzadas from './components/BasesAlcanzadas';
+import MLBModulo from './components/MLBModulo';
 import ScoreboardDeporte from './components/ScoreboardDeporte';
 import AlertasGlobales from './components/AlertasGlobales';
 import ScoreboardComparator from './components/ScoreboardComparator';
@@ -256,7 +256,7 @@ export default function App() {
         )}
         
         {activePage === 'bases_alcanzadas' && (
-          <BasesAlcanzadas config={config} />
+          <MLBModulo config={config} />
         )}
 
         {activePage === 'basket' && (
