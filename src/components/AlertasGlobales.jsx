@@ -66,12 +66,17 @@ function estadoLivescore(e) {
 function hitosLivescore(e, tipo) {
   const { state, period, halftime, suspendido } = estadoLivescore(e);
   const res = [];
-  if (suspendido) res.push('suspendido');
+  if (suspendido) {
+    // Un juego suspendido/pospuesto está en estado 'post', pero NO debe reportar
+    // hitos de cuarto (q1/h) ni final: solo la alerta de suspensión.
+    res.push('suspendido');
+    return res;
+  }
   if (tipo === 'basket') {
     if (state === 'post' || period >= 2) res.push('q1');
     if (state === 'post' || period >= 3 || halftime) res.push('h');
   }
-  if (state === 'post' && !suspendido) res.push('final');
+  if (state === 'post') res.push('final');
   return res;
 }
 
@@ -221,9 +226,13 @@ export default function AlertasGlobales() {
               tipo,
               titulo: k === 'final'
                 ? `${prefijo}🏁 FINAL: ${local} vs ${visita}`
+                : k === 'suspendido'
+                ? `${prefijo}⛔ SUSPENDIDO: ${local} vs ${visita}`
                 : `${prefijo}${icono} ${local} vs ${visita}`,
               texto: k === 'final'
                 ? `Resultado final: ${marcador}`
+                : k === 'suspendido'
+                ? `Juego suspendido / pospuesto · ${marcador}`
                 : `${ETIQUETAS_DEPORTE[k] || k} · ${marcador}`,
               esFavorito: esFav
             }));

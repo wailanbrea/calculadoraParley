@@ -8,7 +8,6 @@
 // Para BASKETBALL compara SOLO estas líneas (regla del negocio de CalcParley):
 //   1Q  = puntos del 1er cuarto
 //   2Q  = puntos del 2do cuarto
-//   H   = medio tiempo (Q1 + Q2)
 //   Final = marcador final del juego completo
 //
 // Uso:  ./verificacion.php?sport=basketball&date=YYYY-MM-DD&eids=123,456
@@ -196,14 +195,6 @@ function compararBasket($a, $e) {
 
     $cmp('1Q', $a['q1h'], $a['q1a'], $e['q1h'], $e['q1a']);
     $cmp('2Q', $a['q2h'], $a['q2a'], $e['q2h'], $e['q2a']);
-
-    // H = medio tiempo = Q1 + Q2
-    $sum = function ($x, $y) { return ($x !== null && $y !== null) ? $x + $y : null; };
-    $cmp('H',
-        $sum($a['q1h'], $a['q2h']), $sum($a['q1a'], $a['q2a']),
-        $sum($e['q1h'], $e['q2h']), $sum($e['q1a'], $e['q2a'])
-    );
-
     $cmp('Final', $a['th'], $a['ta'], $e['th'], $e['ta']);
 
     if ($comparadas === 0) {
