@@ -218,6 +218,9 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   const [filtro, setFiltro] = useState('todos'); // todos | live | final
   const [mostrarOcultos, setMostrarOcultos] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  // Verificación de resultados (solo basket): eid -> { veredicto, lineas }
+  const [verifs, setVerifs] = useState({});
+  const verifsRef = useRef({});
 
   // Hitos guardados: se normalizan a { f: fecha, h: [hitos] } (antes eran arrays simples)
   const hitosDe = (id) => {
@@ -737,6 +740,60 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     setColapsados(prev => ({ ...prev, [ligaId]: !prev[ligaId] }));
   };
 
+  // Verificación de resultados (solo basket): al haber juegos finalizados, consulta
+  // verificacion.php (API principal vs ESPN) y guarda el veredicto por eid. Idempotente:
+  // no vuelve a pedir un eid ya resuelto.
+  useEffect(() => {
+    if (tipoAlertas !== 'basket') return;
+    const todos = [];
+    eventos.forEach(e => todos.push(e));
+    grupos.forEach(g => (g.eventos || []).forEach(e => todos.push(e)));
+    const finales = todos
+      .filter(ev => ev && ev.status && ev.status.type && ev.status.type.name === 'STATUS_FINAL' && String(ev.id).startsWith('ls'))
+      .map(ev => String(ev.id).slice(2))
+      .filter(eid => !(eid in verifsRef.current));
+    if (finales.length === 0) return;
+    fetch(`./verificacion.php?sport=basketball&date=${selectedDate}&eids=${[...new Set(finales)].join(',')}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data || !data.resultados) return;
+        const nuevo = { ...verifsRef.current, ...data.resultados };
+        verifsRef.current = nuevo;
+        setVerifs(nuevo);
+      })
+      .catch(() => {});
+  }, [eventos, grupos, selectedDate, tipoAlertas]);
+
+  // Al cambiar de fecha, olvidar veredictos previos (son de otra jornada)
+  useEffect(() => { verifsRef.current = {}; setVerifs({}); }, [selectedDate]);
+
+  // Badge visual del veredicto de verificación
+  const badgeVerif = (v) => {
+    if (!v) return null;
+    const MAP = {
+      VERIFICADO:      { txt: '✓ Verificado', color: '#6ee7b7', bg: 'rgba(16,185,129,0.15)', bd: 'rgba(16,185,129,0.45)' },
+      CONFLICTO:       { txt: '⚠ Revisar',    color: '#fca5a5', bg: 'rgba(239,68,68,0.15)',  bd: 'rgba(239,68,68,0.45)' },
+      SIN_2DA_FUENTE:  { txt: '1 fuente',      color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', bd: 'rgba(148,163,184,0.3)' },
+      PENDIENTE:       { txt: '…',             color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', bd: 'rgba(148,163,184,0.3)' },
+    };
+    const s = MAP[v.veredicto] || MAP.PENDIENTE;
+    const detalle = v.lineas
+      ? Object.keys(v.lineas).map(k => {
+          const l = v.lineas[k];
+          if (l.estado === 'ok') return `${k}: OK`;
+          if (l.estado === 'conflicto') return `${k}: API ${l.api} vs ESPN ${l.espn}`;
+          return `${k}: sin datos`;
+        }).join('  ·  ')
+      : (v.partido || 'Sin 2da fuente para comparar');
+    return (
+      <span title={detalle} style={{
+        marginTop: '3px', fontSize: '0.58rem', fontWeight: 'bold', padding: '1px 5px',
+        borderRadius: '6px', background: s.bg, color: s.color, border: `1px solid ${s.bd}`,
+        whiteSpace: 'nowrap', cursor: 'help',
+      }}>{s.txt}</span>
+    );
+  };
+
   // Fila estilo Flashscore: DOS filas por partido (una por equipo)
   // Columnas: ☆ | 🚫 | Estado (span 2 filas) | logo + Equipo | Total (bold) | Q1 | Q2 | Q3 | Q4 | OT
   const renderFila = (ev, ligaId) => {
@@ -866,8 +923,8 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
           </button>
         </div>
 
-        {/* Col 3: Estado (span 2 filas) */}
-        <div style={{ gridRow: '1 / 3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Col 3: Estado (span 2 filas) + badge de verificación (solo basket final) */}
+        <div style={{ gridRow: '1 / 3', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{
             fontSize: '0.7rem',
             fontWeight: 'bold',
@@ -878,6 +935,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
           }}>
             {estadoCorto}
           </span>
+          {tipoAlertas === 'basket' && state === 'post' && id.startsWith('ls') && badgeVerif(verifs[id.slice(2)])}
         </div>
 
         {/* Col 4: Equipo home (fila 1) */}

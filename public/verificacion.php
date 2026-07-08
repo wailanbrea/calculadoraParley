@@ -234,7 +234,7 @@ if (!$apiJuegos) {
 // Qué juegos verificar: los eids pedidos, o todos los que estén finalizados
 $objetivo = [];
 foreach ($apiJuegos as $eid => $g) {
-    if ($eids) { if (in_array($eid, $eids, true)) $objetivo[$eid] = $g; }
+    if ($eids) { if (in_array((string)$eid, $eids, true)) $objetivo[$eid] = $g; }
     elseif ($g['final']) { $objetivo[$eid] = $g; }
 }
 
