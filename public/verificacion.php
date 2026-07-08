@@ -103,13 +103,25 @@ function cargarApiBasket($cacheDir, $date) {
 // ---------------------------------------------------------------------------
 // Fuente secundaria: ESPN (JSON público, varias ligas de básquet)
 // ---------------------------------------------------------------------------
-function cargarEspnBasket($date) {
+function cargarEspnBasket($date, $cacheDir) {
     $ymd = str_replace('-', '', $date);
-    $ligas = ['nba', 'wnba', 'mens-college-basketball'];
+    // Mismas ligas que el Comparador (cmp_espnGamesRaw): NBA, summer league, college, etc.
+    // Reutiliza su mismo caché en disco (cache_cmp_espn_basketball_*) para NO duplicar
+    // llamadas a ESPN; si falta o está viejo, lo descarga y lo deja cacheado para ambos.
+    $ligas = ['nba', 'wnba', 'mens-college-basketball', 'womens-college-basketball',
+              'nba-summer-las-vegas', 'nba-summer-utah', 'nba-summer-california', 'nba-development'];
     $juegos = [];
     foreach ($ligas as $lg) {
-        $url = "https://site.api.espn.com/apis/site/v2/sports/basketball/{$lg}/scoreboard?dates={$ymd}";
-        $j = httpGetJson($url);
+        $cacheFile = $cacheDir . "/cache_cmp_espn_basketball_{$lg}_{$ymd}.json";
+        $j = null;
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < 300) {
+            $j = json_decode(file_get_contents($cacheFile), true);
+        }
+        if (!$j) {
+            $url = "https://site.api.espn.com/apis/site/v2/sports/basketball/{$lg}/scoreboard?dates={$ymd}";
+            $j = httpGetJson($url);
+            if ($j) @file_put_contents($cacheFile, json_encode($j), LOCK_EX);
+        }
         if (!$j || !isset($j['events'])) continue;
         foreach ($j['events'] as $ev) {
             $comp = isset($ev['competitions'][0]) ? $ev['competitions'][0] : null;
@@ -247,7 +259,7 @@ foreach ($objetivo as $eid => $g) {
         continue;
     }
 
-    if ($espnJuegos === null) $espnJuegos = cargarEspnBasket($date);
+    if ($espnJuegos === null) $espnJuegos = cargarEspnBasket($date, $cacheDir);
     $match = buscarMatchEspn($g, $espnJuegos);
 
     if (!$match) {
