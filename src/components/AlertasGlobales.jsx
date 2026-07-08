@@ -81,6 +81,18 @@ function nombreEquipoLs(t) {
 
 export default function AlertasGlobales() {
   const [toasts, setToasts] = useState([]);
+  // Interruptor global de silencio (persiste en localStorage). Cuando está activo no se
+  // muestran toasts, no suena la campana y no se disparan notificaciones del sistema.
+  const [silenciado, setSilenciado] = useState(() => localStorage.getItem('alertasSilenciado') === '1');
+  const silenciadoRef = useRef(silenciado);
+  useEffect(() => { silenciadoRef.current = silenciado; }, [silenciado]);
+  const toggleSilencio = () => {
+    setSilenciado(s => {
+      const nuevo = !s;
+      localStorage.setItem('alertasSilenciado', nuevo ? '1' : '0');
+      return nuevo;
+    });
+  };
   const audioCtxRef = useRef(null);
   const tituloOriginalRef = useRef(document.title);
   const sinVerRef = useRef(0);
@@ -112,6 +124,10 @@ export default function AlertasGlobales() {
   };
 
   const dispararAlerta = ({ tipo, titulo, texto, esFavorito, pk }) => {
+    // Silencio global: no mostrar nada. El seguimiento de hitos (seen) ya se actualizó
+    // antes de llamar aquí, así que al reactivar no llega una avalancha de atrasadas.
+    if (silenciadoRef.current) return;
+
     const a = {
       id: Date.now() + Math.random(),
       time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
@@ -413,6 +429,21 @@ export default function AlertasGlobales() {
           .glob-toasts { left: 10px !important; right: 10px !important; max-width: none !important; }
         }
       `}</style>
+      <button
+        onClick={toggleSilencio}
+        title={silenciado ? 'Notificaciones silenciadas — clic para activar' : 'Notificaciones activas — clic para silenciar'}
+        aria-label={silenciado ? 'Activar notificaciones' : 'Silenciar notificaciones'}
+        style={{
+          position: 'fixed', bottom: '18px', right: '18px', zIndex: 9999,
+          width: '46px', height: '46px', borderRadius: '50%', cursor: 'pointer',
+          border: silenciado ? '2px solid #64748b' : '2px solid #00d2ff',
+          background: silenciado ? '#1e293b' : 'linear-gradient(135deg, #0b1a2b 0%, #0b0f19 100%)',
+          color: '#f8fafc', fontSize: '1.3rem', lineHeight: 1,
+          boxShadow: silenciado ? '0 6px 18px rgba(0,0,0,0.5)' : '0 0 18px rgba(0,210,255,0.4), 0 6px 18px rgba(0,0,0,0.5)',
+        }}
+      >
+        {silenciado ? '🔕' : '🔔'}
+      </button>
       <div className="glob-toasts" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '420px' }}>
         {toasts.map(t => (
           <div
