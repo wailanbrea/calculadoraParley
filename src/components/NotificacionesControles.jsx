@@ -35,8 +35,8 @@ export default function NotificacionesControles() {
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',
         width: '100%', padding: '8px 10px', marginBottom: '6px', cursor: 'pointer',
-        borderRadius: '8px', border: '1px solid rgba(255,255,255,0.12)',
-        background: 'rgba(255,255,255,0.04)', color: '#e2e8f0', fontSize: '0.82rem', textAlign: 'left',
+        borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)',
+        background: 'rgba(0,0,0,0.03)', color: '#1e293b', fontSize: '0.82rem', textAlign: 'left', fontWeight: 600,
       }}
     >
       <span>{children}</span>
@@ -53,8 +53,8 @@ export default function NotificacionesControles() {
   );
 
   return (
-    <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '8px' }}>
-      <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, letterSpacing: '.04em', marginBottom: '8px' }}>
+    <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: '8px' }}>
+      <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, letterSpacing: '.04em', marginBottom: '8px' }}>
         NOTIFICACIONES
       </div>
 
@@ -70,8 +70,8 @@ export default function NotificacionesControles() {
         onClick={() => { cargarHistorial(); setAbierto(true); }}
         style={{
           width: '100%', padding: '8px 10px', cursor: 'pointer', borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)',
-          color: '#e2e8f0', fontSize: '0.82rem', textAlign: 'left',
+          border: '1px solid rgba(0,0,0,0.1)', background: 'rgba(0,0,0,0.03)',
+          color: '#1e293b', fontSize: '0.82rem', textAlign: 'left', fontWeight: 600,
         }}
       >
         🕑 Historial de alertas
