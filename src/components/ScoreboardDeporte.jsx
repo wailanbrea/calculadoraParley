@@ -136,7 +136,7 @@ function adaptarEventoLivescore(e) {
     const info = (t && t[0]) || {};
     return {
       displayName: info.Nm || '?',
-      logo: info.Img ? `https://lsm-static-prod.livescore.com/medium/${info.Img}` : undefined
+      logo: info.Img ? (String(info.Img).startsWith('http') ? info.Img : `https://lsm-static-prod.livescore.com/medium/${info.Img}`) : undefined
     };
   };
 

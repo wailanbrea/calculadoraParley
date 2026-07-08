@@ -27,6 +27,10 @@ flashscore_*.json
 # Ruta de navegadores de Playwright (específica de cada máquina, la escribe install-task.ps1)
 crawler/browsers-path.txt
 
+# API key de api-sports (secreto) y su caché
+apisports_key.txt
+cache_apibasket_*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
