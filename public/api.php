@@ -446,32 +446,49 @@ if ($action === 'proxy_livescore') {
     $formattedDate = substr($dateRaw, 0, 4) . '-' . substr($dateRaw, 4, 2) . '-' . substr($dateRaw, 6, 2);
 
     // BASKETBALL vía api-basketball (api-sports) si hay una key configurada. Fuente
-    // confiable (JSON, sin scraping). Caché inteligente para cuidar la cuota gratis:
-    // 60s si hay juegos en vivo, 300s si no. Cae al comportamiento viejo si no hay key.
+    // confiable (JSON, sin scraping). Diseñado para el plan gratis (100 req/día):
+    //  - Caché de 5 min con juegos en vivo, 15 min sin juegos (una llamada trae TODOS
+    //    los juegos del día; los usuarios comparten el caché, no suman requests).
+    //  - Tope duro de 95 llamadas/día: al llegar, sirve el último dato en vez de gastar
+    //    cuota o dar error. Configurable con las constantes de abajo.
     $apiKey = @trim(@file_get_contents($cacheDir . '/apisports_key.txt'));
     if ($sport === 'basketball' && $apiKey !== '' && $apiKey !== false) {
+        $ttlLive = 300;    // 5 min con juegos en vivo
+        $ttlIdle = 900;    // 15 min sin juegos
+        $topeDiario = 95;  // margen bajo los 100/día del plan gratis
+
         $cf = $cacheDir . "/cache_apibasket_{$formattedDate}.json";
-        if (file_exists($cf)) {
-            $cached = json_decode(file_get_contents($cf), true);
-            $ttl = (is_array($cached) && !empty($cached['_live'])) ? 60 : 300;
-            if ((time() - filemtime($cf)) < $ttl && isset($cached['Stages'])) {
+        $cached = file_exists($cf) ? json_decode(file_get_contents($cf), true) : null;
+        $tieneCache = is_array($cached) && isset($cached['Stages']);
+
+        if ($tieneCache) {
+            $ttl = !empty($cached['_live']) ? $ttlLive : $ttlIdle;
+            if ((time() - filemtime($cf)) < $ttl) {
                 echo json_encode(['Stages' => $cached['Stages']]);
                 exit;
             }
         }
-        $abErr = null;
-        $mapped = fetchApiBasketball($formattedDate, $apiKey, $abErr);
-        if ($mapped !== null) {
-            file_put_contents($cf, json_encode($mapped), LOCK_EX);
-            echo json_encode(['Stages' => $mapped['Stages']]);
-            exit;
+
+        // Contador diario para no exceder la cuota gratis
+        $countFile = $cacheDir . '/cache_apibasket_count.json';
+        $hoy = date('Ymd');
+        $cnt = @json_decode(@file_get_contents($countFile), true);
+        if (!is_array($cnt) || (isset($cnt['d']) ? $cnt['d'] : '') !== $hoy) $cnt = ['d' => $hoy, 'n' => 0];
+
+        if ($cnt['n'] < $topeDiario) {
+            $abErr = null;
+            $mapped = fetchApiBasketball($formattedDate, $apiKey, $abErr);
+            if ($mapped !== null) {
+                file_put_contents($cf, json_encode($mapped), LOCK_EX);
+                $cnt['n']++;
+                file_put_contents($countFile, json_encode($cnt), LOCK_EX);
+                echo json_encode(['Stages' => $mapped['Stages']]);
+                exit;
+            }
         }
-        // Falló: servir el último caché si existe, antes que quedar sin datos
-        if (file_exists($cf)) {
-            $c = json_decode(file_get_contents($cf), true);
-            if (isset($c['Stages'])) { echo json_encode(['Stages' => $c['Stages']]); exit; }
-        }
-        // Si no hay caché, cae al flujo normal (sofascore/Livescore) más abajo
+        // Cuota agotada o error: servir el último caché aunque esté viejo
+        if ($tieneCache) { echo json_encode(['Stages' => $cached['Stages']]); exit; }
+        // Sin caché: cae al flujo normal (sofascore/Livescore) más abajo
     }
 
     // Si es baloncesto o soccer y existe un archivo de sofascore cargado para esa fecha, servirlo directamente
