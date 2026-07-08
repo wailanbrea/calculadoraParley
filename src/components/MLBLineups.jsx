@@ -256,16 +256,37 @@ export default function MLBLineups() {
         <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           AVG {fmt3(b.avg)} · SLG {fmt3(b.slg)} · Ú10 <strong style={{ color: '#cbd5e1' }}>{b.last10tb}</strong> · <strong style={{ color: colorScore(b.score) }}>Score {b.score}</strong>
         </div>
-        {/* Matchup vs pitcher rival — como MLB, solo HR/RBI/AVG */}
-        <div style={{ fontSize: '0.7rem', marginTop: '2px', fontVariantNumeric: 'tabular-nums', color: hayM ? '#e2e8f0' : '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          <span style={{ color: '#64748b' }}>vs {apellido(rivalNombre) || 'P'}:</span>{' '}
-          {hayM
-            ? <>HR <strong style={{ color: b.mHr > 0 ? '#fca5a5' : '#cbd5e1' }}>{b.mHr}</strong> · RBI <strong style={{ color: '#cbd5e1' }}>{b.mRbi}</strong> · AVG <strong style={{ color: '#cbd5e1' }}>{fmt3(b.mAvg)}</strong> <span style={{ color: '#475569' }}>({b.mAb} AB)</span></>
-            : 'sin historial'}
-        </div>
       </div>
     );
   };
+
+  // Tabla de matchups estilo MLB Gameday: por equipo, vs el pitcher rival, solo HR/RBI/AVG.
+  const TablaMatchup = ({ equipo, bateadores, rivalNombre }) => (
+    <div style={{ minWidth: 0 }}>
+      <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#f8fafc', marginBottom: '6px' }}>
+        {equipo} <span style={{ color: '#64748b', fontWeight: 600 }}>vs. {apellido(rivalNombre) || 'P'}</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 34px 34px 46px', gap: '0', fontSize: '0.72rem' }}>
+        <div style={{ color: '#64748b', fontWeight: 700 }}>Bateador</div>
+        <div style={{ color: '#64748b', fontWeight: 700, textAlign: 'right' }}>HR</div>
+        <div style={{ color: '#64748b', fontWeight: 700, textAlign: 'right' }}>RBI</div>
+        <div style={{ color: '#64748b', fontWeight: 700, textAlign: 'right' }}>AVG</div>
+        {bateadores.map(b => {
+          const hay = b.mAb > 0;
+          return (
+            <React.Fragment key={b.pid}>
+              <div style={{ color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', padding: '3px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ color: '#64748b' }}>{b.orden}.</span> {apellido(b.nombre)} <span style={{ color: '#64748b', fontSize: '0.66rem' }}>{b.pos}</span>
+              </div>
+              <div style={{ textAlign: 'right', padding: '3px 0', borderTop: '1px solid rgba(255,255,255,0.05)', color: hay && b.mHr > 0 ? '#fca5a5' : (hay ? '#cbd5e1' : '#475569'), fontWeight: hay && b.mHr > 0 ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>{hay ? b.mHr : '-'}</div>
+              <div style={{ textAlign: 'right', padding: '3px 0', borderTop: '1px solid rgba(255,255,255,0.05)', color: hay ? '#cbd5e1' : '#475569', fontVariantNumeric: 'tabular-nums' }}>{hay ? b.mRbi : '-'}</div>
+              <div style={{ textAlign: 'right', padding: '3px 0', borderTop: '1px solid rgba(255,255,255,0.05)', color: hay ? '#cbd5e1' : '#475569', fontVariantNumeric: 'tabular-nums' }} title={hay ? `${b.mAb} AB` : 'sin historial'}>{hay ? fmt3(b.mAvg) : '-'}</div>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   const StatP = ({ label, val, mejor }) => (
     <div style={{ textAlign: 'center', minWidth: '44px' }}>
@@ -275,8 +296,9 @@ export default function MLBLineups() {
   );
 
   // Tarjeta de pitchers enfrentados (formato MLB) + cuál es mejor
-  const TarjetaPitchers = ({ p }) => {
+  const TarjetaPitchers = ({ p, tA, tH }) => {
     const a = p.away, h = p.home;
+    const mano = (t) => t === 'L' ? 'LHP' : t === 'R' ? 'RHP' : '';
     const hayRating = a.stats && h.stats;
     const mejorAway = hayRating && a.rating > h.rating;
     const mejorHome = hayRating && h.rating > a.rating;
@@ -291,18 +313,21 @@ export default function MLBLineups() {
         <StatP label="K/9" val={st.k9.toFixed(1)} mejor={mejorLado === 'k9'} />
       </div>
     ) : <div style={{ fontSize: '0.78rem', color: '#64748b', textAlign: 'center' }}>Sin estadísticas de temporada</div>;
-    const nombrePitcher = (pi, mejor) => (
-      <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-        {pi.nombre || 'Por confirmar'}
-        {mejor && <span style={{ fontSize: '0.62rem', background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.45)', borderRadius: '6px', padding: '1px 6px', fontWeight: 700 }}>★ MEJOR</span>}
+    const nombrePitcher = (pi, mejor, hand) => (
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+          {pi.nombre || 'Por confirmar'}
+          {mejor && <span style={{ fontSize: '0.62rem', background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.45)', borderRadius: '6px', padding: '1px 6px', fontWeight: 700 }}>★ MEJOR</span>}
+        </div>
+        {mano(hand) && <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>{mano(hand)}</div>}
       </div>
     );
     return (
       <div style={S.card}>
         <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, letterSpacing: '.04em', marginBottom: '8px' }}>⚾ PITCHERS PROBABLES</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px' }}>
-          <div>{nombrePitcher(a, mejorAway)}<div style={{ marginTop: '6px' }}>{filaStats(a.stats, mejorAway ? 'era' : null)}</div></div>
-          <div style={{ borderLeft: '1px solid #1e293b', paddingLeft: '18px' }}>{nombrePitcher(h, mejorHome)}<div style={{ marginTop: '6px' }}>{filaStats(h.stats, mejorHome ? 'era' : null)}</div></div>
+          <div>{nombrePitcher(a, mejorAway, tA)}<div style={{ marginTop: '6px' }}>{filaStats(a.stats, mejorAway ? 'era' : null)}</div></div>
+          <div style={{ borderLeft: '1px solid #1e293b', paddingLeft: '18px' }}>{nombrePitcher(h, mejorHome, tH)}<div style={{ marginTop: '6px' }}>{filaStats(h.stats, mejorHome ? 'era' : null)}</div></div>
         </div>
         {hayRating && (
           <div style={{ marginTop: '10px', fontSize: '0.78rem', color: '#cbd5e1', textAlign: 'center' }}>
@@ -379,7 +404,7 @@ export default function MLBLineups() {
           )}
           {cargandoLineup && <div style={{ color: '#67e8f9', padding: '10px 4px' }}>Cargando pitchers, lineups y matchups…</div>}
 
-          {detalle && !cargandoLineup && <TarjetaPitchers p={detalle.pitchers} />}
+          {detalle && !cargandoLineup && <TarjetaPitchers p={detalle.pitchers} tA={detalle.throwsAway} tH={detalle.throwsHome} />}
 
           {detalle && !detalle.confirmado && !cargandoLineup && (
             <div style={{ ...S.card, borderColor: 'rgba(251,191,36,0.4)' }}>
@@ -436,9 +461,18 @@ export default function MLBLineups() {
                 })}
 
                 <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '10px' }}>
-                  Orden oficial de MLB (sin reordenar). El % es quién tiene más probabilidad de más bases alcanzadas en el duelo del mismo turno.
-                  La línea "vs [pitcher]" es el matchup histórico HR/RBI/AVG contra el abridor rival.
+                  Orden oficial de MLB (sin reordenar). El % es quién tiene más probabilidad de lograr más bases alcanzadas en el duelo del mismo turno.
                 </div>
+              </div>
+
+              {/* ===== Matchups estilo MLB: HR/RBI/AVG vs el pitcher rival ===== */}
+              <div style={S.card}>
+                <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, letterSpacing: '.04em', marginBottom: '10px' }}>🆚 MATCHUPS vs PITCHER RIVAL (histórico)</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <TablaMatchup equipo={detalle.away.team} bateadores={detalle.away.bateadores.slice(0, lim)} rivalNombre={detalle.pitchers.home.nombre} />
+                  <TablaMatchup equipo={detalle.home.team} bateadores={detalle.home.bateadores.slice(0, lim)} rivalNombre={detalle.pitchers.away.nombre} />
+                </div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '8px' }}>Historial career de cada bateador frente al abridor rival (MLB Stats API). "-" = nunca se han enfrentado. AVG se lee al pasar el mouse con los AB.</div>
               </div>
 
               <div style={S.card}>
