@@ -451,8 +451,11 @@ if ($action === 'proxy_livescore') {
     //    los juegos del día; los usuarios comparten el caché, no suman requests).
     //  - Tope duro de 95 llamadas/día: al llegar, sirve el último dato en vez de gastar
     //    cuota o dar error. Configurable con las constantes de abajo.
-    $apiKey = @trim(@file_get_contents($cacheDir . '/apisports_key.txt'));
-    if ($sport === 'basketball' && $apiKey !== '' && $apiKey !== false) {
+    // Extrae la key aunque el archivo traiga texto de más: toma el primer token
+    // alfanumérico de 20-64 chars (formato de las keys de api-sports).
+    $apiKeyRaw = @file_get_contents($cacheDir . '/apisports_key.txt');
+    $apiKey = (is_string($apiKeyRaw) && preg_match('/[A-Za-z0-9]{20,64}/', $apiKeyRaw, $mk)) ? $mk[0] : '';
+    if ($sport === 'basketball' && $apiKey !== '') {
         $ttlLive = 300;    // 5 min con juegos en vivo
         $ttlIdle = 900;    // 15 min sin juegos
         $topeDiario = 95;  // margen bajo los 100/día del plan gratis
