@@ -21,16 +21,23 @@ const apellido = (nombre) => (nombre || '').split(' ').slice(-1)[0];
 
 // Score heurístico de bases alcanzadas (0-100). NO es probabilidad calibrada: es un
 // indicador relativo de fuerza para comparar bateadores del mismo juego.
-function scoreBateador(b, pitcherThrows) {
+// Score de bases alcanzadas (0-100). Indicador relativo, no probabilidad calibrada.
+// Combina: poder (SLG/ISO), forma del ÚLTIMO MES (bases/juego, todos los juegos del
+// mes), platoon (mano), puesto en el orden, CALIDAD DEL PITCHER RIVAL (a mejor pitcher,
+// menos oportunidad) y el MATCHUP histórico del bateador vs ese pitcher.
+function scoreBateador(b, pitcherThrows, rivalRating) {
   const slgN = nrm(b.slg, 0.300, 0.600);
   const isoN = nrm(b.slg - b.avg, 0.080, 0.300);
-  const l10N = nrm(b.last10tb, 0, 25);
-  const l5N = nrm(b.last5tb, 0, 14);
+  const tbPorJuego = b.mesJuegos > 0 ? b.mesTb / b.mesJuegos : 0;
+  const mesN = nrm(tbPorJuego, 0.8, 2.2);            // forma del último mes (TB por juego)
   let plat = 60;
   if (b.bats === 'S') plat = 62;
-  else if (pitcherThrows && b.bats) plat = b.bats !== pitcherThrows ? 75 : 45;
+  else if (pitcherThrows && b.bats) plat = b.bats !== pitcherThrows ? 72 : 48;
   const spot = b.orden <= 2 ? 100 : b.orden <= 5 ? 85 : b.orden <= 7 ? 65 : 50;
-  const s = slgN * 0.25 + isoN * 0.15 + l10N * 0.25 + l5N * 0.12 + plat * 0.15 + spot * 0.08;
+  const rivalOp = rivalRating > 0 ? clamp(100 - rivalRating, 0, 100) : 55;  // pitcher fuerte => menos oportunidad
+  let matchN = 55;                                    // neutro si la muestra es chica
+  if (b.mAb >= 5) matchN = clamp(nrm(parseFloat(b.mAvg) || 0, 0.150, 0.400) + (b.mHr > 0 ? 10 : 0), 0, 100);
+  const s = slgN * 0.20 + isoN * 0.12 + mesN * 0.25 + plat * 0.10 + spot * 0.05 + rivalOp * 0.16 + matchN * 0.12;
   return Math.round(s * 10) / 10;
 }
 
@@ -90,18 +97,31 @@ export default function MLBLineups() {
     return () => { vivo = false; };
   }, [selectedDate]);
 
-  async function ultimasTB(pid, year) {
-    if (logCache.current[pid]) return logCache.current[pid];
+  // Bases alcanzadas del ÚLTIMO MES: suma los TB de TODOS los juegos en los 30 días
+  // previos a la fecha del juego (sean 20, 25 o los que haya). Cachea en memoria y en
+  // localStorage (6h) para no repetir la llamada al recargar.
+  async function basesUltimoMes(pid, year, hastaISO) {
+    const key = pid + '_' + hastaISO;
+    if (logCache.current[key]) return logCache.current[key];
+    const lsKey = 'mlb_mes_' + key;
+    try { const raw = localStorage.getItem(lsKey); if (raw) { const o = JSON.parse(raw); if (o.exp > Date.now()) { logCache.current[key] = o.v; return o.v; } } } catch (e) { /* ignore */ }
     try {
       const r = await fetch(`${API}/people/${pid}/stats?stats=gameLog&group=hitting&season=${year}&gameType=R`);
       const d = await r.json();
       const splits = (d.stats && d.stats[0] && d.stats[0].splits) || [];
-      const tb = splits.map(s => parseInt((s.stat && s.stat.totalBases) || 0, 10));
-      const sum = (arr) => arr.reduce((a, b) => a + b, 0);
-      const res = { last10: sum(tb.slice(-10)), last5: sum(tb.slice(-5)) };
-      logCache.current[pid] = res;
+      const hasta = new Date(hastaISO + 'T23:59:59');
+      const desde = new Date(hasta); desde.setDate(desde.getDate() - 30);
+      let tb = 0, juegos = 0;
+      for (const s of splits) {
+        if (!s.date) continue;
+        const f = new Date(s.date + 'T12:00:00');
+        if (f >= desde && f <= hasta) { tb += parseInt((s.stat && s.stat.totalBases) || 0, 10); juegos++; }
+      }
+      const res = { tb, juegos };
+      logCache.current[key] = res;
+      try { localStorage.setItem(lsKey, JSON.stringify({ v: res, exp: Date.now() + 6 * 3600 * 1000 })); } catch (e) { /* ignore */ }
       return res;
-    } catch (e) { return { last10: 0, last5: 0 }; }
+    } catch (e) { return { tb: 0, juegos: 0 }; }
   }
 
   // Matchup histórico (career) del bateador vs el pitcher rival: solo HR/RBI/AVG.
@@ -109,6 +129,8 @@ export default function MLBLineups() {
     if (!pitcherId) return { ab: 0, hr: 0, rbi: 0, avg: null };
     const key = batterId + 'v' + pitcherId;
     if (mCache.current[key] !== undefined) return mCache.current[key];
+    const lsKey = 'mlb_mu_' + key;
+    try { const raw = localStorage.getItem(lsKey); if (raw) { const o = JSON.parse(raw); if (o.exp > Date.now()) { mCache.current[key] = o.v; return o.v; } } } catch (e) { /* ignore */ }
     try {
       const r = await fetch(`${API}/people/${batterId}/stats?stats=vsPlayerTotal&group=hitting&opposingPlayerId=${pitcherId}`);
       const d = await r.json();
@@ -116,6 +138,7 @@ export default function MLBLineups() {
       for (const st of (d.stats || [])) { if (st.splits && st.splits.length) { sp = st.splits[0].stat; break; } }
       const res = sp ? { ab: parseInt(sp.atBats || 0, 10), hr: parseInt(sp.homeRuns || 0, 10), rbi: parseInt(sp.rbi || 0, 10), avg: sp.avg } : { ab: 0, hr: 0, rbi: 0, avg: null };
       mCache.current[key] = res;
+      try { localStorage.setItem(lsKey, JSON.stringify({ v: res, exp: Date.now() + 24 * 3600 * 1000 })); } catch (e) { /* ignore */ }
       return res;
     } catch (e) { return { ab: 0, hr: 0, rbi: 0, avg: null }; }
   }
@@ -160,7 +183,7 @@ export default function MLBLineups() {
             nombre: (p.person && p.person.fullName) || '?',
             pos: (p.position && p.position.abbreviation) || '',
             avg: parseFloat(sb.avg) || 0, slg: parseFloat(sb.slg) || 0,
-            bats: null, last10tb: 0, last5tb: 0, score: 0,
+            bats: null, mesTb: 0, mesJuegos: 0, score: 0,
             mHr: null, mRbi: null, mAvg: null, mAb: 0,
           };
         });
@@ -200,12 +223,13 @@ export default function MLBLineups() {
       lados.home.bateadores.forEach(b => tareas.push({ b, rival: pAway && pAway.id }));
       await Promise.all(tareas.map(async ({ b, rival }) => {
         b.bats = (manos[b.pid] && manos[b.pid].bats) || null;
-        const [u, m] = await Promise.all([ultimasTB(b.pid, year), matchup(b.pid, rival)]);
-        b.last10tb = u.last10; b.last5tb = u.last5;
+        const [u, m] = await Promise.all([basesUltimoMes(b.pid, year, selectedDate), matchup(b.pid, rival)]);
+        b.mesTb = u.tb; b.mesJuegos = u.juegos;
         b.mAb = m.ab; b.mHr = m.hr; b.mRbi = m.rbi; b.mAvg = m.avg;
       }));
-      lados.away.bateadores.forEach(b => { b.score = scoreBateador(b, throwsHome); });
-      lados.home.bateadores.forEach(b => { b.score = scoreBateador(b, throwsAway); });
+      // away batea vs pitcher home (usa su rating) y viceversa
+      lados.away.bateadores.forEach(b => { b.score = scoreBateador(b, throwsHome, pitchers.home.rating); });
+      lados.home.bateadores.forEach(b => { b.score = scoreBateador(b, throwsAway, pitchers.away.rating); });
 
       setDetalle({
         estado: (juego && juego.status.detailedState) || 'Confirmado', confirmado: true,
@@ -254,7 +278,7 @@ export default function MLBLineups() {
           <span style={{ color: fav ? '#6ee7b7' : '#94a3b8', fontWeight: 600 }}> {b.bats || '?'}{fav ? '✓' : ''}</span>
         </div>
         <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          AVG {fmt3(b.avg)} · SLG {fmt3(b.slg)} · Ú10 <strong style={{ color: '#cbd5e1' }}>{b.last10tb}</strong> · <strong style={{ color: colorScore(b.score) }}>Score {b.score}</strong>
+          AVG {fmt3(b.avg)} · SLG {fmt3(b.slg)} · mes <strong style={{ color: '#cbd5e1' }} title={`${b.mesTb} bases en ${b.mesJuegos} juegos del último mes`}>{b.mesTb}TB/{b.mesJuegos}j</strong> · <strong style={{ color: colorScore(b.score) }}>Score {b.score}</strong>
         </div>
       </div>
     );
@@ -494,7 +518,7 @@ export default function MLBLineups() {
               </div>
 
               <div style={{ fontSize: '0.72rem', color: '#64748b', padding: '2px 4px', lineHeight: 1.5 }}>
-                Score/ventaja = <strong>indicador heurístico v1</strong> (SLG, ISO, últimos 10/5 TB, mano y orden). Matchup HR/RBI/AVG y stats de pitcher = MLB Stats API oficial.
+                Score/ventaja = <strong>indicador heurístico v1</strong> (SLG, ISO, bases del último mes, mano, orden, calidad del pitcher rival y matchup histórico). Datos = MLB Stats API oficial.
                 Pendiente v2: Statcast (xSLG/barrel), probabilidad Poisson real, park factor y edge vs línea.
               </div>
             </>
