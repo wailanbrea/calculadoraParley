@@ -748,12 +748,22 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
     const todos = [];
     eventos.forEach(e => todos.push(e));
     grupos.forEach(g => (g.eventos || []).forEach(e => todos.push(e)));
-    const finales = todos
-      .filter(ev => ev && ev.status && ev.status.type && ev.status.type.name === 'STATUS_FINAL' && String(ev.id).startsWith('ls'))
-      .map(ev => String(ev.id).slice(2))
-      .filter(eid => !(eid in verifsRef.current));
-    if (finales.length === 0) return;
-    fetch(`./verificacion.php?sport=basketball&date=${selectedDate}&eids=${[...new Set(finales)].join(',')}`)
+    // Verificar: juegos finalizados (una vez, hasta tener veredicto final) y juegos EN VIVO
+    // que ya completaron el 1er cuarto (period >= 2), para comparar Q1/Q2 al llegar.
+    const objetivo = todos
+      .filter(ev => {
+        if (!ev || !ev.status || !ev.status.type || !String(ev.id).startsWith('ls')) return false;
+        const eid = String(ev.id).slice(2);
+        const t = ev.status.type;
+        if (t.name === 'STATUS_FINAL') {
+          const v = verifsRef.current[eid];
+          return !(v && v.final); // finalizado: hasta tener veredicto firme
+        }
+        return t.state === 'in' && (ev.status.period || 0) >= 2; // en vivo con Q1 completado
+      })
+      .map(ev => String(ev.id).slice(2));
+    if (objetivo.length === 0) return;
+    fetch(`./verificacion.php?sport=basketball&date=${selectedDate}&eids=${[...new Set(objetivo)].join(',')}`)
       .then(r => r.json())
       .then(data => {
         if (!data || !data.resultados) return;
@@ -770,20 +780,27 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
   // Badge visual del veredicto de verificación
   const badgeVerif = (v) => {
     if (!v) return null;
+    // ¿Hay algún cuarto ya comparado y coincidiendo? (para juegos en vivo)
+    const algunOk = v.lineas && Object.keys(v.lineas).some(k => v.lineas[k].estado === 'ok');
     const MAP = {
       VERIFICADO:      { txt: '✓ Verificado', color: '#6ee7b7', bg: 'rgba(16,185,129,0.15)', bd: 'rgba(16,185,129,0.45)' },
       CONFLICTO:       { txt: '⚠ Revisar',    color: '#fca5a5', bg: 'rgba(239,68,68,0.15)',  bd: 'rgba(239,68,68,0.45)' },
       SIN_2DA_FUENTE:  { txt: '1 fuente',      color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', bd: 'rgba(148,163,184,0.3)' },
-      PENDIENTE:       { txt: '…',             color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', bd: 'rgba(148,163,184,0.3)' },
+      // En vivo: si ya hay cuartos comparados y coinciden, verde "coincide"; si no, neutro.
+      PENDIENTE:       algunOk
+        ? { txt: '✓ coincide',  color: '#67e8f9', bg: 'rgba(6,182,212,0.14)', bd: 'rgba(6,182,212,0.4)' }
+        : { txt: '…',           color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', bd: 'rgba(148,163,184,0.3)' },
+      SIN_DATOS:       { txt: '…',             color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', bd: 'rgba(148,163,184,0.3)' },
     };
     const s = MAP[v.veredicto] || MAP.PENDIENTE;
+    const fuente = v.fuente ? v.fuente : 'ESPN';
     const detalle = v.lineas
       ? Object.keys(v.lineas).map(k => {
           const l = v.lineas[k];
           if (l.estado === 'ok') return `${k}: OK`;
-          if (l.estado === 'conflicto') return `${k}: API ${l.api} vs ESPN ${l.espn}`;
-          return `${k}: sin datos`;
-        }).join('  ·  ')
+          if (l.estado === 'conflicto') return `${k}: API ${l.api} vs ${fuente} ${l.espn}`;
+          return `${k}: —`;
+        }).join('  ·  ') + `  (2da fuente: ${fuente})`
       : (v.partido || 'Sin 2da fuente para comparar');
     return (
       <span title={detalle} style={{
@@ -935,7 +952,7 @@ export default function ScoreboardDeporte({ titulo, icono, ligas, ordenLocalPrim
           }}>
             {estadoCorto}
           </span>
-          {tipoAlertas === 'basket' && state === 'post' && id.startsWith('ls') && badgeVerif(verifs[id.slice(2)])}
+          {tipoAlertas === 'basket' && (state === 'post' || state === 'in') && id.startsWith('ls') && badgeVerif(verifs[id.slice(2)])}
         </div>
 
         {/* Col 4: Equipo home (fila 1) */}

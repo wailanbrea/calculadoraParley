@@ -142,6 +142,7 @@ function cargarEspnBasket($date, $cacheDir) {
             if (!$home || !$away) continue;
             $st = isset($ev['status']['type']) ? $ev['status']['type'] : [];
             $juegos[] = [
+                'src'   => 'ESPN',
                 'home'  => $home['name'], 'away' => $away['name'],
                 'q1h'   => isset($home['q'][0]) ? $home['q'][0] : null,
                 'q1a'   => isset($away['q'][0]) ? $away['q'][0] : null,
@@ -149,6 +150,34 @@ function cargarEspnBasket($date, $cacheDir) {
                 'q2a'   => isset($away['q'][1]) ? $away['q'][1] : null,
                 'th'    => $home['total'], 'ta' => $away['total'],
                 'final' => !empty($st['completed']),
+            ];
+        }
+    }
+    return $juegos;
+}
+
+// Lee un archivo del crawler en formato Livescore (sofascore_/flashscore_basketball_FECHA.json)
+// y lo normaliza igual que ESPN. Estas fuentes cubren muchas más ligas (Australia, NZ,
+// Filipinas, Canadá, Puerto Rico, etc.) con marcadores por cuarto.
+function cargarLivescoreBasket($cacheDir, $prefix, $date) {
+    $f = $cacheDir . "/{$prefix}_basketball_{$date}.json";
+    if (!file_exists($f)) return [];
+    $d = json_decode(file_get_contents($f), true);
+    if (!isset($d['Stages'])) return [];
+    $juegos = [];
+    foreach ($d['Stages'] as $st) {
+        foreach ((isset($st['Events']) ? $st['Events'] : []) as $e) {
+            $juegos[] = [
+                'src'   => $prefix,
+                'home'  => isset($e['T1'][0]['Nm']) ? $e['T1'][0]['Nm'] : '?',
+                'away'  => isset($e['T2'][0]['Nm']) ? $e['T2'][0]['Nm'] : '?',
+                'q1h'   => toIntOrNull(isset($e['Tr1Q1']) ? $e['Tr1Q1'] : null),
+                'q1a'   => toIntOrNull(isset($e['Tr2Q1']) ? $e['Tr2Q1'] : null),
+                'q2h'   => toIntOrNull(isset($e['Tr1Q2']) ? $e['Tr1Q2'] : null),
+                'q2a'   => toIntOrNull(isset($e['Tr2Q2']) ? $e['Tr2Q2'] : null),
+                'th'    => toIntOrNull(isset($e['Tr1']) ? $e['Tr1'] : null),
+                'ta'    => toIntOrNull(isset($e['Tr2']) ? $e['Tr2'] : null),
+                'final' => (isset($e['Eps']) && $e['Eps'] === 'FT'),
             ];
         }
     }
@@ -164,6 +193,7 @@ function buscarMatchEspn($api, $espnJuegos) {
         if (nombresCoinciden($api['home'], $e['away']) && nombresCoinciden($api['away'], $e['home'])) {
             // lados invertidos: intercambiar para comparar home-con-home
             return [
+                'src'=>isset($e['src']) ? $e['src'] : '?',
                 'home'=>$e['away'], 'away'=>$e['home'],
                 'q1h'=>$e['q1a'], 'q1a'=>$e['q1h'],
                 'q2h'=>$e['q2a'], 'q2a'=>$e['q2h'],
@@ -238,26 +268,35 @@ if (!$objetivo) {
 $store = file_exists($storeFile) ? json_decode(file_get_contents($storeFile), true) : [];
 if (!is_array($store)) $store = [];
 
-$espnJuegos = null; // se carga perezosamente solo si hace falta
+$fuentes = null; // se cargan perezosamente solo si hace falta
 $resultados = [];
 
 foreach ($objetivo as $eid => $g) {
     $clave = "bk_{$date}_{$eid}";
 
-    // Si ya hay un veredicto firme guardado, reusarlo (no gastar red)
-    if (isset($store[$clave]['veredicto']) && in_array($store[$clave]['veredicto'], ['VERIFICADO', 'CONFLICTO'], true)) {
+    // Si ya hay un veredicto FIRME (de un juego finalizado) guardado, reusarlo (no gastar red)
+    if (isset($store[$clave]['veredicto']) && !empty($store[$clave]['final'])
+        && in_array($store[$clave]['veredicto'], ['VERIFICADO', 'CONFLICTO'], true)) {
         $resultados[$eid] = $store[$clave];
         continue;
     }
 
-    if ($espnJuegos === null) $espnJuegos = cargarEspnBasket($date, $cacheDir);
-    $match = buscarMatchEspn($g, $espnJuegos);
+    // Pool de 2das fuentes: ESPN + Sofascore + Flashscore (mucha más cobertura de ligas)
+    if ($fuentes === null) {
+        $fuentes = array_merge(
+            cargarEspnBasket($date, $cacheDir),
+            cargarLivescoreBasket($cacheDir, 'sofascore', $date),
+            cargarLivescoreBasket($cacheDir, 'flashscore', $date)
+        );
+    }
+    $match = buscarMatchEspn($g, $fuentes);
 
     if (!$match) {
         $res = [
             'veredicto' => 'SIN_2DA_FUENTE',
             'partido'   => $g['home'] . ' vs ' . $g['away'],
             'api'       => ['final' => "{$g['th']}-{$g['ta']}", 'eps' => $g['eps']],
+            'final'     => $g['final'],
             'checked_at'=> gmdate('c'),
         ];
     } else {
@@ -265,12 +304,17 @@ foreach ($objetivo as $eid => $g) {
         $res = [
             'veredicto' => $comp['veredicto'],
             'partido'   => $g['home'] . ' vs ' . $g['away'],
+            'fuente'    => isset($match['src']) ? $match['src'] : '?',
             'lineas'    => $comp['lineas'],
+            'final'     => $g['final'],
             'checked_at'=> gmdate('c'),
         ];
     }
 
-    $store[$clave] = $res;
+    // Solo se persiste (y se reusa como firme) el veredicto de juegos FINALIZADOS.
+    // Los juegos en vivo se recalculan en cada consulta para no congelar un desfase
+    // momentáneo entre fuentes durante un cuarto en curso.
+    if ($g['final']) $store[$clave] = $res;
     $resultados[$eid] = $res;
 }
 
