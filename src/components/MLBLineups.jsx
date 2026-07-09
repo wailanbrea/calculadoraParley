@@ -503,9 +503,9 @@ export default function MLBLineups() {
                 <div style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: 700, marginBottom: '8px' }}>⚔️ Comparar cualquier bateador A vs B</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                   {[['A', dueloA, setDueloA], ['B', dueloB, setDueloB]].map(([lbl, val, set]) => (
-                    <select key={lbl} value={val} onChange={e => set(e.target.value)} style={{ ...S.input, maxWidth: '230px' }}>
-                      <option value="">Jugador {lbl}…</option>
-                      {todosBateadores.map(b => <option key={b.pid} value={b.pid}>{b.orden}. {b.nombre} ({b.eq})</option>)}
+                    <select key={lbl} value={val} onChange={e => set(e.target.value)} style={{ ...S.input, maxWidth: '230px', background: '#0e1626' }}>
+                      <option value="" style={{ background: '#0e1626', color: '#e2e8f0' }}>Jugador {lbl}…</option>
+                      {todosBateadores.map(b => <option key={b.pid} value={b.pid} style={{ background: '#0e1626', color: '#e2e8f0' }}>{b.orden}. {b.nombre} ({b.eq})</option>)}
                     </select>
                   ))}
                 </div>
