@@ -5,7 +5,7 @@
 // Pensado para correr de forma persistente en el VPS con `node runner.js`.
 //
 // Configurable por variables de entorno:
-//   CRAWL_INTERVAL_MIN  (por defecto 3)
+//   CRAWL_INTERVAL_MIN  (por defecto 2)
 //   CRAWL_TIMEOUT_SEC   (por defecto 90)  — mata un crawl colgado para no bloquear el ciclo
 //   CRAWL_TZ            (por defecto America/Santo_Domingo)
 
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // El proyecto (donde api.php lee los JSON) es la carpeta padre de /crawler.
 const PROJECT_DIR = path.resolve(__dirname, '..');
-const INTERVAL_MIN = Number(process.env.CRAWL_INTERVAL_MIN || 3);
+const INTERVAL_MIN = Number(process.env.CRAWL_INTERVAL_MIN || 2);
 const TIMEOUT_SEC = Number(process.env.CRAWL_TIMEOUT_SEC || 90);
 
 // Fecha "de hoy" en la zona de los usuarios (RD/AST por defecto), INDEPENDIENTE de la
