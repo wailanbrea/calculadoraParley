@@ -43,3 +43,6 @@ verificacion_resultados.json
 *.njsproj
 *.sln
 *.sw?
+
+# Grafo de conocimiento Graphify (artefacto generado, local)
+graphify-out/
