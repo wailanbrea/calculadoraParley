@@ -14,6 +14,12 @@ function fechaHoyISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+// Mueve una fecha ISO (YYYY-MM-DD) N días (mediodía para evitar saltos por zona horaria)
+function moverFecha(iso, dias) {
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() + dias);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const nrm = (v, lo, hi) => clamp(((v - lo) / (hi - lo)) * 100, 0, 100);
 const fmt3 = (v) => (v === null || v === undefined || v === '' || isNaN(parseFloat(v))) ? '—' : parseFloat(v).toFixed(3).replace(/^0/, '');
@@ -379,7 +385,15 @@ export default function MLBLineups() {
         {/* ===== Panel lateral de juegos (estilo Bases Alcanzadas) ===== */}
         <div className="ml-sidebar" style={{ position: 'sticky', top: '16px', maxHeight: 'calc(100vh - 32px)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ background: '#0b0f19', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px', minHeight: 0 }}>
-            <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} style={{ ...S.input, width: '100%', boxSizing: 'border-box' }} />
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <button onClick={() => setSelectedDate(d => moverFecha(d, -1))} title="Día anterior"
+                style={{ ...S.input, cursor: 'pointer', padding: '6px 9px', color: '#67e8f9', fontWeight: 700, lineHeight: 1 }}>◀</button>
+              <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} style={{ ...S.input, flex: 1, minWidth: 0, boxSizing: 'border-box' }} />
+              <button onClick={() => setSelectedDate(d => moverFecha(d, 1))} title="Día siguiente"
+                style={{ ...S.input, cursor: 'pointer', padding: '6px 9px', color: '#67e8f9', fontWeight: 700, lineHeight: 1 }}>▶</button>
+              <button onClick={() => setSelectedDate(fechaHoyISO())} title="Ir a hoy"
+                style={{ ...S.input, cursor: 'pointer', padding: '6px 10px', color: '#cbd5e1', fontWeight: 600, whiteSpace: 'nowrap' }}>Hoy</button>
+            </div>
             <input type="text" placeholder="Buscar equipo…" value={busqueda} onChange={e => setBusqueda(e.target.value)} style={{ ...S.input, width: '100%', boxSizing: 'border-box' }} />
             <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, letterSpacing: '.04em' }}>JUEGOS {cargandoJuegos ? '· cargando…' : `· ${juegos.length}`}</div>
             {error && <div style={{ color: '#fca5a5', fontSize: '0.8rem' }}>{error}</div>}
