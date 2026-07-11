@@ -151,7 +151,7 @@ export default function FraccionarTickets() {
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               {[
-                { valor: 200000, etiqueta: 'Sin Código' },
+                { valor: 60000, etiqueta: 'Sin Código' },
                 { valor: 200000, etiqueta: 'Con Código' }
               ].map(({ valor, etiqueta }) => (
                 <button
