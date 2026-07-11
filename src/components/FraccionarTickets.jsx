@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 export default function FraccionarTickets() {
   const [gananciaDeseada, setGananciaDeseada] = useState('');
   const [linea, setLinea] = useState('');
-  const [limiteTicket, setLimiteTicket] = useState('800000');
+  const [limiteTicket, setLimiteTicket] = useState('200000');
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
   const [calculado, setCalculado] = useState(false);
 
@@ -23,7 +23,7 @@ export default function FraccionarTickets() {
     e.preventDefault();
     const targetGain = parseFloat(gananciaDeseada);
     const lineVal = parseFloat(linea);
-    const limitVal = parseFloat(limiteTicket);
+    const maxGainVal = parseFloat(limiteTicket);
 
     if (isNaN(targetGain) || targetGain <= 0) {
       alert("Ingrese una ganancia deseada válida");
@@ -33,8 +33,8 @@ export default function FraccionarTickets() {
       alert("Ingrese una línea válida (diferente de 0)");
       return;
     }
-    if (isNaN(limitVal) || limitVal <= 0) {
-      alert("Ingrese un límite de ticket válido");
+    if (isNaN(maxGainVal) || maxGainVal <= 0) {
+      alert("Ingrese una máxima ganancia por ticket válida");
       return;
     }
 
@@ -51,7 +51,7 @@ export default function FraccionarTickets() {
       if (totalApostado % tickets === 0) {
         montoPorTicket = totalApostado / tickets;
         gananciaPorTicket = montoPorTicket / (L / 100.0);
-        if ((montoPorTicket + gananciaPorTicket) <= limitVal) {
+        if (gananciaPorTicket <= maxGainVal) {
           encontrado = true;
           break;
         }
@@ -86,7 +86,7 @@ export default function FraccionarTickets() {
   const limpiar = () => {
     setGananciaDeseada('');
     setLinea('');
-    setLimiteTicket('800000');
+    setLimiteTicket('200000');
     setCalculado(false);
     setResumen({ encontrado: false });
   };
@@ -137,11 +137,11 @@ export default function FraccionarTickets() {
           </div>
 
           <div className="form-group" style={{ margin: '1.25rem 0' }}>
-            <label className="form-label">Límite Máximo a Cobrar por Ticket (RD$)</label>
+            <label className="form-label">Máxima Ganancia por Ticket (RD$)</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <input 
                 type="number" 
-                placeholder="Ej: 170000" 
+                placeholder="Ej: 200000" 
                 className="form-input"
                 value={limiteTicket}
                 onChange={e => setLimiteTicket(e.target.value)}
@@ -150,15 +150,18 @@ export default function FraccionarTickets() {
               />
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-              {[60000, 800000].map(val => (
+              {[
+                { valor: 200000, etiqueta: 'Sin Código' },
+                { valor: 200000, etiqueta: 'Con Código' }
+              ].map(({ valor, etiqueta }) => (
                 <button
-                  key={val}
+                  key={etiqueta}
                   type="button"
-                  className={`filter-btn ${parseInt(limiteTicket, 10) === val ? 'active' : ''}`}
-                  onClick={() => setLimiteTicket(val.toString())}
+                  className={`filter-btn ${parseInt(limiteTicket, 10) === valor ? 'active' : ''}`}
+                  onClick={() => setLimiteTicket(valor.toString())}
                   style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px' }}
                 >
-                  RD$ {val.toLocaleString('de-DE')} {val === 60000 ? '(Sin Código)' : '(Con Código)'}
+                  RD$ {valor.toLocaleString('de-DE')} ({etiqueta})
                 </button>
               ))}
             </div>
@@ -178,7 +181,7 @@ export default function FraccionarTickets() {
           <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.5rem' }}>
             {!resumen.encontrado ? (
               <div className="badge badge-error" style={{ width: '100%', padding: '1rem', display: 'block', textAlign: 'center', fontSize: '0.9rem', borderRadius: '12px' }}>
-                ⚠️ No es posible dividir esta jugada en tickets exactos que cumplan el límite de monto + ganancia.
+                ⚠️ No es posible dividir esta jugada en tickets exactos que cumplan la máxima ganancia por ticket.
               </div>
             ) : (
               <div>
