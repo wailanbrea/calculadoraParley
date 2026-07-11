@@ -1,6 +1,6 @@
 // runner.js — Actualizador de marcadores 24/7 para el VPS.
 //
-// Corre los crawlers de Sofascore y Flashscore (basketball y soccer) cada N minutos
+// Corre los crawlers de marcadores (Flashscore por defecto; Sofascore opcional) cada N minutos
 // y escribe los JSON directamente en la carpeta del proyecto (donde api.php los lee).
 // Pensado para correr de forma persistente en el VPS con `node runner.js`.
 //
@@ -8,6 +8,7 @@
 //   CRAWL_INTERVAL_MIN  (por defecto 2)
 //   CRAWL_TIMEOUT_SEC   (por defecto 90)  — mata un crawl colgado para no bloquear el ciclo
 //   CRAWL_TZ            (por defecto America/Santo_Domingo)
+//   CRAWL_ENABLE_SOFASCORE (por defecto 0) — Sofascore puede responder 403 por Cloudflare
 
 import { spawn } from 'child_process';
 import fs from 'fs';
@@ -19,6 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_DIR = path.resolve(__dirname, '..');
 const INTERVAL_MIN = Number(process.env.CRAWL_INTERVAL_MIN || 2);
 const TIMEOUT_SEC = Number(process.env.CRAWL_TIMEOUT_SEC || 90);
+const ENABLE_SOFASCORE = process.env.CRAWL_ENABLE_SOFASCORE === '1';
 
 // Fecha "de hoy" en la zona de los usuarios (RD/AST por defecto), INDEPENDIENTE de la
 // zona horaria del VPS. Así el nombre del archivo coincide con la fecha que pide la
@@ -103,13 +105,20 @@ async function ejecutarCiclo() {
   const ayer = desplazarFechaISO(fecha, -1);
   const jobs = [
     // Basketball puede terminar despues de medianoche; refrescar ayer evita estados live viejos.
-    ['crawl_sofascore.js',  'basketball', ayer,  `sofascore_basketball_${ayer}.json`],
     ['crawl_flashscore.js', 'basketball', ayer,  `flashscore_basketball_${ayer}.json`],
-    ['crawl_sofascore.js',  'basketball', fecha, `sofascore_basketball_${fecha}.json`],
     ['crawl_flashscore.js', 'basketball', fecha, `flashscore_basketball_${fecha}.json`],
-    ['crawl_sofascore.js',  'football',   fecha, `sofascore_soccer_${fecha}.json`],
     ['crawl_flashscore.js', 'football',   fecha, `flashscore_soccer_${fecha}.json`],
   ];
+
+  if (ENABLE_SOFASCORE) {
+    jobs.unshift(
+      ['crawl_sofascore.js', 'basketball', ayer,  `sofascore_basketball_${ayer}.json`],
+      ['crawl_sofascore.js', 'basketball', fecha, `sofascore_basketball_${fecha}.json`],
+      ['crawl_sofascore.js', 'football',   fecha, `sofascore_soccer_${fecha}.json`],
+    );
+  } else {
+    log('Sofascore desactivado por defecto (usa CRAWL_ENABLE_SOFASCORE=1 para probarlo).');
+  }
 
   for (const [script, sport, fechaJob, archivo] of jobs) {
     const salida = path.join(PROJECT_DIR, archivo);

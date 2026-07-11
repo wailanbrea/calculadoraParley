@@ -1,17 +1,21 @@
 # Crawler de marcadores en vivo (24/7 en el VPS) — OBLIGATORIO
 
-Este crawler descarga los marcadores de basketball de **Sofascore y Flashscore** y los
-escribe como `sofascore_basketball_YYYY-MM-DD.json` y `flashscore_basketball_YYYY-MM-DD.json`
+Este crawler descarga los marcadores de basketball de **Flashscore** y los
+escribe como `flashscore_basketball_YYYY-MM-DD.json`
 en la carpeta del proyecto, donde `public/api.php` y `public/verificacion.php` los leen.
 **Corre en el VPS de forma independiente — tu PC no participa.**
+
+Sofascore queda disponible solo como prueba manual con `CRAWL_ENABLE_SOFASCORE=1`,
+porque actualmente responde `HTTP 403` detrás de Cloudflare/Turnstile en el VPS.
 
 > ⚠️ **NO desactives este crawler.** Aunque los marcadores en vivo de basketball ahora vienen
 > de **api-basketball** (api-sports), el crawler sigue siendo **obligatorio** porque es la
 > **2da fuente** con la que:
-> 1. **`verificacion.php` compara Q1, Q2 y el final** de cada juego (Sofascore/Flashscore
+> 1. **`verificacion.php` compara Q1, Q2 y el final** de cada juego (Flashscore
 >    cubren ~25 ligas que ESPN no toca: Australia, NZ, Filipinas, Canadá, Puerto Rico, etc.).
 >    Sin el crawler, casi todos los juegos quedan "sin 2da fuente" y no se puede comparar.
-> 2. El **Comparador** (`get_basketball_comparison`) cruza Sofascore/Flashscore/ESPN.
+> 2. El **Comparador** (`get_basketball_comparison`) cruza Flashscore/ESPN y Sofascore si
+>    se logra activar manualmente.
 >
 > Si el crawler se detiene, dejan de generarse los `*_basketball_HOY.json` y la verificación
 > pierde cobertura (todo vuelve a "1 fuente").
@@ -24,7 +28,7 @@ en la carpeta del proyecto, donde `public/api.php` y `public/verificacion.php` l
 En el VPS, dentro de la carpeta del proyecto, debe existir el archivo de HOY:
 
 ```powershell
-dir sofascore_basketball_*.json, flashscore_basketball_*.json | Sort-Object LastWriteTime -Descending | Select-Object -First 4
+dir flashscore_basketball_*.json | Sort-Object LastWriteTime -Descending | Select-Object -First 4
 ```
 
 El de la fecha de hoy debe tener una fecha de modificación de hace pocos minutos. Si no
@@ -69,6 +73,8 @@ Arguments = `runner.js`. Así se reinicia solo si se cae.
 
 - `CRAWL_INTERVAL_MIN` (por defecto 2): minutos entre actualizaciones.
 - `CRAWL_TIMEOUT_SEC` (por defecto 90): mata un crawl colgado.
+- `CRAWL_ENABLE_SOFASCORE=1`: intenta ejecutar Sofascore. Por defecto está desactivado
+  porque sus endpoints están devolviendo `HTTP 403`.
 
 ```powershell
 $env:CRAWL_INTERVAL_MIN=3; node runner.js
