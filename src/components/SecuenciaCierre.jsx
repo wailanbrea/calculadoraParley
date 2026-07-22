@@ -5,7 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 const STORAGE_KEY = 'closing_sequence_state_v1';
-const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real';
+const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real-v2';
 const ACCESS_PASSWORD = 'ubet@';
 const STATS_PASSWORD = 'ubet0909';
 const FIXED_START_TIME = '16:00';
@@ -66,9 +66,9 @@ const historicalSequence = [
   { date: '2026-07-16', day: 'Jueves', names: [] },
   { date: '2026-07-17', day: 'Viernes', names: ['Ariel', 'Daniel', 'Guillermo'] },
   { date: '2026-07-18', day: 'Sabado', names: ['Michael', 'Ariel', 'Chamo'] },
-  { date: '2026-07-19', day: 'Domingo', names: ['Ariel', 'Daniel'] },
+  { date: '2026-07-19', day: 'Domingo', names: ['Ariel', 'Daniel'], miniApplied: ['Daniel'] },
   { date: '2026-07-20', day: 'Lunes', names: ['Michael', 'Diego', 'Daniel'], miniApplied: ['Diego'] },
-  { date: '2026-07-21', day: 'Martes', names: ['Michael', 'Ariel', 'Daniel'], miniApplied: ['Daniel'] },
+  { date: '2026-07-21', day: 'Martes', names: ['Michael', 'Daniel', 'Ariel'], miniApplied: ['Ariel'] },
   { date: '2026-07-22', day: 'Miercoles', names: ['Ariel', 'Chamo', 'Guillermo'] },
   { date: '2026-07-23', day: 'Jueves', names: ['Ariel', 'Daniel', 'Michael'] }
 ];
