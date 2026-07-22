@@ -8,6 +8,8 @@ const STORAGE_KEY = 'closing_sequence_state_v1';
 const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real';
 const ACCESS_PASSWORD = 'ubet@';
 const STATS_PASSWORD = 'ubet0909';
+const FIXED_START_TIME = '16:00';
+const FIXED_END_TIME = '00:00';
 const DAYS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
 const WEEKEND_DAYS = ['Viernes', 'Sabado', 'Domingo'];
 const STATUS_OPTIONS = ['Pendiente', 'Generado', 'Confirmado', 'En curso', 'Completado', 'Cancelado', 'Modificado'];
@@ -72,8 +74,8 @@ const historicalSequence = [
 ];
 
 const defaultSettings = {
-  startTime: '16:00',
-  endTime: '00:00',
+  startTime: FIXED_START_TIME,
+  endTime: FIXED_END_TIME,
   firstExitTime: '22:00',
   closingCount: 2,
   miniRotationSize: 2,
@@ -258,6 +260,19 @@ function dayNameFromDate(dateIso) {
   return ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'][dayIndex];
 }
 
+function formatTime12(value) {
+  if (!value) return '';
+  const [hourRaw, minute = '00'] = value.split(':');
+  let hour = Number(hourRaw);
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+  return `${hour}:${minute.padStart(2, '0')} ${suffix}`;
+}
+
+function fixedShiftTimeLabel() {
+  return `${formatTime12(FIXED_START_TIME)} - ${formatTime12(FIXED_END_TIME)}`;
+}
+
 function employeeNameMap(employees) {
   return Object.fromEntries(employees.map(emp => [emp.id, emp.name]));
 }
@@ -357,12 +372,18 @@ export default function SecuenciaCierre() {
   const selectedShift = state.schedules.find(shift => shift.id === selectedShiftId) || null;
   const calendarEvents = state.schedules.map(shift => ({
     id: shift.id,
-    title: `${shift.day}: ${names(shift.order, nameMap).join(' > ')}`,
+    title: shift.day,
     start: shift.date,
     allDay: true,
     backgroundColor: shift.status === 'Completado' ? '#059669' : shift.status === 'Cancelado' ? '#dc2626' : '#7c3aed',
     borderColor: shift.status === 'Completado' ? '#059669' : shift.status === 'Cancelado' ? '#dc2626' : '#7c3aed',
-    extendedProps: { status: shift.status, closer: nameMap[shift.closerId] || '-' }
+    extendedProps: {
+      day: shift.day,
+      order: shift.order,
+      closerId: shift.closerId,
+      status: shift.status,
+      closer: nameMap[shift.closerId] || '-'
+    }
   }));
   const weekendPreview = WEEKEND_DAYS.map((day, index) => {
     const date = nextIsoDate(weekStart, index);
@@ -412,8 +433,8 @@ export default function SecuenciaCierre() {
       id: `shift-${item.date}-${item.day}-${Date.now()}`,
       date: item.date,
       day: item.day,
-      startTime: state.settings.startTime,
-      endTime: state.settings.endTime,
+      startTime: FIXED_START_TIME,
+      endTime: FIXED_END_TIME,
       firstExitTime: state.settings.firstExitTime,
       employeeIds: item.employeeIds,
       order: item.result.order,
@@ -719,6 +740,23 @@ export default function SecuenciaCierre() {
                 editable
                 eventDrop={moveShift}
                 eventClick={(info) => setSelectedShiftId(info.event.id)}
+                eventContent={(info) => {
+                  const props = info.event.extendedProps;
+                  return (
+                    <div className="closing-calendar-event">
+                      <div className="closing-calendar-day">{props.day}</div>
+                      <div className="closing-calendar-time">{fixedShiftTimeLabel()}</div>
+                      {(props.order || []).map(employeeId => (
+                        <div
+                          key={employeeId}
+                          className={employeeId === props.closerId ? 'closing-calendar-name closing-calendar-closer' : 'closing-calendar-name'}
+                        >
+                          {nameMap[employeeId] || employeeId}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }}
                 height="auto"
                 locale="es"
                 buttonText={{ today: 'Hoy', month: 'Mes', week: 'Semana', day: 'Agenda' }}
@@ -737,7 +775,7 @@ export default function SecuenciaCierre() {
             ) : (
               <div style={{ display: 'grid', gap: '1rem' }}>
                 <div><strong>{selectedShift.day}</strong> · {selectedShift.date}</div>
-                <div>Horario: {selectedShift.startTime} - {selectedShift.endTime}</div>
+                <div>Horario: {fixedShiftTimeLabel()}</div>
                 <div>Personal: {names(selectedShift.employeeIds, nameMap).join(', ')}</div>
                 <div>Orden principal: {names(selectedShift.primaryOrder, nameMap).join(' → ')}</div>
                 <div>Mini rotacion: {names(selectedShift.miniOrder, nameMap).join(' → ') || '-'}</div>
@@ -815,9 +853,11 @@ export default function SecuenciaCierre() {
           </div>
           <div className="glass-panel">
             <h3 style={{ marginBottom: '1rem' }}>Configuracion</h3>
+            <div className="result-card" style={{ textAlign: 'left', marginBottom: '1rem' }}>
+              <div className="result-card-title">Horario fijo</div>
+              <div className="result-card-value" style={{ fontSize: '1.25rem', color: 'var(--primary-hover)' }}>{fixedShiftTimeLabel()}</div>
+            </div>
             {[
-              ['startTime', 'Hora entrada', 'time'],
-              ['endTime', 'Hora salida', 'time'],
               ['firstExitTime', 'Primera salida', 'time'],
               ['closingCount', 'Empleados que permanecen', 'number'],
               ['miniRotationSize', 'Tamano mini rotacion', 'number'],
