@@ -246,6 +246,14 @@ function nextIsoDate(dateIso, offsetDays) {
   return base.toISOString().slice(0, 10);
 }
 
+function weekStartIso(dateIso) {
+  const base = new Date(`${dateIso}T12:00:00`);
+  const day = base.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  base.setDate(base.getDate() + diff);
+  return base.toISOString().slice(0, 10);
+}
+
 function getNextWeekendStart() {
   const today = new Date();
   const currentDay = today.getDay();
@@ -271,6 +279,21 @@ function formatTime12(value) {
 
 function fixedShiftTimeLabel() {
   return `${formatTime12(FIXED_START_TIME)} - ${formatTime12(FIXED_END_TIME)}`;
+}
+
+function buildManualShiftPatch(order, reason = 'Secuencia editada manualmente') {
+  const closingPool = order.length > 1 ? order.slice(-2) : [];
+  return {
+    employeeIds: order,
+    order,
+    primaryOrder: order,
+    miniOrder: closingPool,
+    groupKey: order.length ? groupKey(order) : '',
+    miniKey: closingPool.length > 1 ? groupKey(closingPool) : '',
+    closerId: order[order.length - 1] || '',
+    reason,
+    status: 'Modificado'
+  };
 }
 
 function employeeNameMap(employees) {
@@ -356,6 +379,9 @@ export default function SecuenciaCierre() {
   const [statsError, setStatsError] = useState('');
   const [activeTab, setActiveTab] = useState('generador');
   const [selectedShiftId, setSelectedShiftId] = useState('');
+  const [editShiftId, setEditShiftId] = useState('');
+  const [editOrder, setEditOrder] = useState([]);
+  const [editError, setEditError] = useState('');
   const [newEmployeeName, setNewEmployeeName] = useState('');
   const [weekStart, setWeekStart] = useState(getNextWeekendStart);
   const [weekendSelection, setWeekendSelection] = useState({
@@ -498,6 +524,83 @@ export default function SecuenciaCierre() {
       schedules: prev.schedules.map(shift => shift.id === id ? { ...shift, ...patch, status: patch.status || 'Modificado' } : shift),
       logs: [buildLog('shift.updated', { id, patch }), ...prev.logs]
     }));
+  }
+
+  function startEditShift(shift) {
+    setEditShiftId(shift.id);
+    setEditOrder(shift.order?.length ? shift.order : shift.employeeIds);
+    setEditError('');
+  }
+
+  function cancelEditShift() {
+    setEditShiftId('');
+    setEditOrder([]);
+    setEditError('');
+  }
+
+  function changeEditOrder(index, employeeId) {
+    setEditOrder(prev => prev.map((id, i) => i === index ? employeeId : id));
+  }
+
+  function moveEditOrder(index, direction) {
+    setEditOrder(prev => {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
+    });
+  }
+
+  function validateEditOrder() {
+    if (!editOrder.length) return 'La secuencia no puede quedar vacia.';
+    if (new Set(editOrder).size !== editOrder.length) return 'No repitas empleados en la misma secuencia.';
+    return '';
+  }
+
+  function saveManualOrder(scope) {
+    const validation = validateEditOrder();
+    if (validation) {
+      setEditError(validation);
+      return;
+    }
+
+    persist(prev => {
+      const selected = prev.schedules.find(shift => shift.id === editShiftId);
+      if (!selected) return prev;
+      let rotations = setRotationFromSequence(prev.rotations, editOrder, editOrder, selected.date);
+      const manualPatch = buildManualShiftPatch(editOrder);
+      const selectedWeekStart = weekStartIso(selected.date);
+      const nextSchedules = prev.schedules.map(shift => {
+        if (shift.id === selected.id) {
+          return { ...shift, ...manualPatch, notes: [shift.notes, 'Editado manualmente'].filter(Boolean).join(' | ') };
+        }
+        if (scope !== 'week' || weekStartIso(shift.date) !== selectedWeekStart || shift.date <= selected.date) {
+          return shift;
+        }
+        const result = calculateShift(shift.employeeIds, rotations, prev.settings);
+        rotations = advanceRotation(rotations, result.order);
+        if (result.miniOrder?.length > 1) rotations = advanceRotation(rotations, result.miniOrder);
+        return {
+          ...shift,
+          order: result.order,
+          primaryOrder: result.primaryOrder,
+          miniOrder: result.miniOrder,
+          groupKey: result.groupKey,
+          miniKey: result.miniKey,
+          closerId: result.closerId,
+          reason: 'Recalculado por cambio manual de la semana',
+          status: 'Modificado'
+        };
+      });
+      return {
+        ...prev,
+        rotations,
+        schedules: nextSchedules,
+        logs: [buildLog(scope === 'week' ? 'shift.manual_week_recalculated' : 'shift.manual_day_updated', { id: selected.id, order: editOrder }), ...prev.logs]
+      };
+    });
+    cancelEditShift();
   }
 
   function recalculateShift(id) {
@@ -739,7 +842,10 @@ export default function SecuenciaCierre() {
                 events={calendarEvents}
                 editable
                 eventDrop={moveShift}
-                eventClick={(info) => setSelectedShiftId(info.event.id)}
+                eventClick={(info) => {
+                  setSelectedShiftId(info.event.id);
+                  cancelEditShift();
+                }}
                 eventContent={(info) => {
                   const props = info.event.extendedProps;
                   return (
@@ -776,11 +882,83 @@ export default function SecuenciaCierre() {
               <div style={{ display: 'grid', gap: '1rem' }}>
                 <div><strong>{selectedShift.day}</strong> · {selectedShift.date}</div>
                 <div>Horario: {fixedShiftTimeLabel()}</div>
-                <div>Personal: {names(selectedShift.employeeIds, nameMap).join(', ')}</div>
-                <div>Orden principal: {names(selectedShift.primaryOrder, nameMap).join(' → ')}</div>
-                <div>Mini rotacion: {names(selectedShift.miniOrder, nameMap).join(' → ') || '-'}</div>
-                <div>Cierra: <strong>{nameMap[selectedShift.closerId] || '-'}</strong></div>
+                <div>
+                  <div className="form-label">Personal</div>
+                  <div className="closing-detail-list">
+                    {selectedShift.employeeIds.map(employeeId => (
+                      <span key={employeeId}>{nameMap[employeeId] || employeeId}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="form-label">Orden principal</div>
+                  <div className="closing-detail-list">
+                    {selectedShift.primaryOrder.map(employeeId => (
+                      <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
+                        {nameMap[employeeId] || employeeId}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="form-label">Mini rotacion</div>
+                  <div className="closing-detail-list">
+                    {selectedShift.miniOrder?.length ? selectedShift.miniOrder.map(employeeId => (
+                      <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
+                        {nameMap[employeeId] || employeeId}
+                      </span>
+                    )) : <span>-</span>}
+                  </div>
+                </div>
+                <div>Cierra: <strong className="closing-detail-closer" style={{ padding: '0.15rem 0.45rem', borderRadius: '6px' }}>{nameMap[selectedShift.closerId] || '-'}</strong></div>
                 <div>Motivo: {selectedShift.reason}</div>
+                <div className="glass-panel" style={{ background: 'rgba(6,8,19,0.03)', padding: '1rem', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: editShiftId === selectedShift.id ? '1rem' : 0 }}>
+                    <strong>Editar secuencia</strong>
+                    {statsAccessGranted ? (
+                      editShiftId === selectedShift.id ? (
+                        <button type="button" className="btn btn-secondary" onClick={cancelEditShift} style={{ padding: '0.45rem 0.8rem', fontSize: '0.82rem' }}>Cancelar</button>
+                      ) : (
+                        <button type="button" className="btn btn-secondary" onClick={() => startEditShift(selectedShift)} style={{ padding: '0.45rem 0.8rem', fontSize: '0.82rem' }}>Editar</button>
+                      )
+                    ) : null}
+                  </div>
+                  {!statsAccessGranted ? (
+                    <form onSubmit={submitStatsAccess} style={{ display: 'grid', gap: '0.75rem' }}>
+                      <p style={{ color: 'var(--text-muted)' }}>Para editar usa la clave privada.</p>
+                      <input
+                        className="form-input"
+                        type="password"
+                        placeholder="Clave"
+                        value={statsPassword}
+                        onChange={e => setStatsPassword(e.target.value)}
+                        required
+                      />
+                      {statsError && <div className="badge badge-error">{statsError}</div>}
+                      <button type="submit" className="btn btn-primary">Desbloquear edicion</button>
+                    </form>
+                  ) : editShiftId === selectedShift.id ? (
+                    <div style={{ display: 'grid', gap: '0.75rem' }}>
+                      {editOrder.map((employeeId, index) => (
+                        <div key={`${employeeId}-${index}`} style={{ display: 'grid', gridTemplateColumns: '42px 1fr 40px 40px', gap: '0.5rem', alignItems: 'center' }}>
+                          <strong>#{index + 1}</strong>
+                          <select className="form-input" value={employeeId} onChange={e => changeEditOrder(index, e.target.value)}>
+                            {selectedShift.employeeIds.map(id => <option key={id} value={id}>{nameMap[id] || id}</option>)}
+                          </select>
+                          <button type="button" className="btn btn-secondary" onClick={() => moveEditOrder(index, -1)} style={{ padding: '0.45rem' }}>↑</button>
+                          <button type="button" className="btn btn-secondary" onClick={() => moveEditOrder(index, 1)} style={{ padding: '0.45rem' }}>↓</button>
+                        </div>
+                      ))}
+                      {editError && <div className="badge badge-error">{editError}</div>}
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <button type="button" className="btn btn-primary" onClick={() => saveManualOrder('day')}>Guardar solo este dia</button>
+                        <button type="button" className="btn btn-success" onClick={() => saveManualOrder('week')}>Guardar y recalcular semana</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p style={{ color: 'var(--text-muted)' }}>Desbloqueado. Puedes editar el orden de este dia.</p>
+                  )}
+                </div>
                 <div className="form-group">
                   <label className="form-label">Estado</label>
                   <select className="form-input" value={selectedShift.status} onChange={e => updateShift(selectedShift.id, { status: e.target.value })}>

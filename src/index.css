@@ -324,6 +324,26 @@ body {
   font-weight: 800;
 }
 
+.closing-detail-list {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.closing-detail-list span {
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+}
+
+.closing-detail-closer {
+  background: #f59e0b !important;
+  border-color: #d97706 !important;
+  color: #111827;
+  font-weight: 800;
+}
+
 /* Badges */
 .badge {
   display: inline-flex;
