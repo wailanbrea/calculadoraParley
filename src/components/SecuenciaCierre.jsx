@@ -20,8 +20,8 @@ const defaultEmployees = [
   { id: 'emp-2', name: 'Ariel', canCloseAlone: true, canMiniRotate: true, level: 'Senior', active: true },
   { id: 'emp-3', name: 'Diego', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
   { id: 'emp-4', name: 'Chamo', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
-  { id: 'emp-5', name: 'Michael', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
-  { id: 'emp-6', name: 'Guillermo', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true }
+  { id: 'emp-5', name: 'Michael', canCloseAlone: false, canMiniRotate: false, level: 'Semi Senior', active: true },
+  { id: 'emp-6', name: 'Guillermo', canCloseAlone: false, canMiniRotate: false, level: 'Semi Senior', active: true }
 ];
 
 const EMPLOYEE_IDS = {
@@ -308,9 +308,14 @@ function hasMiniSequence(shift) {
   return Array.isArray(shift?.miniOrder) && shift.miniOrder.length > 1;
 }
 
-function displayEmployeeName(employeeId, nameMap, shift) {
+function canEmployeeMiniRotate(employeeId, employees) {
+  const employee = employees.find(emp => emp.id === employeeId);
+  return Boolean(employee?.canCloseAlone && employee?.canMiniRotate);
+}
+
+function displayEmployeeName(employeeId, nameMap, shift, employees = defaultEmployees) {
   const baseName = nameMap[employeeId] || employeeId;
-  return hasMiniSequence(shift) && employeeId === shift?.closerId ? `${baseName}.` : baseName;
+  return hasMiniSequence(shift) && employeeId === shift?.closerId && canEmployeeMiniRotate(employeeId, employees) ? `${baseName}.` : baseName;
 }
 
 function calculateShift(employeeIds, rotations, settings) {
@@ -977,7 +982,7 @@ export default function SecuenciaCierre() {
                           key={employeeId}
                           className={employeeId === props.closerId ? 'closing-calendar-name closing-calendar-closer' : 'closing-calendar-name'}
                         >
-                          {displayEmployeeName(employeeId, nameMap, props)}
+                          {displayEmployeeName(employeeId, nameMap, props, state.employees)}
                         </div>
                       ))}
                     </div>
@@ -1007,7 +1012,7 @@ export default function SecuenciaCierre() {
                   <div className="closing-detail-list">
                     {selectedShift.order.map(employeeId => (
                       <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
-                        {displayEmployeeName(employeeId, nameMap, selectedShift)}
+                        {displayEmployeeName(employeeId, nameMap, selectedShift, state.employees)}
                       </span>
                     ))}
                   </div>
@@ -1017,12 +1022,12 @@ export default function SecuenciaCierre() {
                   <div className="closing-detail-list">
                     {selectedShift.miniOrder?.length ? selectedShift.miniOrder.map(employeeId => (
                       <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
-                        {displayEmployeeName(employeeId, nameMap, selectedShift)}
+                        {displayEmployeeName(employeeId, nameMap, selectedShift, state.employees)}
                       </span>
                     )) : <span>-</span>}
                   </div>
                 </div>
-                <div>Cierra: <strong className="closing-detail-closer" style={{ padding: '0.15rem 0.45rem', borderRadius: '6px' }}>{displayEmployeeName(selectedShift.closerId, nameMap, selectedShift) || '-'}</strong></div>
+                <div>Cierra: <strong className="closing-detail-closer" style={{ padding: '0.15rem 0.45rem', borderRadius: '6px' }}>{displayEmployeeName(selectedShift.closerId, nameMap, selectedShift, state.employees) || '-'}</strong></div>
                 <div>Motivo: {selectedShift.reason}</div>
                 <div className="glass-panel" style={{ background: 'rgba(6,8,19,0.03)', padding: '1rem', borderRadius: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: editShiftId === selectedShift.id ? '1rem' : 0 }}>
