@@ -6,9 +6,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 const STORAGE_KEY = 'closing_sequence_state_v1';
 const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real';
-const ACCESS_KEY = 'closing_sequence_access_granted';
 const ACCESS_PASSWORD = 'ubet@';
-const STATS_ACCESS_KEY = 'closing_sequence_stats_access_granted';
 const STATS_PASSWORD = 'ubet0909';
 const DAYS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
 const WEEKEND_DAYS = ['Viernes', 'Sabado', 'Domingo'];
@@ -335,10 +333,10 @@ function buildLog(action, payload) {
 
 export default function SecuenciaCierre() {
   const [state, setState] = useState(loadState);
-  const [accessGranted, setAccessGranted] = useState(() => sessionStorage.getItem(ACCESS_KEY) === '1');
+  const [accessGranted, setAccessGranted] = useState(false);
   const [accessPassword, setAccessPassword] = useState('');
   const [accessError, setAccessError] = useState('');
-  const [statsAccessGranted, setStatsAccessGranted] = useState(() => sessionStorage.getItem(STATS_ACCESS_KEY) === '1');
+  const [statsAccessGranted, setStatsAccessGranted] = useState(false);
   const [statsPassword, setStatsPassword] = useState('');
   const [statsError, setStatsError] = useState('');
   const [activeTab, setActiveTab] = useState('generador');
@@ -572,7 +570,6 @@ export default function SecuenciaCierre() {
   function submitAccess(e) {
     e.preventDefault();
     if (accessPassword === ACCESS_PASSWORD) {
-      sessionStorage.setItem(ACCESS_KEY, '1');
       setAccessGranted(true);
       setAccessError('');
       setAccessPassword('');
@@ -584,7 +581,6 @@ export default function SecuenciaCierre() {
   function submitStatsAccess(e) {
     e.preventDefault();
     if (statsPassword === STATS_PASSWORD) {
-      sessionStorage.setItem(STATS_ACCESS_KEY, '1');
       setStatsAccessGranted(true);
       setStatsError('');
       setStatsPassword('');
