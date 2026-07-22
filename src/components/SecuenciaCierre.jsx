@@ -226,7 +226,7 @@ function applyHistoricalSeed(state) {
 
   return {
     ...state,
-    employees: defaultEmployees,
+    employees: Array.isArray(state.employees) && state.employees.length ? state.employees : defaultEmployees,
     rotations: {
       ...state.rotations,
       ...buildHistoricalRotations()
@@ -385,6 +385,7 @@ function formatLogAction(action) {
     'template.updated': 'Plantilla actualizada',
     'employee.created': 'Empleado agregado',
     'employee.updated': 'Empleado actualizado',
+    'employees.saved': 'Empleados guardados',
     'shift.updated': 'Turno actualizado',
     'shift.recalculated': 'Turno recalculado',
     'shift.completed': 'Turno completado',
@@ -412,6 +413,9 @@ function summarizeLogPayload(log, nameMap) {
   if (log.action === 'employee.updated') {
     const changes = Object.entries(payload.patch || {}).map(([key, value]) => `${key}: ${String(value)}`).join(', ');
     return `Empleado ${nameMap[payload.id] || payload.id || '-'} · ${changes || 'sin detalles'}.`;
+  }
+  if (log.action === 'employees.saved') {
+    return `${payload.count || 0} empleados guardados con sus capacidades.`;
   }
   if (log.action === 'shift.completed') {
     return `Turno completado · grupo ${payload.groupKey || '-'} · cierra ${nameMap[payload.closerId] || payload.closerId || '-'}.`;
@@ -442,6 +446,8 @@ export default function SecuenciaCierre() {
   const [editShiftId, setEditShiftId] = useState('');
   const [editOrder, setEditOrder] = useState([]);
   const [editError, setEditError] = useState('');
+  const [employeeDrafts, setEmployeeDrafts] = useState(() => state.employees);
+  const [employeeDraftError, setEmployeeDraftError] = useState('');
   const [newEmployeeName, setNewEmployeeName] = useState('');
   const [weekStart, setWeekStart] = useState(getNextWeekendStart);
   const [weekendSelection, setWeekendSelection] = useState({
@@ -573,6 +579,54 @@ export default function SecuenciaCierre() {
       employees: prev.employees.map(emp => emp.id === id ? { ...emp, ...patch } : emp),
       logs: [buildLog('employee.updated', { id, patch }), ...prev.logs]
     }));
+  }
+
+  function addEmployeeDraft() {
+    const name = newEmployeeName.trim();
+    if (!name) return;
+    setEmployeeDrafts(prev => [
+      ...prev,
+      { id: `emp-${Date.now()}`, name, canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true }
+    ]);
+    setNewEmployeeName('');
+    setEmployeeDraftError('');
+  }
+
+  function updateEmployeeDraft(id, patch) {
+    setEmployeeDrafts(prev => prev.map(emp => {
+      if (emp.id !== id) return emp;
+      const next = { ...emp, ...patch };
+      if (patch.canCloseAlone === false) {
+        next.canMiniRotate = false;
+      }
+      return next;
+    }));
+    setEmployeeDraftError('');
+  }
+
+  function resetEmployeeDrafts() {
+    setEmployeeDrafts(state.employees);
+    setEmployeeDraftError('');
+    setNewEmployeeName('');
+  }
+
+  function saveEmployeeDrafts() {
+    const normalized = employeeDrafts.map(emp => ({
+      ...emp,
+      name: emp.name.trim(),
+      canMiniRotate: emp.canCloseAlone ? Boolean(emp.canMiniRotate) : false
+    }));
+    if (normalized.some(emp => !emp.name)) {
+      setEmployeeDraftError('Todos los empleados deben tener nombre.');
+      return;
+    }
+    persist(prev => ({
+      ...prev,
+      employees: normalized,
+      logs: [buildLog('employees.saved', { count: normalized.length }), ...prev.logs]
+    }));
+    setEmployeeDrafts(normalized);
+    setEmployeeDraftError('');
   }
 
   function updateSettings(patch) {
@@ -1068,20 +1122,34 @@ export default function SecuenciaCierre() {
             <>
               <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
                 <input className="form-input" value={newEmployeeName} onChange={e => setNewEmployeeName(e.target.value)} placeholder="Nombre del empleado" />
-                <button type="button" className="btn btn-primary" onClick={addEmployee}>Agregar</button>
+                <button type="button" className="btn btn-secondary" onClick={addEmployeeDraft}>Agregar</button>
+                <button type="button" className="btn btn-primary" onClick={saveEmployeeDrafts}>Guardar cambios</button>
+                <button type="button" className="btn btn-secondary" onClick={resetEmployeeDrafts}>Cancelar</button>
               </div>
+              {employeeDraftError && (
+                <div className="badge badge-error" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+                  {employeeDraftError}
+                </div>
+              )}
               <div style={{ display: 'grid', gap: '0.75rem' }}>
-                {state.employees.map(emp => (
+                {employeeDrafts.map(emp => (
                   <div key={emp.id} className="result-card" style={{ display: 'grid', gridTemplateColumns: '1fr 150px 150px 150px 110px', gap: '0.75rem', alignItems: 'center', textAlign: 'left' }}>
-                    <input className="form-input" value={emp.name} onChange={e => updateEmployee(emp.id, { name: e.target.value })} />
-                    <select className="form-input" value={emp.level} onChange={e => updateEmployee(emp.id, { level: e.target.value })}>
+                    <input className="form-input" value={emp.name} onChange={e => updateEmployeeDraft(emp.id, { name: e.target.value })} />
+                    <select className="form-input" value={emp.level} onChange={e => updateEmployeeDraft(emp.id, { level: e.target.value })}>
                       <option>Junior</option>
                       <option>Semi Senior</option>
                       <option>Senior</option>
                     </select>
-                    <label><input type="checkbox" checked={emp.canCloseAlone} onChange={e => updateEmployee(emp.id, { canCloseAlone: e.target.checked })} /> Cierra solo</label>
-                    <label><input type="checkbox" checked={emp.canMiniRotate} onChange={e => updateEmployee(emp.id, { canMiniRotate: e.target.checked })} /> Mini rotacion</label>
-                    <label><input type="checkbox" checked={emp.active} onChange={e => updateEmployee(emp.id, { active: e.target.checked })} /> Activo</label>
+                    <label><input type="checkbox" checked={emp.canCloseAlone} onChange={e => updateEmployeeDraft(emp.id, { canCloseAlone: e.target.checked })} /> Cierra solo</label>
+                    <label title={!emp.canCloseAlone ? 'Si no cierra solo, no participa en mini secuencia.' : ''}>
+                      <input
+                        type="checkbox"
+                        checked={emp.canCloseAlone && emp.canMiniRotate}
+                        disabled={!emp.canCloseAlone}
+                        onChange={e => updateEmployeeDraft(emp.id, { canMiniRotate: e.target.checked })}
+                      /> Mini rotacion
+                    </label>
+                    <label><input type="checkbox" checked={emp.active} onChange={e => updateEmployeeDraft(emp.id, { active: e.target.checked })} /> Activo</label>
                   </div>
                 ))}
               </div>
