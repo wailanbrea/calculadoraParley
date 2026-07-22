@@ -448,6 +448,7 @@ export default function SecuenciaCierre() {
   const [editError, setEditError] = useState('');
   const [employeeDrafts, setEmployeeDrafts] = useState(() => state.employees);
   const [employeeDraftError, setEmployeeDraftError] = useState('');
+  const [employeeDraftSuccess, setEmployeeDraftSuccess] = useState('');
   const [newEmployeeName, setNewEmployeeName] = useState('');
   const [weekStart, setWeekStart] = useState(getNextWeekendStart);
   const [weekendSelection, setWeekendSelection] = useState({
@@ -590,6 +591,7 @@ export default function SecuenciaCierre() {
     ]);
     setNewEmployeeName('');
     setEmployeeDraftError('');
+    setEmployeeDraftSuccess('');
   }
 
   function updateEmployeeDraft(id, patch) {
@@ -602,11 +604,13 @@ export default function SecuenciaCierre() {
       return next;
     }));
     setEmployeeDraftError('');
+    setEmployeeDraftSuccess('');
   }
 
   function resetEmployeeDrafts() {
     setEmployeeDrafts(state.employees);
     setEmployeeDraftError('');
+    setEmployeeDraftSuccess('');
     setNewEmployeeName('');
   }
 
@@ -627,6 +631,7 @@ export default function SecuenciaCierre() {
     }));
     setEmployeeDrafts(normalized);
     setEmployeeDraftError('');
+    setEmployeeDraftSuccess('Cambios guardados correctamente.');
   }
 
   function updateSettings(patch) {
@@ -1129,6 +1134,11 @@ export default function SecuenciaCierre() {
               {employeeDraftError && (
                 <div className="badge badge-error" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
                   {employeeDraftError}
+                </div>
+              )}
+              {employeeDraftSuccess && (
+                <div className="badge badge-ok" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+                  {employeeDraftSuccess}
                 </div>
               )}
               <div style={{ display: 'grid', gap: '0.75rem' }}>
