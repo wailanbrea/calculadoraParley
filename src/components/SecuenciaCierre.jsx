@@ -5,6 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 const STORAGE_KEY = 'closing_sequence_state_v1';
+const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real';
 const ACCESS_KEY = 'closing_sequence_access_granted';
 const ACCESS_PASSWORD = 'ubet@';
 const STATS_ACCESS_KEY = 'closing_sequence_stats_access_granted';
@@ -21,6 +22,55 @@ const defaultEmployees = [
   { id: 'emp-4', name: 'Chamo', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
   { id: 'emp-5', name: 'Michael', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
   { id: 'emp-6', name: 'Guillermo', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true }
+];
+
+const EMPLOYEE_IDS = {
+  Daniel: 'emp-1',
+  Ariel: 'emp-2',
+  Diego: 'emp-3',
+  Chamo: 'emp-4',
+  Michael: 'emp-5',
+  Guillermo: 'emp-6'
+};
+
+const historicalSequence = [
+  { date: '2026-06-15', day: 'Lunes', names: ['Daniel', 'Michael', 'Diego'] },
+  { date: '2026-06-18', day: 'Jueves', names: ['Michael', 'Ariel', 'Daniel'] },
+  { date: '2026-06-19', day: 'Viernes', names: ['Michael', 'Ariel', 'Chamo'] },
+  { date: '2026-06-20', day: 'Sabado', names: ['Ariel', 'Daniel'] },
+  { date: '2026-06-21', day: 'Domingo', names: [] },
+  { date: '2026-06-22', day: 'Lunes', names: ['Daniel', 'Michael', 'Diego'], miniApplied: ['Daniel'] },
+  { date: '2026-06-23', day: 'Martes', names: [] },
+  { date: '2026-06-24', day: 'Miercoles', names: ['Chamo', 'Ariel'] },
+  { date: '2026-06-25', day: 'Jueves', names: [] },
+  { date: '2026-06-26', day: 'Viernes', names: ['Michael', 'Ariel', 'Daniel'] },
+  { date: '2026-06-27', day: 'Sabado', names: ['Ariel', 'Chamo'] },
+  { date: '2026-06-28', day: 'Domingo', names: [] },
+  { date: '2026-06-29', day: 'Lunes', names: ['Michael', 'Diego', 'Daniel'], miniApplied: ['Daniel'] },
+  { date: '2026-06-30', day: 'Martes', names: [] },
+  { date: '2026-07-01', day: 'Miercoles', names: ['Chamo', 'Ariel'] },
+  { date: '2026-07-02', day: 'Jueves', names: ['Ariel', 'Daniel', 'Michael'] },
+  { date: '2026-07-03', day: 'Viernes', names: ['Chamo', 'Guillermo', 'Ariel'] },
+  { date: '2026-07-04', day: 'Sabado', names: ['Guillermo', 'Ariel', 'Daniel'], miniApplied: ['Ariel'] },
+  { date: '2026-07-05', day: 'Domingo', names: [] },
+  { date: '2026-07-06', day: 'Lunes', names: ['Diego', 'Daniel', 'Michael'], miniApplied: ['Daniel'] },
+  { date: '2026-07-07', day: 'Martes', names: ['Daniel', 'Michael', 'Ariel'] },
+  { date: '2026-07-08', day: 'Miercoles', names: ['Guillermo', 'Ariel', 'Chamo'] },
+  { date: '2026-07-09', day: 'Jueves', names: ['Michael', 'Ariel', 'Daniel'], miniApplied: ['Daniel'] },
+  { date: '2026-07-10', day: 'Viernes', names: ['Ariel', 'Daniel', 'Michael'] },
+  { date: '2026-07-11', day: 'Sabado', names: ['Ariel', 'Chamo', 'Michael'] },
+  { date: '2026-07-12', day: 'Domingo', names: ['Chamo', 'Michael', 'Ariel'] },
+  { date: '2026-07-13', day: 'Lunes', names: [] },
+  { date: '2026-07-14', day: 'Martes', names: [] },
+  { date: '2026-07-15', day: 'Miercoles', names: [] },
+  { date: '2026-07-16', day: 'Jueves', names: [] },
+  { date: '2026-07-17', day: 'Viernes', names: ['Ariel', 'Daniel', 'Guillermo'] },
+  { date: '2026-07-18', day: 'Sabado', names: ['Michael', 'Ariel', 'Chamo'] },
+  { date: '2026-07-19', day: 'Domingo', names: ['Ariel', 'Daniel'] },
+  { date: '2026-07-20', day: 'Lunes', names: ['Michael', 'Diego', 'Daniel'], miniApplied: ['Diego'] },
+  { date: '2026-07-21', day: 'Martes', names: ['Michael', 'Ariel', 'Daniel'], miniApplied: ['Daniel'] },
+  { date: '2026-07-22', day: 'Miercoles', names: ['Ariel', 'Chamo', 'Guillermo'] },
+  { date: '2026-07-23', day: 'Jueves', names: ['Ariel', 'Daniel', 'Michael'] }
 ];
 
 const defaultSettings = {
@@ -45,15 +95,20 @@ const defaultState = {
   },
   rotations: {},
   schedules: [],
-  logs: []
+  logs: [],
+  historySeedVersion: ''
 };
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultState;
+    if (!raw) {
+      const seeded = applyHistoricalSeed(defaultState);
+      saveState(seeded);
+      return seeded;
+    }
     const parsed = JSON.parse(raw);
-    return {
+    const loadedState = {
       ...defaultState,
       ...parsed,
       settings: { ...defaultSettings, ...(parsed.settings || {}) },
@@ -61,10 +116,19 @@ function loadState() {
       templates: { ...defaultState.templates, ...(parsed.templates || {}) },
       rotations: parsed.rotations || {},
       schedules: Array.isArray(parsed.schedules) ? parsed.schedules : [],
-      logs: Array.isArray(parsed.logs) ? parsed.logs : []
+      logs: Array.isArray(parsed.logs) ? parsed.logs : [],
+      historySeedVersion: parsed.historySeedVersion || ''
     };
+    if (loadedState.historySeedVersion !== HISTORY_SEED_VERSION) {
+      const seeded = applyHistoricalSeed(loadedState);
+      saveState(seeded);
+      return seeded;
+    }
+    return loadedState;
   } catch {
-    return defaultState;
+    const seeded = applyHistoricalSeed(defaultState);
+    saveState(seeded);
+    return seeded;
   }
 }
 
@@ -76,10 +140,104 @@ function groupKey(ids) {
   return [...new Set(ids)].sort().join('-');
 }
 
+function sameGroup(idsA, idsB) {
+  return groupKey(idsA) === groupKey(idsB);
+}
+
+function sequenceForRotation(ids, rotationState) {
+  if (Array.isArray(rotationState?.sequence) && sameGroup(ids, rotationState.sequence)) {
+    return rotationState.sequence;
+  }
+  return ids;
+}
+
 function rotate(ids, cursor = 0) {
   if (!ids.length) return [];
   const safeCursor = cursor % ids.length;
   return [...ids.slice(safeCursor), ...ids.slice(0, safeCursor)];
+}
+
+function idsFromNames(list) {
+  return list.map(name => EMPLOYEE_IDS[name]).filter(Boolean);
+}
+
+function setRotationFromSequence(rotations, ids, sequence, date) {
+  if (!ids.length) return rotations;
+  const key = groupKey(ids);
+  const normalizedSequence = sequenceForRotation(ids, { sequence });
+  return {
+    ...rotations,
+    [key]: {
+      sequence: normalizedSequence,
+      cursor: normalizedSequence.length > 1 ? 1 : 0,
+      lastAdvancedAt: `${date}T23:59:00`
+    }
+  };
+}
+
+function buildHistoricalSchedules() {
+  return historicalSequence.map(item => {
+    const employeeIds = idsFromNames(item.names);
+    const isEmpty = employeeIds.length === 0;
+    const miniOrder = employeeIds.length > 2 ? employeeIds.slice(-2) : [];
+    return {
+      id: `hist-${item.date}`,
+      date: item.date,
+      day: item.day,
+      startTime: defaultSettings.startTime,
+      endTime: defaultSettings.endTime,
+      firstExitTime: defaultSettings.firstExitTime,
+      employeeIds,
+      order: employeeIds,
+      primaryOrder: employeeIds,
+      miniOrder,
+      groupKey: isEmpty ? '' : groupKey(employeeIds),
+      miniKey: miniOrder.length > 1 ? groupKey(miniOrder) : '',
+      closerId: employeeIds[employeeIds.length - 1] || '',
+      status: isEmpty ? 'Cancelado' : 'Completado',
+      absenceType: isEmpty ? 'Sin Secuencia' : '',
+      notes: item.miniApplied?.length ? `Mini secuencia aplicada: ${item.miniApplied.join(', ')}` : '',
+      reason: isEmpty ? 'Sin Secuencia' : 'Historial real cargado',
+      completedAt: isEmpty ? null : `${item.date}T23:59:00`
+    };
+  });
+}
+
+function buildHistoricalRotations() {
+  return historicalSequence.reduce((rotations, item) => {
+    const employeeIds = idsFromNames(item.names);
+    if (!employeeIds.length) return rotations;
+    let nextRotations = setRotationFromSequence(rotations, employeeIds, employeeIds, item.date);
+    if (employeeIds.length > 2) {
+      const miniOrder = employeeIds.slice(-2);
+      nextRotations = setRotationFromSequence(nextRotations, miniOrder, miniOrder, item.date);
+    }
+    return nextRotations;
+  }, {});
+}
+
+function applyHistoricalSeed(state) {
+  const historicalSchedules = buildHistoricalSchedules();
+  const historicalIds = new Set(historicalSchedules.map(item => item.id));
+  const schedules = [
+    ...state.schedules.filter(item => !historicalIds.has(item.id)),
+    ...historicalSchedules
+  ].sort((a, b) => a.date.localeCompare(b.date));
+
+  return {
+    ...state,
+    employees: defaultEmployees,
+    rotations: {
+      ...state.rotations,
+      ...buildHistoricalRotations()
+    },
+    schedules,
+    historySeedVersion: HISTORY_SEED_VERSION,
+    logs: [
+      buildLog('history.seeded', { version: HISTORY_SEED_VERSION, shifts: historicalSchedules.length }),
+      ...state.logs.filter(log => log.action !== 'history.seeded')
+    ]
+  };
 }
 
 function nextIsoDate(dateIso, offsetDays) {
@@ -117,8 +275,10 @@ function calculateShift(employeeIds, rotations, settings) {
   }
 
   const mainKey = groupKey(uniqueIds);
-  const mainCursor = rotations[mainKey]?.cursor || 0;
-  const primaryOrder = rotate(uniqueIds, mainCursor);
+  const mainRotation = rotations[mainKey] || {};
+  const mainSequence = sequenceForRotation(uniqueIds, mainRotation);
+  const mainCursor = mainRotation.cursor || 0;
+  const primaryOrder = rotate(mainSequence, mainCursor);
   const closingCount = Math.max(1, Math.min(Number(settings.closingCount) || 2, primaryOrder.length));
   const earlyCount = Math.max(0, primaryOrder.length - closingCount);
   const earlyOrder = primaryOrder.slice(0, earlyCount);
@@ -128,8 +288,10 @@ function calculateShift(employeeIds, rotations, settings) {
   let miniKey = '';
   if (closingPool.length > 1) {
     miniKey = groupKey(closingPool);
-    const miniCursor = rotations[miniKey]?.cursor || 0;
-    miniOrder = rotate(closingPool, miniCursor);
+    const miniRotation = rotations[miniKey] || {};
+    const miniSequence = sequenceForRotation(closingPool, miniRotation);
+    const miniCursor = miniRotation.cursor || 0;
+    miniOrder = rotate(miniSequence, miniCursor);
   }
 
   const order = [...earlyOrder, ...miniOrder];
@@ -147,11 +309,15 @@ function calculateShift(employeeIds, rotations, settings) {
 function advanceRotation(rotations, ids) {
   if (!ids.length) return rotations;
   const key = groupKey(ids);
-  const current = rotations[key]?.cursor || 0;
+  const currentRotation = rotations[key] || {};
+  const sequence = sequenceForRotation(ids, currentRotation);
+  const current = currentRotation.cursor || 0;
   return {
     ...rotations,
     [key]: {
-      cursor: (current + 1) % ids.length,
+      ...currentRotation,
+      sequence,
+      cursor: (current + 1) % sequence.length,
       lastAdvancedAt: new Date().toISOString()
     }
   };
@@ -273,6 +439,11 @@ export default function SecuenciaCierre() {
         logs: [buildLog('weekend.generated', { weekStart, shifts }), ...prev.logs]
       };
     });
+    setActiveTab('calendario');
+  }
+
+  function loadHistoricalBase() {
+    persist(prev => applyHistoricalSeed(prev));
     setActiveTab('calendario');
   }
 
@@ -483,7 +654,12 @@ export default function SecuenciaCierre() {
       {activeTab === 'generador' && (
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 0.9fr) minmax(360px, 1.1fr)', gap: '1.5rem' }}>
           <div className="glass-panel">
-            <h3 style={{ marginBottom: '1rem' }}>Generar fin de semana</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3>Generar fin de semana</h3>
+              <button type="button" className="btn btn-secondary" onClick={loadHistoricalBase} style={{ padding: '0.45rem 0.8rem', fontSize: '0.82rem' }}>
+                Cargar historial base
+              </button>
+            </div>
             <div className="form-group">
               <label className="form-label">Viernes de la semana</label>
               <input className="form-input" type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)} />
