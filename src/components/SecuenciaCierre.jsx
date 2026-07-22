@@ -11,11 +11,12 @@ const STATUS_OPTIONS = ['Pendiente', 'Generado', 'Confirmado', 'En curso', 'Comp
 const ABSENCE_TYPES = ['Libre', 'Vacaciones', 'Permiso', 'Cambio de turno', 'Enfermedad', 'Sustitucion', 'Otro'];
 
 const defaultEmployees = [
-  { id: 'emp-1', name: 'Wailan', canCloseAlone: true, canMiniRotate: true, level: 'Senior', active: true },
+  { id: 'emp-1', name: 'Daniel', canCloseAlone: true, canMiniRotate: true, level: 'Senior', active: true },
   { id: 'emp-2', name: 'Ariel', canCloseAlone: true, canMiniRotate: true, level: 'Senior', active: true },
-  { id: 'emp-3', name: 'Michael', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
-  { id: 'emp-4', name: 'Daniel', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
-  { id: 'emp-5', name: 'Guillermo', canCloseAlone: false, canMiniRotate: true, level: 'Junior', active: true }
+  { id: 'emp-3', name: 'Diego', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
+  { id: 'emp-4', name: 'Chamo', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
+  { id: 'emp-5', name: 'Michael', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
+  { id: 'emp-6', name: 'Guillermo', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true }
 ];
 
 const defaultSettings = {
@@ -170,8 +171,8 @@ export default function SecuenciaCierre() {
   const [weekStart, setWeekStart] = useState(getNextWeekendStart);
   const [weekendSelection, setWeekendSelection] = useState({
     Viernes: ['emp-1', 'emp-2', 'emp-3'],
-    Sabado: ['emp-2', 'emp-3', 'emp-4'],
-    Domingo: ['emp-1', 'emp-4', 'emp-5']
+    Sabado: ['emp-2', 'emp-4', 'emp-5'],
+    Domingo: ['emp-1', 'emp-5', 'emp-6']
   });
   const [simSelection, setSimSelection] = useState(['emp-1', 'emp-2', 'emp-3']);
   const [simCount, setSimCount] = useState(10);
