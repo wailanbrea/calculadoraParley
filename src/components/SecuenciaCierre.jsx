@@ -377,7 +377,7 @@ export default function SecuenciaCierre() {
   const [statsAccessGranted, setStatsAccessGranted] = useState(false);
   const [statsPassword, setStatsPassword] = useState('');
   const [statsError, setStatsError] = useState('');
-  const [activeTab, setActiveTab] = useState('generador');
+  const [activeTab, setActiveTab] = useState('calendario');
   const [selectedShiftId, setSelectedShiftId] = useState('');
   const [editShiftId, setEditShiftId] = useState('');
   const [editOrder, setEditOrder] = useState([]);
@@ -827,7 +827,7 @@ export default function SecuenciaCierre() {
       )}
 
       {activeTab === 'calendario' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(360px, 1fr) minmax(320px, 0.8fr)', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(640px, 1.55fr) minmax(280px, 0.55fr)', gap: '1.5rem' }}>
           <div className="glass-panel">
             <h3 style={{ marginBottom: '1rem' }}>Calendario de turnos</h3>
             <div className="closing-calendar">
@@ -883,17 +883,9 @@ export default function SecuenciaCierre() {
                 <div><strong>{selectedShift.day}</strong> · {selectedShift.date}</div>
                 <div>Horario: {fixedShiftTimeLabel()}</div>
                 <div>
-                  <div className="form-label">Personal</div>
+                  <div className="form-label">Orden de Personal</div>
                   <div className="closing-detail-list">
-                    {selectedShift.employeeIds.map(employeeId => (
-                      <span key={employeeId}>{nameMap[employeeId] || employeeId}</span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="form-label">Orden principal</div>
-                  <div className="closing-detail-list">
-                    {selectedShift.primaryOrder.map(employeeId => (
+                    {selectedShift.order.map(employeeId => (
                       <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
                         {nameMap[employeeId] || employeeId}
                       </span>
