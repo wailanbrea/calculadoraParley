@@ -8,6 +8,7 @@ import MLBModulo from './components/MLBModulo';
 import ScoreboardDeporte from './components/ScoreboardDeporte';
 import AlertasGlobales from './components/AlertasGlobales';
 import ScoreboardComparator from './components/ScoreboardComparator';
+import SecuenciaCierre from './components/SecuenciaCierre';
 
 const LIGAS_BASKET = [
   { id: 'basketball/nba', label: 'NBA' },
@@ -253,6 +254,10 @@ export default function App() {
 
         {activePage === 'tickets' && (
           <FraccionarTickets />
+        )}
+
+        {activePage === 'secuencia_cierre' && (
+          <SecuenciaCierre />
         )}
         
         {activePage === 'bases_alcanzadas' && (

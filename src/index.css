@@ -255,6 +255,46 @@ body {
   border-color: rgba(16, 185, 129, 0.25);
 }
 
+.closing-calendar .fc {
+  color: var(--text-main);
+}
+
+.closing-calendar .fc-toolbar-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.closing-calendar .fc-button {
+  background: var(--primary);
+  border-color: var(--primary);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.closing-calendar .fc-button:hover,
+.closing-calendar .fc-button-primary:not(:disabled).fc-button-active {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.closing-calendar .fc-scrollgrid,
+.closing-calendar .fc-theme-standard td,
+.closing-calendar .fc-theme-standard th {
+  border-color: var(--border-glass);
+}
+
+.closing-calendar .fc-daygrid-day-number,
+.closing-calendar .fc-col-header-cell-cushion {
+  color: var(--text-main);
+  text-decoration: none;
+}
+
+.closing-calendar .fc-event {
+  border-radius: 6px;
+  padding: 2px 4px;
+  font-size: 0.78rem;
+}
+
 /* Badges */
 .badge {
   display: inline-flex;
