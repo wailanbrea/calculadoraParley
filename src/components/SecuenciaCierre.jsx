@@ -5,7 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 const STORAGE_KEY = 'closing_sequence_state_v1';
-const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real-v2';
+const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real-v3';
 const ACCESS_PASSWORD = 'ubet@';
 const STATS_PASSWORD = 'ubet0909';
 const FIXED_START_TIME = '16:00';
@@ -67,7 +67,7 @@ const historicalSequence = [
   { date: '2026-07-17', day: 'Viernes', names: ['Ariel', 'Daniel', 'Guillermo'] },
   { date: '2026-07-18', day: 'Sabado', names: ['Michael', 'Ariel', 'Chamo'] },
   { date: '2026-07-19', day: 'Domingo', names: ['Ariel', 'Daniel'], miniApplied: ['Daniel'] },
-  { date: '2026-07-20', day: 'Lunes', names: ['Michael', 'Diego', 'Daniel'], miniApplied: ['Diego'] },
+  { date: '2026-07-20', day: 'Lunes', names: ['Michael', 'Diego', 'Daniel'], miniApplied: ['Daniel'] },
   { date: '2026-07-21', day: 'Martes', names: ['Michael', 'Daniel', 'Ariel'], miniApplied: ['Ariel'] },
   { date: '2026-07-22', day: 'Miercoles', names: ['Ariel', 'Chamo', 'Guillermo'] },
   { date: '2026-07-23', day: 'Jueves', names: ['Ariel', 'Daniel', 'Michael'] }
@@ -179,7 +179,7 @@ function buildHistoricalSchedules() {
   return historicalSequence.map(item => {
     const employeeIds = idsFromNames(item.names);
     const isEmpty = employeeIds.length === 0;
-    const miniOrder = employeeIds.length > 2 ? employeeIds.slice(-2) : [];
+    const miniOrder = employeeIds.length > 1 ? employeeIds.slice(-2) : [];
     return {
       id: `hist-${item.date}`,
       date: item.date,
@@ -302,6 +302,15 @@ function employeeNameMap(employees) {
 
 function names(ids, nameMap) {
   return ids.map(id => nameMap[id] || id);
+}
+
+function hasMiniSequence(shift) {
+  return Array.isArray(shift?.miniOrder) && shift.miniOrder.length > 1;
+}
+
+function displayEmployeeName(employeeId, nameMap, shift) {
+  const baseName = nameMap[employeeId] || employeeId;
+  return hasMiniSequence(shift) && employeeId === shift?.closerId ? `${baseName}.` : baseName;
 }
 
 function calculateShift(employeeIds, rotations, settings) {
@@ -457,6 +466,7 @@ export default function SecuenciaCierre() {
     extendedProps: {
       day: shift.day,
       order: shift.order,
+      miniOrder: shift.miniOrder,
       closerId: shift.closerId,
       status: shift.status,
       closer: nameMap[shift.closerId] || '-'
@@ -908,7 +918,7 @@ export default function SecuenciaCierre() {
                           key={employeeId}
                           className={employeeId === props.closerId ? 'closing-calendar-name closing-calendar-closer' : 'closing-calendar-name'}
                         >
-                          {nameMap[employeeId] || employeeId}
+                          {displayEmployeeName(employeeId, nameMap, props)}
                         </div>
                       ))}
                     </div>
@@ -938,7 +948,7 @@ export default function SecuenciaCierre() {
                   <div className="closing-detail-list">
                     {selectedShift.order.map(employeeId => (
                       <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
-                        {nameMap[employeeId] || employeeId}
+                        {displayEmployeeName(employeeId, nameMap, selectedShift)}
                       </span>
                     ))}
                   </div>
@@ -948,12 +958,12 @@ export default function SecuenciaCierre() {
                   <div className="closing-detail-list">
                     {selectedShift.miniOrder?.length ? selectedShift.miniOrder.map(employeeId => (
                       <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
-                        {nameMap[employeeId] || employeeId}
+                        {displayEmployeeName(employeeId, nameMap, selectedShift)}
                       </span>
                     )) : <span>-</span>}
                   </div>
                 </div>
-                <div>Cierra: <strong className="closing-detail-closer" style={{ padding: '0.15rem 0.45rem', borderRadius: '6px' }}>{nameMap[selectedShift.closerId] || '-'}</strong></div>
+                <div>Cierra: <strong className="closing-detail-closer" style={{ padding: '0.15rem 0.45rem', borderRadius: '6px' }}>{displayEmployeeName(selectedShift.closerId, nameMap, selectedShift) || '-'}</strong></div>
                 <div>Motivo: {selectedShift.reason}</div>
                 <div className="glass-panel" style={{ background: 'rgba(6,8,19,0.03)', padding: '1rem', borderRadius: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: editShiftId === selectedShift.id ? '1rem' : 0 }}>
