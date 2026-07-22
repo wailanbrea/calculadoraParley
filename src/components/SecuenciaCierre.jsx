@@ -981,25 +981,51 @@ export default function SecuenciaCierre() {
       {activeTab === 'empleados' && (
         <div className="glass-panel">
           <h3 style={{ marginBottom: '1rem' }}>Empleados y capacidades</h3>
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-            <input className="form-input" value={newEmployeeName} onChange={e => setNewEmployeeName(e.target.value)} placeholder="Nombre del empleado" />
-            <button type="button" className="btn btn-primary" onClick={addEmployee}>Agregar</button>
-          </div>
-          <div style={{ display: 'grid', gap: '0.75rem' }}>
-            {state.employees.map(emp => (
-              <div key={emp.id} className="result-card" style={{ display: 'grid', gridTemplateColumns: '1fr 150px 150px 150px 110px', gap: '0.75rem', alignItems: 'center', textAlign: 'left' }}>
-                <input className="form-input" value={emp.name} onChange={e => updateEmployee(emp.id, { name: e.target.value })} />
-                <select className="form-input" value={emp.level} onChange={e => updateEmployee(emp.id, { level: e.target.value })}>
-                  <option>Junior</option>
-                  <option>Semi Senior</option>
-                  <option>Senior</option>
-                </select>
-                <label><input type="checkbox" checked={emp.canCloseAlone} onChange={e => updateEmployee(emp.id, { canCloseAlone: e.target.checked })} /> Cierra solo</label>
-                <label><input type="checkbox" checked={emp.canMiniRotate} onChange={e => updateEmployee(emp.id, { canMiniRotate: e.target.checked })} /> Mini rotacion</label>
-                <label><input type="checkbox" checked={emp.active} onChange={e => updateEmployee(emp.id, { active: e.target.checked })} /> Activo</label>
+          {!statsAccessGranted ? (
+            <form onSubmit={submitStatsAccess} style={{ maxWidth: '420px' }}>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Introduce la clave privada para editar empleados.</p>
+              <div className="form-group">
+                <label className="form-label">Clave de edicion</label>
+                <input
+                  className="form-input"
+                  type="password"
+                  value={statsPassword}
+                  onChange={e => setStatsPassword(e.target.value)}
+                  required
+                />
               </div>
-            ))}
-          </div>
+              {statsError && (
+                <div className="badge badge-error" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+                  {statsError}
+                </div>
+              )}
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                Desbloquear empleados
+              </button>
+            </form>
+          ) : (
+            <>
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+                <input className="form-input" value={newEmployeeName} onChange={e => setNewEmployeeName(e.target.value)} placeholder="Nombre del empleado" />
+                <button type="button" className="btn btn-primary" onClick={addEmployee}>Agregar</button>
+              </div>
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {state.employees.map(emp => (
+                  <div key={emp.id} className="result-card" style={{ display: 'grid', gridTemplateColumns: '1fr 150px 150px 150px 110px', gap: '0.75rem', alignItems: 'center', textAlign: 'left' }}>
+                    <input className="form-input" value={emp.name} onChange={e => updateEmployee(emp.id, { name: e.target.value })} />
+                    <select className="form-input" value={emp.level} onChange={e => updateEmployee(emp.id, { level: e.target.value })}>
+                      <option>Junior</option>
+                      <option>Semi Senior</option>
+                      <option>Senior</option>
+                    </select>
+                    <label><input type="checkbox" checked={emp.canCloseAlone} onChange={e => updateEmployee(emp.id, { canCloseAlone: e.target.checked })} /> Cierra solo</label>
+                    <label><input type="checkbox" checked={emp.canMiniRotate} onChange={e => updateEmployee(emp.id, { canMiniRotate: e.target.checked })} /> Mini rotacion</label>
+                    <label><input type="checkbox" checked={emp.active} onChange={e => updateEmployee(emp.id, { active: e.target.checked })} /> Activo</label>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
