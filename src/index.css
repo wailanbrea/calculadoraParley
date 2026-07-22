@@ -344,6 +344,30 @@ body {
   font-weight: 800;
 }
 
+.closing-audit-card {
+  text-align: left;
+  border-left: 4px solid var(--primary);
+}
+
+.closing-audit-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.closing-audit-meta {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 0.2rem;
+}
+
+.closing-audit-summary {
+  color: var(--text-main);
+  margin-top: 0.65rem;
+  line-height: 1.45;
+}
+
 /* Badges */
 .badge {
   display: inline-flex;

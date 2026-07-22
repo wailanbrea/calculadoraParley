@@ -369,6 +369,57 @@ function buildLog(action, payload) {
   };
 }
 
+function formatLogAction(action) {
+  const labels = {
+    'history.seeded': 'Historial base cargado',
+    'weekend.generated': 'Fin de semana generado',
+    'template.updated': 'Plantilla actualizada',
+    'employee.created': 'Empleado agregado',
+    'employee.updated': 'Empleado actualizado',
+    'shift.updated': 'Turno actualizado',
+    'shift.recalculated': 'Turno recalculado',
+    'shift.completed': 'Turno completado',
+    'shift.manual_day_updated': 'Secuencia editada para un dia',
+    'shift.manual_week_recalculated': 'Secuencia editada y semana recalculada'
+  };
+  return labels[action] || action;
+}
+
+function summarizeLogPayload(log, nameMap) {
+  const payload = log.payload || {};
+  if (log.action === 'history.seeded') {
+    return `Version ${payload.version || '-'} · ${payload.shifts || 0} turnos cargados.`;
+  }
+  if (log.action === 'weekend.generated') {
+    const shifts = payload.shifts || [];
+    return `${shifts.length} turnos desde ${payload.weekStart || '-'}: ${shifts.map(shift => `${shift.day} ${shift.date}`).join(', ')}`;
+  }
+  if (log.action === 'template.updated') {
+    return `${payload.day || '-'}: ${names(payload.employees || [], nameMap).join(', ') || 'sin empleados'}.`;
+  }
+  if (log.action === 'employee.created') {
+    return `Nuevo empleado: ${payload.name || '-'}.`;
+  }
+  if (log.action === 'employee.updated') {
+    const changes = Object.entries(payload.patch || {}).map(([key, value]) => `${key}: ${String(value)}`).join(', ');
+    return `Empleado ${nameMap[payload.id] || payload.id || '-'} · ${changes || 'sin detalles'}.`;
+  }
+  if (log.action === 'shift.completed') {
+    return `Turno completado · grupo ${payload.groupKey || '-'} · cierra ${nameMap[payload.closerId] || payload.closerId || '-'}.`;
+  }
+  if (log.action === 'shift.manual_day_updated' || log.action === 'shift.manual_week_recalculated') {
+    return `Nuevo orden: ${names(payload.order || [], nameMap).join(' -> ') || '-'}.`;
+  }
+  if (log.action === 'shift.updated') {
+    const changes = Object.entries(payload.patch || {}).map(([key, value]) => `${key}: ${String(value)}`).join(', ');
+    return `Turno ${payload.id || '-'} · ${changes || 'actualizado'}.`;
+  }
+  if (log.action === 'shift.recalculated') {
+    return `Turno ${payload.id || '-'} recalculado.`;
+  }
+  return JSON.stringify(payload);
+}
+
 export default function SecuenciaCierre() {
   const [state, setState] = useState(loadState);
   const [accessGranted, setAccessGranted] = useState(false);
@@ -1167,14 +1218,17 @@ export default function SecuenciaCierre() {
       {activeTab === 'historial' && (
         <div className="glass-panel">
           <h3 style={{ marginBottom: '1rem' }}>Auditoria e historial</h3>
-          <div style={{ display: 'grid', gap: '0.65rem' }}>
+          <div style={{ display: 'grid', gap: '0.75rem' }}>
             {state.logs.slice(0, 80).map(log => (
-              <div key={log.id} className="result-card" style={{ textAlign: 'left' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-                  <strong>{log.action}</strong>
-                  <span style={{ color: 'var(--text-muted)' }}>{new Date(log.at).toLocaleString()}</span>
+              <div key={log.id} className="result-card closing-audit-card">
+                <div className="closing-audit-head">
+                  <div>
+                    <strong>{formatLogAction(log.action)}</strong>
+                    <div className="closing-audit-meta">{log.user || 'Local'} · {new Date(log.at).toLocaleString()}</div>
+                  </div>
+                  <span className="badge badge-review">{log.action.split('.')[0]}</span>
                 </div>
-                <pre style={{ whiteSpace: 'pre-wrap', marginTop: '0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>{JSON.stringify(log.payload, null, 2)}</pre>
+                <div className="closing-audit-summary">{summarizeLogPayload(log, nameMap)}</div>
               </div>
             ))}
             {state.logs.length === 0 && <div className="badge badge-review">Sin eventos registrados.</div>}
