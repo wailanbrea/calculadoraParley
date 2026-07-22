@@ -45,17 +45,6 @@ export default function Navigation({ activePage, setActivePage }) {
             </button>
           </li>
           <li className="nav-item">
-            <button
-              className={`nav-link ${activePage === 'secuencia_cierre' ? 'active' : ''}`}
-              onClick={() => setActivePage('secuencia_cierre')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 3.75h9m-9 16.5h9M6 7.5h12M6 12h12M6 16.5h12" />
-              </svg>
-              Secuencia de Cierre
-            </button>
-          </li>
-          <li className="nav-item">
             <button 
               className={`nav-link ${activePage === 'bases_alcanzadas' ? 'active' : ''}`}
               onClick={() => setActivePage('bases_alcanzadas')}
@@ -101,6 +90,17 @@ export default function Navigation({ activePage, setActivePage }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
               </svg>
               Tabla
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              className={`nav-link ${activePage === 'secuencia_cierre' ? 'active' : ''}`}
+              onClick={() => setActivePage('secuencia_cierre')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 3.75h9m-9 16.5h9M6 7.5h12M6 12h12M6 16.5h12" />
+              </svg>
+              Secuencia de Cierre
             </button>
           </li>
         </ul>
