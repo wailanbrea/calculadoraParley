@@ -7,6 +7,8 @@ import interactionPlugin from '@fullcalendar/interaction';
 const STORAGE_KEY = 'closing_sequence_state_v1';
 const ACCESS_KEY = 'closing_sequence_access_granted';
 const ACCESS_PASSWORD = 'ubet@';
+const STATS_ACCESS_KEY = 'closing_sequence_stats_access_granted';
+const STATS_PASSWORD = 'ubet0909';
 const DAYS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
 const WEEKEND_DAYS = ['Viernes', 'Sabado', 'Domingo'];
 const STATUS_OPTIONS = ['Pendiente', 'Generado', 'Confirmado', 'En curso', 'Completado', 'Cancelado', 'Modificado'];
@@ -170,6 +172,9 @@ export default function SecuenciaCierre() {
   const [accessGranted, setAccessGranted] = useState(() => sessionStorage.getItem(ACCESS_KEY) === '1');
   const [accessPassword, setAccessPassword] = useState('');
   const [accessError, setAccessError] = useState('');
+  const [statsAccessGranted, setStatsAccessGranted] = useState(() => sessionStorage.getItem(STATS_ACCESS_KEY) === '1');
+  const [statsPassword, setStatsPassword] = useState('');
+  const [statsError, setStatsError] = useState('');
   const [activeTab, setActiveTab] = useState('generador');
   const [selectedShiftId, setSelectedShiftId] = useState('');
   const [newEmployeeName, setNewEmployeeName] = useState('');
@@ -403,6 +408,18 @@ export default function SecuenciaCierre() {
       return;
     }
     setAccessError('Clave incorrecta');
+  }
+
+  function submitStatsAccess(e) {
+    e.preventDefault();
+    if (statsPassword === STATS_PASSWORD) {
+      sessionStorage.setItem(STATS_ACCESS_KEY, '1');
+      setStatsAccessGranted(true);
+      setStatsError('');
+      setStatsPassword('');
+      return;
+    }
+    setStatsError('Clave incorrecta');
   }
 
   if (!accessGranted) {
@@ -682,36 +699,60 @@ export default function SecuenciaCierre() {
       {activeTab === 'estadisticas' && (
         <div className="glass-panel">
           <h3 style={{ marginBottom: '1rem' }}>Estadisticas de equidad</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="mapping-table">
-              <thead>
-                <tr>
-                  <th>Empleado</th>
-                  <th>Primero</th>
-                  <th>Segundo</th>
-                  <th>Tercero</th>
-                  <th>Ultimo</th>
-                  <th>Cerro</th>
-                  <th>Salio antes</th>
-                  <th>Ausencias</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.map(row => (
-                  <tr key={row.name}>
-                    <td>{row.name}</td>
-                    <td>{row.first}</td>
-                    <td>{row.second}</td>
-                    <td>{row.third}</td>
-                    <td>{row.last}</td>
-                    <td>{row.closed}</td>
-                    <td>{row.beforeClose}</td>
-                    <td>{row.absences}</td>
+          {!statsAccessGranted ? (
+            <form onSubmit={submitStatsAccess} style={{ maxWidth: '420px' }}>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Introduce la clave para ver las estadisticas.</p>
+              <div className="form-group">
+                <label className="form-label">Clave de estadisticas</label>
+                <input
+                  className="form-input"
+                  type="password"
+                  value={statsPassword}
+                  onChange={e => setStatsPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {statsError && (
+                <div className="badge badge-error" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+                  {statsError}
+                </div>
+              )}
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                Ver estadisticas
+              </button>
+            </form>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="mapping-table">
+                <thead>
+                  <tr>
+                    <th>Empleado</th>
+                    <th>Primero</th>
+                    <th>Segundo</th>
+                    <th>Tercero</th>
+                    <th>Ultimo</th>
+                    <th>Cerro</th>
+                    <th>Salio antes</th>
+                    <th>Ausencias</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {stats.map(row => (
+                    <tr key={row.name}>
+                      <td>{row.name}</td>
+                      <td>{row.first}</td>
+                      <td>{row.second}</td>
+                      <td>{row.third}</td>
+                      <td>{row.last}</td>
+                      <td>{row.closed}</td>
+                      <td>{row.beforeClose}</td>
+                      <td>{row.absences}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
