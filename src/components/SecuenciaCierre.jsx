@@ -5,6 +5,8 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 const STORAGE_KEY = 'closing_sequence_state_v1';
+const ACCESS_KEY = 'closing_sequence_access_granted';
+const ACCESS_PASSWORD = 'ubet@';
 const DAYS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
 const WEEKEND_DAYS = ['Viernes', 'Sabado', 'Domingo'];
 const STATUS_OPTIONS = ['Pendiente', 'Generado', 'Confirmado', 'En curso', 'Completado', 'Cancelado', 'Modificado'];
@@ -165,6 +167,9 @@ function buildLog(action, payload) {
 
 export default function SecuenciaCierre() {
   const [state, setState] = useState(loadState);
+  const [accessGranted, setAccessGranted] = useState(() => sessionStorage.getItem(ACCESS_KEY) === '1');
+  const [accessPassword, setAccessPassword] = useState('');
+  const [accessError, setAccessError] = useState('');
   const [activeTab, setActiveTab] = useState('generador');
   const [selectedShiftId, setSelectedShiftId] = useState('');
   const [newEmployeeName, setNewEmployeeName] = useState('');
@@ -387,6 +392,55 @@ export default function SecuenciaCierre() {
   }, [state.employees, state.schedules]);
 
   const simulation = runSimulation();
+
+  function submitAccess(e) {
+    e.preventDefault();
+    if (accessPassword === ACCESS_PASSWORD) {
+      sessionStorage.setItem(ACCESS_KEY, '1');
+      setAccessGranted(true);
+      setAccessError('');
+      setAccessPassword('');
+      return;
+    }
+    setAccessError('Clave incorrecta');
+  }
+
+  if (!accessGranted) {
+    return (
+      <div className="fade-in">
+        <div className="page-header">
+          <div>
+            <h2 className="page-title">Secuencia de Cierre</h2>
+            <p className="page-subtitle">Introduce la clave para acceder a este modulo.</p>
+          </div>
+        </div>
+
+        <div className="glass-panel" style={{ maxWidth: '420px', margin: '0 auto' }}>
+          <form onSubmit={submitAccess}>
+            <div className="form-group">
+              <label className="form-label">Clave de acceso</label>
+              <input
+                className="form-input"
+                type="password"
+                value={accessPassword}
+                onChange={e => setAccessPassword(e.target.value)}
+                autoFocus
+                required
+              />
+            </div>
+            {accessError && (
+              <div className="badge badge-error" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+                {accessError}
+              </div>
+            )}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+              Entrar
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fade-in">
