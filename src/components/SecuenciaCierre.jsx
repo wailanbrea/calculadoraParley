@@ -5,13 +5,13 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 const STORAGE_KEY = 'closing_sequence_state_v1';
-const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real-v3';
+const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real-v4';
 const ACCESS_PASSWORD = 'ubet@';
 const STATS_PASSWORD = 'ubet0909';
 const FIXED_START_TIME = '16:00';
 const FIXED_END_TIME = '00:00';
 const DAYS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
-const WEEKEND_DAYS = ['Viernes', 'Sabado', 'Domingo'];
+const GENERATION_DAYS = ['Viernes', 'Sabado', 'Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves'];
 const STATUS_OPTIONS = ['Pendiente', 'Generado', 'Confirmado', 'En curso', 'Completado', 'Cancelado', 'Modificado'];
 const ABSENCE_TYPES = ['Libre', 'Vacaciones', 'Permiso', 'Cambio de turno', 'Enfermedad', 'Sustitucion', 'Otro'];
 
@@ -79,6 +79,7 @@ const defaultSettings = {
   firstExitTime: '22:00',
   closingCount: 2,
   miniRotationSize: 2,
+  sequenceMode: 'pair',
   timezone: 'America/Santo_Domingo',
   maxEmployees: 5,
   generationDay: 'Jueves'
@@ -179,7 +180,8 @@ function buildHistoricalSchedules() {
   return historicalSequence.map(item => {
     const employeeIds = idsFromNames(item.names);
     const isEmpty = employeeIds.length === 0;
-    const miniOrder = employeeIds.length > 1 ? employeeIds.slice(-2) : [];
+    const closingPool = employeeIds.length > 1 ? employeeIds.slice(-2) : [];
+    const miniOrder = item.miniApplied?.length && canMiniRotateGroup(closingPool, defaultEmployees) ? closingPool : [];
     return {
       id: `hist-${item.date}`,
       date: item.date,
@@ -208,9 +210,11 @@ function buildHistoricalRotations() {
     const employeeIds = idsFromNames(item.names);
     if (!employeeIds.length) return rotations;
     let nextRotations = setRotationFromSequence(rotations, employeeIds, employeeIds, item.date);
-    if (employeeIds.length > 2) {
+    if (employeeIds.length > 2 && item.miniApplied?.length) {
       const miniOrder = employeeIds.slice(-2);
-      nextRotations = setRotationFromSequence(nextRotations, miniOrder, miniOrder, item.date);
+      if (canMiniRotateGroup(miniOrder, defaultEmployees)) {
+        nextRotations = setRotationFromSequence(nextRotations, miniOrder, miniOrder, item.date);
+      }
     }
     return nextRotations;
   }, {});
@@ -281,15 +285,16 @@ function fixedShiftTimeLabel() {
   return `${formatTime12(FIXED_START_TIME)} - ${formatTime12(FIXED_END_TIME)}`;
 }
 
-function buildManualShiftPatch(order, reason = 'Secuencia editada manualmente') {
-  const closingPool = order.length > 1 ? order.slice(-2) : [];
+function buildManualShiftPatch(order, employees = defaultEmployees, settings = defaultSettings, reason = 'Secuencia editada manualmente') {
+  const closingPool = settings.sequenceMode === 'triple' ? [] : order.slice(-2);
+  const miniOrder = canMiniRotateGroup(closingPool, employees) ? closingPool : [];
   return {
     employeeIds: order,
     order,
     primaryOrder: order,
-    miniOrder: closingPool,
+    miniOrder,
     groupKey: order.length ? groupKey(order) : '',
-    miniKey: closingPool.length > 1 ? groupKey(closingPool) : '',
+    miniKey: miniOrder.length > 1 ? groupKey(miniOrder) : '',
     closerId: order[order.length - 1] || '',
     reason,
     status: 'Modificado'
@@ -304,8 +309,58 @@ function names(ids, nameMap) {
   return ids.map(id => nameMap[id] || id);
 }
 
+function normalizeText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+}
+
+function parseSequenceInput(value, employeeIds, employees) {
+  const employeeByName = Object.fromEntries(employees.map(emp => [normalizeText(emp.name), emp.id]));
+  const parsed = String(value || '')
+    .split(',')
+    .map(item => employeeByName[normalizeText(item)])
+    .filter(Boolean);
+  if (parsed.length !== employeeIds.length) return [];
+  if (new Set(parsed).size !== parsed.length) return [];
+  return sameGroup(parsed, employeeIds) ? parsed : [];
+}
+
+function requestMissingRotation(rotations, employeeIds, employees, date, day) {
+  if (!employeeIds.length) return rotations;
+  const key = groupKey(employeeIds);
+  if (rotations[key]) return rotations;
+  const currentNames = names(employeeIds, employeeNameMap(employees));
+  const answer = window.prompt(
+    `El grupo de ${day} ${date} no tiene registro pasado.\n\nGrupo: ${currentNames.join(', ')}\n\nEscribe el ultimo orden usado separado por coma para registrarlo.`
+  );
+  if (answer === null) return null;
+  const sequence = parseSequenceInput(answer, employeeIds, employees);
+  if (!sequence.length) {
+    window.alert('Orden invalido. Debes escribir exactamente los nombres del grupo, separados por coma.');
+    return null;
+  }
+  return setRotationFromSequence(rotations, employeeIds, sequence, date);
+}
+
+function closingPoolForMini(employeeIds, rotations, settings) {
+  const uniqueIds = [...new Set(employeeIds)].filter(Boolean);
+  if (!uniqueIds.length || settings.sequenceMode === 'triple') return [];
+  const mainRotation = rotations[groupKey(uniqueIds)] || {};
+  const mainSequence = sequenceForRotation(uniqueIds, mainRotation);
+  const primaryOrder = rotate(mainSequence, mainRotation.cursor || 0);
+  const closingCount = Math.max(1, Math.min(Number(settings.closingCount) || 2, primaryOrder.length));
+  return primaryOrder.slice(Math.max(0, primaryOrder.length - closingCount));
+}
+
+function shouldAdvanceMini(result) {
+  return Boolean(result.miniKey && result.miniKey !== result.groupKey && result.miniOrder?.length > 1);
+}
+
 function hasMiniSequence(shift) {
-  return Array.isArray(shift?.miniOrder) && shift.miniOrder.length > 1;
+  return Boolean(shift?.miniKey && Array.isArray(shift?.miniOrder) && shift.miniOrder.length > 1);
 }
 
 function canEmployeeMiniRotate(employeeId, employees) {
@@ -318,7 +373,11 @@ function displayEmployeeName(employeeId, nameMap, shift, employees = defaultEmpl
   return hasMiniSequence(shift) && employeeId === shift?.closerId && canEmployeeMiniRotate(employeeId, employees) ? `${baseName}.` : baseName;
 }
 
-function calculateShift(employeeIds, rotations, settings) {
+function canMiniRotateGroup(employeeIds, employees) {
+  return employeeIds.length > 1 && employeeIds.every(id => canEmployeeMiniRotate(id, employees));
+}
+
+function calculateShift(employeeIds, rotations, settings, employees = defaultEmployees) {
   const uniqueIds = [...new Set(employeeIds)].filter(Boolean);
   if (!uniqueIds.length) {
     return { groupKey: '', order: [], primaryOrder: [], miniOrder: [], closerId: '', reason: 'Sin empleados seleccionados' };
@@ -329,6 +388,18 @@ function calculateShift(employeeIds, rotations, settings) {
   const mainSequence = sequenceForRotation(uniqueIds, mainRotation);
   const mainCursor = mainRotation.cursor || 0;
   const primaryOrder = rotate(mainSequence, mainCursor);
+  if (settings.sequenceMode === 'triple') {
+    return {
+      groupKey: mainKey,
+      miniKey: '',
+      order: primaryOrder,
+      primaryOrder,
+      miniOrder: [],
+      closerId: primaryOrder[primaryOrder.length - 1] || '',
+      reason: 'Secuencia de 3 aplicada'
+    };
+  }
+
   const closingCount = Math.max(1, Math.min(Number(settings.closingCount) || 2, primaryOrder.length));
   const earlyCount = Math.max(0, primaryOrder.length - closingCount);
   const earlyOrder = primaryOrder.slice(0, earlyCount);
@@ -336,7 +407,7 @@ function calculateShift(employeeIds, rotations, settings) {
 
   let miniOrder = closingPool;
   let miniKey = '';
-  if (closingPool.length > 1) {
+  if (canMiniRotateGroup(closingPool, employees)) {
     miniKey = groupKey(closingPool);
     const miniRotation = rotations[miniKey] || {};
     const miniSequence = sequenceForRotation(closingPool, miniRotation);
@@ -352,7 +423,7 @@ function calculateShift(employeeIds, rotations, settings) {
     primaryOrder,
     miniOrder,
     closerId: order[order.length - 1] || '',
-    reason: miniKey ? 'Mini rotacion aplicada al grupo de cierre' : 'Rotacion principal aplicada'
+    reason: miniKey ? 'Mini rotacion aplicada al grupo de cierre' : 'Rotacion principal aplicada sin mini rotacion'
   };
 }
 
@@ -386,7 +457,7 @@ function buildLog(action, payload) {
 function formatLogAction(action) {
   const labels = {
     'history.seeded': 'Historial base cargado',
-    'weekend.generated': 'Fin de semana generado',
+    'weekend.generated': 'Semana generada',
     'template.updated': 'Plantilla actualizada',
     'employee.created': 'Empleado agregado',
     'employee.updated': 'Empleado actualizado',
@@ -459,7 +530,11 @@ export default function SecuenciaCierre() {
   const [weekendSelection, setWeekendSelection] = useState({
     Viernes: ['emp-1', 'emp-2', 'emp-3'],
     Sabado: ['emp-2', 'emp-4', 'emp-5'],
-    Domingo: ['emp-1', 'emp-5', 'emp-6']
+    Domingo: ['emp-1', 'emp-5', 'emp-6'],
+    Lunes: state.templates.Lunes || [],
+    Martes: state.templates.Martes || [],
+    Miercoles: state.templates.Miercoles || [],
+    Jueves: state.templates.Jueves || []
   });
   const [simSelection, setSimSelection] = useState(['emp-1', 'emp-2', 'emp-3']);
   const [simCount, setSimCount] = useState(10);
@@ -484,17 +559,28 @@ export default function SecuenciaCierre() {
       closer: nameMap[shift.closerId] || '-'
     }
   }));
-  const weekendPreview = WEEKEND_DAYS.map((day, index) => {
-    const date = nextIsoDate(weekStart, index);
-    const employeeIds = weekendSelection[day] || [];
-    return {
-      id: `preview-${day}`,
-      date,
-      day,
-      employeeIds,
-      result: calculateShift(employeeIds, state.rotations, state.settings)
-    };
-  });
+  const weekendPreview = (() => {
+    let rotations = { ...state.rotations };
+    return GENERATION_DAYS.map((day, index) => {
+      const date = nextIsoDate(weekStart, index);
+      const employeeIds = weekendSelection[day] || [];
+      const miniCandidate = closingPoolForMini(employeeIds, rotations, state.settings);
+      const result = calculateShift(employeeIds, rotations, state.settings, state.employees);
+      const missingMainHistory = Boolean(employeeIds.length && !rotations[groupKey(employeeIds)]);
+      const missingMiniHistory = Boolean(canMiniRotateGroup(miniCandidate, state.employees) && groupKey(miniCandidate) !== groupKey(employeeIds) && !rotations[groupKey(miniCandidate)]);
+      const missingHistory = missingMainHistory || missingMiniHistory;
+      if (employeeIds.length) rotations = advanceRotation(rotations, employeeIds);
+      if (shouldAdvanceMini(result)) rotations = advanceRotation(rotations, result.miniOrder);
+      return {
+        id: `preview-${day}`,
+        date,
+        day,
+        employeeIds,
+        missingHistory,
+        result
+      };
+    });
+  })();
 
   function persist(updater) {
     setState(prev => {
@@ -528,31 +614,48 @@ export default function SecuenciaCierre() {
   }
 
   function generateWeekend() {
-    const shifts = weekendPreview.map(item => ({
-      id: `shift-${item.date}-${item.day}-${Date.now()}`,
-      date: item.date,
-      day: item.day,
-      startTime: FIXED_START_TIME,
-      endTime: FIXED_END_TIME,
-      firstExitTime: state.settings.firstExitTime,
-      employeeIds: item.employeeIds,
-      order: item.result.order,
-      primaryOrder: item.result.primaryOrder,
-      miniOrder: item.result.miniOrder,
-      groupKey: item.result.groupKey,
-      miniKey: item.result.miniKey,
-      closerId: item.result.closerId,
-      status: 'Generado',
-      absenceType: '',
-      notes: '',
-      reason: item.result.reason,
-      completedAt: null
-    }));
+    let rotations = { ...state.rotations };
+    const shifts = [];
+    const generatedAt = Date.now();
+
+    for (const item of weekendPreview) {
+      rotations = requestMissingRotation(rotations, item.employeeIds, state.employees, item.date, item.day);
+      if (!rotations) return;
+      const miniCandidate = closingPoolForMini(item.employeeIds, rotations, state.settings);
+      if (canMiniRotateGroup(miniCandidate, state.employees) && groupKey(miniCandidate) !== groupKey(item.employeeIds)) {
+        rotations = requestMissingRotation(rotations, miniCandidate, state.employees, item.date, `${item.day} mini rotacion`);
+        if (!rotations) return;
+      }
+      const result = calculateShift(item.employeeIds, rotations, state.settings, state.employees);
+      shifts.push({
+        id: `shift-${item.date}-${item.day}-${generatedAt}`,
+        date: item.date,
+        day: item.day,
+        startTime: FIXED_START_TIME,
+        endTime: FIXED_END_TIME,
+        firstExitTime: state.settings.firstExitTime,
+        employeeIds: item.employeeIds,
+        order: result.order,
+        primaryOrder: result.primaryOrder,
+        miniOrder: result.miniOrder,
+        groupKey: result.groupKey,
+        miniKey: result.miniKey,
+        closerId: result.closerId,
+        status: item.employeeIds.length ? 'Generado' : 'Cancelado',
+        absenceType: item.employeeIds.length ? '' : 'Sin Secuencia',
+        notes: '',
+        reason: item.employeeIds.length ? result.reason : 'Sin Secuencia',
+        completedAt: null
+      });
+      if (item.employeeIds.length) rotations = advanceRotation(rotations, item.employeeIds);
+      if (shouldAdvanceMini(result)) rotations = advanceRotation(rotations, result.miniOrder);
+    }
 
     persist(prev => {
       const otherSchedules = prev.schedules.filter(existing => !shifts.some(next => next.date === existing.date));
       return {
         ...prev,
+        rotations,
         schedules: [...otherSchedules, ...shifts].sort((a, b) => a.date.localeCompare(b.date)),
         logs: [buildLog('weekend.generated', { weekStart, shifts }), ...prev.logs]
       };
@@ -694,7 +797,7 @@ export default function SecuenciaCierre() {
       const selected = prev.schedules.find(shift => shift.id === editShiftId);
       if (!selected) return prev;
       let rotations = setRotationFromSequence(prev.rotations, editOrder, editOrder, selected.date);
-      const manualPatch = buildManualShiftPatch(editOrder);
+      const manualPatch = buildManualShiftPatch(editOrder, prev.employees, prev.settings);
       const selectedWeekStart = weekStartIso(selected.date);
       const nextSchedules = prev.schedules.map(shift => {
         if (shift.id === selected.id) {
@@ -703,9 +806,9 @@ export default function SecuenciaCierre() {
         if (scope !== 'week' || weekStartIso(shift.date) !== selectedWeekStart || shift.date <= selected.date) {
           return shift;
         }
-        const result = calculateShift(shift.employeeIds, rotations, prev.settings);
+        const result = calculateShift(shift.employeeIds, rotations, prev.settings, prev.employees);
         rotations = advanceRotation(rotations, result.order);
-        if (result.miniOrder?.length > 1) rotations = advanceRotation(rotations, result.miniOrder);
+        if (shouldAdvanceMini(result)) rotations = advanceRotation(rotations, result.miniOrder);
         return {
           ...shift,
           order: result.order,
@@ -733,7 +836,7 @@ export default function SecuenciaCierre() {
       ...prev,
       schedules: prev.schedules.map(shift => {
         if (shift.id !== id) return shift;
-        const result = calculateShift(shift.employeeIds, prev.rotations, prev.settings);
+        const result = calculateShift(shift.employeeIds, prev.rotations, prev.settings, prev.employees);
         return {
           ...shift,
           order: result.order,
@@ -755,7 +858,7 @@ export default function SecuenciaCierre() {
       const shift = prev.schedules.find(item => item.id === id);
       if (!shift || shift.status === 'Completado') return prev;
       let rotations = advanceRotation(prev.rotations, shift.employeeIds);
-      if (shift.miniOrder?.length > 1) rotations = advanceRotation(rotations, shift.miniOrder);
+      if (shouldAdvanceMini(shift)) rotations = advanceRotation(rotations, shift.miniOrder);
       return {
         ...prev,
         rotations,
@@ -774,10 +877,10 @@ export default function SecuenciaCierre() {
     let rotations = { ...state.rotations };
     const rows = [];
     for (let i = 1; i <= Number(simCount); i++) {
-      const result = calculateShift(simSelection, rotations, state.settings);
+      const result = calculateShift(simSelection, rotations, state.settings, state.employees);
       rows.push({ n: i, ...result });
       rotations = advanceRotation(rotations, simSelection);
-      if (result.miniOrder?.length > 1) rotations = advanceRotation(rotations, result.miniOrder);
+      if (shouldAdvanceMini(result)) rotations = advanceRotation(rotations, result.miniOrder);
     }
     return rows;
   }
@@ -900,16 +1003,16 @@ export default function SecuenciaCierre() {
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 0.9fr) minmax(360px, 1.1fr)', gap: '1.5rem' }}>
           <div className="glass-panel">
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3>Generar fin de semana</h3>
+              <h3>Generar semana de cierre</h3>
               <button type="button" className="btn btn-secondary" onClick={loadHistoricalBase} style={{ padding: '0.45rem 0.8rem', fontSize: '0.82rem' }}>
                 Cargar historial base
               </button>
             </div>
             <div className="form-group">
-              <label className="form-label">Viernes de la semana</label>
+              <label className="form-label">Viernes de inicio</label>
               <input className="form-input" type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)} />
             </div>
-            {WEEKEND_DAYS.map(day => (
+            {GENERATION_DAYS.map(day => (
               <div key={day} style={{ marginTop: '1.25rem' }}>
                 <div className="form-label">{day}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
@@ -927,7 +1030,7 @@ export default function SecuenciaCierre() {
               </div>
             ))}
             <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem' }} onClick={generateWeekend}>
-              Generar Fin de Semana
+              Generar Semana
             </button>
           </div>
 
@@ -944,6 +1047,11 @@ export default function SecuenciaCierre() {
                   <div style={{ marginTop: '0.5rem' }}>Orden final: <strong>{names(item.result.order, nameMap).join(' → ') || '-'}</strong></div>
                   <div style={{ marginTop: '0.4rem', color: 'var(--color-ok)' }}>Cierra: {nameMap[item.result.closerId] || '-'}</div>
                   <div style={{ marginTop: '0.4rem', color: 'var(--text-muted)' }}>{item.result.reason}</div>
+                  {item.missingHistory && (
+                    <div className="badge badge-review" style={{ marginTop: '0.5rem' }}>
+                      Pedira historial pasado al generar
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1020,7 +1128,7 @@ export default function SecuenciaCierre() {
                 <div>
                   <div className="form-label">Mini rotacion</div>
                   <div className="closing-detail-list">
-                    {selectedShift.miniOrder?.length ? selectedShift.miniOrder.map(employeeId => (
+                    {hasMiniSequence(selectedShift) ? selectedShift.miniOrder.map(employeeId => (
                       <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
                         {displayEmployeeName(employeeId, nameMap, selectedShift, state.employees)}
                       </span>
@@ -1196,6 +1304,20 @@ export default function SecuenciaCierre() {
             <div className="result-card" style={{ textAlign: 'left', marginBottom: '1rem' }}>
               <div className="result-card-title">Horario fijo</div>
               <div className="result-card-value" style={{ fontSize: '1.25rem', color: 'var(--primary-hover)' }}>{fixedShiftTimeLabel()}</div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Tipo de secuencia</label>
+              <label className="filter-btn" style={{ justifyContent: 'flex-start' }}>
+                <input
+                  type="checkbox"
+                  checked={state.settings.sequenceMode === 'triple'}
+                  onChange={e => updateSettings({ sequenceMode: e.target.checked ? 'triple' : 'pair' })}
+                />
+                Secuencia de 3
+              </label>
+              <div style={{ marginTop: '0.45rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                {state.settings.sequenceMode === 'triple' ? 'Activa: 123, 231, 312.' : 'Activa: secuencia 1-2 con mini rotacion validada.'}
+              </div>
             </div>
             {[
               ['firstExitTime', 'Primera salida', 'time'],
