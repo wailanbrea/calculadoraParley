@@ -13,7 +13,7 @@ if (in_array($origin, $allowed_origins)) {
     // Por defecto, o si es local/vacío
     header("Access-Control-Allow-Origin: https://calcparley.bsolutions.dev");
 }
-header("Access-Control-Allow-Headers: Content-Type, X-CalcParley-Import-Token");
+header("Access-Control-Allow-Headers: Content-Type, X-CalcParley-Import-Token, X-Closing-Sequence-Key");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json; charset=UTF-8");
@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $configFile = dirname(__DIR__) . '/server_config.json';
 $feedFile = dirname(__DIR__) . '/server_feed.json';
 $basesFile = dirname(__DIR__) . '/server_bases.json';
+$closingSequenceFile = dirname(__DIR__) . '/server_closing_sequence.json';
 $tokenFile = dirname(__DIR__) . '/import_token.txt';
 
 // Si el archivo de config no existe, lo inicializamos
@@ -108,6 +109,23 @@ function validateToken($expectedToken) {
     if (!$isValid) {
         http_response_code(401);
         echo json_encode(["status" => "error", "message" => "No autorizado: Token inválido"]);
+        exit;
+    }
+}
+
+function validateClosingSequenceKey() {
+    $headers = getallheaders();
+    $key = '';
+    foreach ($headers as $name => $value) {
+        if (strcasecmp($name, 'X-Closing-Sequence-Key') === 0) {
+            $key = trim($value);
+            break;
+        }
+    }
+
+    if (!hash_equals('ubet@', $key)) {
+        http_response_code(401);
+        echo json_encode(["status" => "error", "message" => "No autorizado"]);
         exit;
     }
 }
@@ -276,6 +294,64 @@ if ($action === 'clear_bases') {
     echo json_encode([
         "success" => true,
         "message" => "Historial de bases alcanzadas eliminado"
+    ]);
+    exit;
+}
+
+// Accion: get_closing_sequence
+if ($action === 'get_closing_sequence') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+        exit;
+    }
+
+    if (file_exists($closingSequenceFile)) {
+        clearstatcache(true, $closingSequenceFile);
+        $data = json_decode(file_get_contents($closingSequenceFile), true);
+        echo json_encode([
+            "success" => true,
+            "state" => $data,
+            "updated_at" => date('c', filemtime($closingSequenceFile))
+        ]);
+    } else {
+        echo json_encode([
+            "success" => true,
+            "state" => null
+        ]);
+    }
+    exit;
+}
+
+// Accion: save_closing_sequence
+if ($action === 'save_closing_sequence') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Metodo no permitido"]);
+        exit;
+    }
+    validateClosingSequenceKey();
+
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+
+    if (!is_array($data) || !isset($data['employees']) || !isset($data['schedules']) || !isset($data['rotations'])) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Estado de secuencia invalido"]);
+        exit;
+    }
+
+    $saved = file_put_contents($closingSequenceFile, json_encode($data, JSON_PRETTY_PRINT), LOCK_EX);
+    if ($saved === false) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "No se pudo guardar la secuencia en el servidor"]);
+        exit;
+    }
+
+    clearstatcache(true, $closingSequenceFile);
+    echo json_encode([
+        "success" => true,
+        "updated_at" => date('c', filemtime($closingSequenceFile))
     ]);
     exit;
 }

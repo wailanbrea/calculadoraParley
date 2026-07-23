@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 const STORAGE_KEY = 'closing_sequence_state_v1';
+const SERVER_STATE_URL = './api.php?action=get_closing_sequence';
+const SERVER_SAVE_URL = './api.php?action=save_closing_sequence';
 const HISTORY_SEED_VERSION = '2026-07-23-secuencia-real-v4';
 const ACCESS_PASSWORD = 'ubet@';
 const STATS_PASSWORD = 'ubet0909';
@@ -100,6 +102,21 @@ const defaultState = {
   historySeedVersion: ''
 };
 
+function normalizeState(parsed) {
+  const loadedState = {
+    ...defaultState,
+    ...(parsed || {}),
+    settings: { ...defaultSettings, ...(parsed?.settings || {}) },
+    employees: Array.isArray(parsed?.employees) ? parsed.employees : defaultEmployees,
+    templates: { ...defaultState.templates, ...(parsed?.templates || {}) },
+    rotations: parsed?.rotations || {},
+    schedules: Array.isArray(parsed?.schedules) ? parsed.schedules : [],
+    logs: Array.isArray(parsed?.logs) ? parsed.logs : [],
+    historySeedVersion: parsed?.historySeedVersion || ''
+  };
+  return loadedState.historySeedVersion !== HISTORY_SEED_VERSION ? applyHistoricalSeed(loadedState) : loadedState;
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -109,22 +126,8 @@ function loadState() {
       return seeded;
     }
     const parsed = JSON.parse(raw);
-    const loadedState = {
-      ...defaultState,
-      ...parsed,
-      settings: { ...defaultSettings, ...(parsed.settings || {}) },
-      employees: Array.isArray(parsed.employees) ? parsed.employees : defaultEmployees,
-      templates: { ...defaultState.templates, ...(parsed.templates || {}) },
-      rotations: parsed.rotations || {},
-      schedules: Array.isArray(parsed.schedules) ? parsed.schedules : [],
-      logs: Array.isArray(parsed.logs) ? parsed.logs : [],
-      historySeedVersion: parsed.historySeedVersion || ''
-    };
-    if (loadedState.historySeedVersion !== HISTORY_SEED_VERSION) {
-      const seeded = applyHistoricalSeed(loadedState);
-      saveState(seeded);
-      return seeded;
-    }
+    const loadedState = normalizeState(parsed);
+    if (loadedState.historySeedVersion !== parsed.historySeedVersion) saveState(loadedState);
     return loadedState;
   } catch {
     const seeded = applyHistoricalSeed(defaultState);
@@ -135,6 +138,25 @@ function loadState() {
 
 function saveState(nextState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+}
+
+function hasUserSavedState(nextState) {
+  return Boolean(
+    nextState?.schedules?.some(shift => !String(shift.id || '').startsWith('hist-')) ||
+    nextState?.logs?.some(log => log.action !== 'history.seeded')
+  );
+}
+
+async function saveStateToServer(nextState) {
+  const response = await fetch(SERVER_SAVE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Closing-Sequence-Key': ACCESS_PASSWORD
+    },
+    body: JSON.stringify(nextState)
+  });
+  return response.ok;
 }
 
 function groupKey(ids) {
@@ -511,6 +533,7 @@ function summarizeLogPayload(log, nameMap) {
 
 export default function SecuenciaCierre() {
   const [state, setState] = useState(loadState);
+  const [syncStatus, setSyncStatus] = useState('Cargando datos compartidos...');
   const [accessGranted, setAccessGranted] = useState(false);
   const [accessPassword, setAccessPassword] = useState('');
   const [accessError, setAccessError] = useState('');
@@ -538,6 +561,42 @@ export default function SecuenciaCierre() {
   });
   const [simSelection, setSimSelection] = useState(['emp-1', 'emp-2', 'emp-3']);
   const [simCount, setSimCount] = useState(10);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadServerState() {
+      try {
+        const response = await fetch(`${SERVER_STATE_URL}&_=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (cancelled) return;
+
+        if (payload?.state) {
+          const sharedState = normalizeState(payload.state);
+          saveState(sharedState);
+          setState(sharedState);
+          setEmployeeDrafts(sharedState.employees);
+          setSyncStatus('Datos compartidos cargados');
+          return;
+        }
+
+        const initialState = loadState();
+        if (hasUserSavedState(initialState)) {
+          await saveStateToServer(initialState);
+          if (!cancelled) setSyncStatus('Datos locales subidos al servidor');
+          return;
+        }
+        if (!cancelled) setSyncStatus('Sin datos compartidos guardados');
+      } catch {
+        if (!cancelled) setSyncStatus('Sin conexion con datos compartidos');
+      }
+    }
+
+    loadServerState();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const nameMap = useMemo(() => employeeNameMap(state.employees), [state.employees]);
   const activeEmployees = state.employees.filter(emp => emp.active);
@@ -586,6 +645,10 @@ export default function SecuenciaCierre() {
     setState(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       saveState(next);
+      setSyncStatus('Guardando datos compartidos...');
+      saveStateToServer(next)
+        .then(ok => setSyncStatus(ok ? 'Datos compartidos guardados' : 'No se pudo guardar en servidor'))
+        .catch(() => setSyncStatus('No se pudo guardar en servidor'));
       return next;
     });
   }
@@ -986,6 +1049,7 @@ export default function SecuenciaCierre() {
           <p className="page-subtitle">Motor independiente para rotaciones, mini rotaciones, cierres y calendario semanal.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <span className="badge badge-review" style={{ alignSelf: 'center' }}>{syncStatus}</span>
           {['generador', 'calendario', 'empleados', 'plantillas', 'simulador', 'estadisticas', 'historial'].map(tab => (
             <button
               key={tab}

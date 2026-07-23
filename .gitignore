@@ -15,6 +15,7 @@ dist-ssr
 # Datos de runtime del servidor (no versionar)
 server_bases.json
 server_feed.json
+server_closing_sequence.json
 import_token.txt
 cache_ls_*.json
 .playwright-mcp/
