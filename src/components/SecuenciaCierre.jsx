@@ -397,7 +397,7 @@ function displayEmployeeName(employeeId, nameMap, shift, employees = defaultEmpl
 
 function departureTimeForEmployee(employeeId, shift, employees = defaultEmployees) {
   if (!employeeId || !shift?.order?.length) return '';
-  if (employeeId === shift.closerId) return formatTime12(FIXED_END_TIME);
+  if (employeeId === shift.closerId) return 'Cierra';
 
   const employee = employees.find(emp => emp.id === employeeId);
   if (employee?.level === 'Senior') return '10:00 PM';
