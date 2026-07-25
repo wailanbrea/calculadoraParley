@@ -395,6 +395,31 @@ function displayEmployeeName(employeeId, nameMap, shift, employees = defaultEmpl
   return hasMiniSequence(shift) && employeeId === shift?.closerId && canEmployeeMiniRotate(employeeId, employees) ? `${baseName}.` : baseName;
 }
 
+function departureTimeForEmployee(employeeId, shift, employees = defaultEmployees) {
+  if (!employeeId || !shift?.order?.length) return '';
+  if (employeeId === shift.closerId) return formatTime12(FIXED_END_TIME);
+
+  const employee = employees.find(emp => emp.id === employeeId);
+  if (employee?.level === 'Senior') return '10:00 PM';
+
+  const orderIndex = shift.order.indexOf(employeeId);
+  if (!canEmployeeMiniRotate(employeeId, employees)) {
+    return orderIndex <= 0 ? '10:00 PM' : '11:00 PM';
+  }
+
+  if (hasMiniSequence(shift) && shift.miniOrder?.includes(employeeId)) {
+    return '11:00 PM';
+  }
+
+  return orderIndex <= 0 ? '10:00 PM' : '11:00 PM';
+}
+
+function displayEmployeeWithDeparture(employeeId, nameMap, shift, employees = defaultEmployees) {
+  const name = displayEmployeeName(employeeId, nameMap, shift, employees);
+  const departure = departureTimeForEmployee(employeeId, shift, employees);
+  return departure ? `${name} · ${departure}` : name;
+}
+
 function canMiniRotateGroup(employeeIds, employees) {
   return employeeIds.length > 1 && employeeIds.every(id => canEmployeeMiniRotate(id, employees));
 }
@@ -1108,8 +1133,8 @@ export default function SecuenciaCierre() {
                     <span className="badge badge-review">{item.result.groupKey || 'Sin grupo'}</span>
                   </div>
                   <div style={{ marginTop: '0.5rem', color: 'var(--text-muted)' }}>Personal: {names(item.employeeIds, nameMap).join(', ') || 'Ninguno'}</div>
-                  <div style={{ marginTop: '0.5rem' }}>Orden final: <strong>{names(item.result.order, nameMap).join(' → ') || '-'}</strong></div>
-                  <div style={{ marginTop: '0.4rem', color: 'var(--color-ok)' }}>Cierra: {nameMap[item.result.closerId] || '-'}</div>
+                  <div style={{ marginTop: '0.5rem' }}>Orden final: <strong>{item.result.order.map(employeeId => displayEmployeeWithDeparture(employeeId, nameMap, item.result, state.employees)).join(' → ') || '-'}</strong></div>
+                  <div style={{ marginTop: '0.4rem', color: 'var(--color-ok)' }}>Cierra: {displayEmployeeWithDeparture(item.result.closerId, nameMap, item.result, state.employees) || '-'}</div>
                   <div style={{ marginTop: '0.4rem', color: 'var(--text-muted)' }}>{item.result.reason}</div>
                   {item.missingHistory && (
                     <div className="badge badge-review" style={{ marginTop: '0.5rem' }}>
@@ -1154,7 +1179,7 @@ export default function SecuenciaCierre() {
                           key={employeeId}
                           className={employeeId === props.closerId ? 'closing-calendar-name closing-calendar-closer' : 'closing-calendar-name'}
                         >
-                          {displayEmployeeName(employeeId, nameMap, props, state.employees)}
+                          {displayEmployeeWithDeparture(employeeId, nameMap, props, state.employees)}
                         </div>
                       ))}
                     </div>
@@ -1184,7 +1209,7 @@ export default function SecuenciaCierre() {
                   <div className="closing-detail-list">
                     {selectedShift.order.map(employeeId => (
                       <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
-                        {displayEmployeeName(employeeId, nameMap, selectedShift, state.employees)}
+                        {displayEmployeeWithDeparture(employeeId, nameMap, selectedShift, state.employees)}
                       </span>
                     ))}
                   </div>
@@ -1194,12 +1219,12 @@ export default function SecuenciaCierre() {
                   <div className="closing-detail-list">
                     {hasMiniSequence(selectedShift) ? selectedShift.miniOrder.map(employeeId => (
                       <span key={employeeId} className={employeeId === selectedShift.closerId ? 'closing-detail-closer' : ''}>
-                        {displayEmployeeName(employeeId, nameMap, selectedShift, state.employees)}
+                        {displayEmployeeWithDeparture(employeeId, nameMap, selectedShift, state.employees)}
                       </span>
                     )) : <span>-</span>}
                   </div>
                 </div>
-                <div>Cierra: <strong className="closing-detail-closer" style={{ padding: '0.15rem 0.45rem', borderRadius: '6px' }}>{displayEmployeeName(selectedShift.closerId, nameMap, selectedShift, state.employees) || '-'}</strong></div>
+                <div>Cierra: <strong className="closing-detail-closer" style={{ padding: '0.15rem 0.45rem', borderRadius: '6px' }}>{displayEmployeeWithDeparture(selectedShift.closerId, nameMap, selectedShift, state.employees) || '-'}</strong></div>
                 <div>Motivo: {selectedShift.reason}</div>
                 <div className="glass-panel" style={{ background: 'rgba(6,8,19,0.03)', padding: '1rem', borderRadius: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: editShiftId === selectedShift.id ? '1rem' : 0 }}>
@@ -1426,8 +1451,8 @@ export default function SecuenciaCierre() {
             {simulation.map(row => (
               <div key={row.n} className="result-card" style={{ display: 'grid', gridTemplateColumns: '80px 1fr 180px', gap: '1rem', textAlign: 'left' }}>
                 <strong>#{row.n}</strong>
-                <span>{names(row.order, nameMap).join(' → ')}</span>
-                <span style={{ color: 'var(--color-ok)' }}>Cierra: {nameMap[row.closerId] || '-'}</span>
+                <span>{row.order.map(employeeId => displayEmployeeWithDeparture(employeeId, nameMap, row, state.employees)).join(' → ')}</span>
+                <span style={{ color: 'var(--color-ok)' }}>Cierra: {displayEmployeeWithDeparture(row.closerId, nameMap, row, state.employees) || '-'}</span>
               </div>
             ))}
           </div>
