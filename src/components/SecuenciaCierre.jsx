@@ -16,12 +16,13 @@ const DAYS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Do
 const GENERATION_DAYS = ['Viernes', 'Sabado', 'Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves'];
 const STATUS_OPTIONS = ['Pendiente', 'Generado', 'Confirmado', 'En curso', 'Completado', 'Cancelado', 'Modificado'];
 const ABSENCE_TYPES = ['Libre', 'Vacaciones', 'Permiso', 'Cambio de turno', 'Enfermedad', 'Sustitucion', 'Otro'];
+const SENIOR_EMPLOYEE_IDS = new Set(['emp-1', 'emp-2', 'emp-3', 'emp-4']);
 
 const defaultEmployees = [
   { id: 'emp-1', name: 'Daniel', canCloseAlone: true, canMiniRotate: true, level: 'Senior', active: true },
   { id: 'emp-2', name: 'Ariel', canCloseAlone: true, canMiniRotate: true, level: 'Senior', active: true },
-  { id: 'emp-3', name: 'Diego', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
-  { id: 'emp-4', name: 'Chamo', canCloseAlone: true, canMiniRotate: true, level: 'Semi Senior', active: true },
+  { id: 'emp-3', name: 'Diego', canCloseAlone: true, canMiniRotate: true, level: 'Senior', active: true },
+  { id: 'emp-4', name: 'Chamo', canCloseAlone: true, canMiniRotate: true, level: 'Senior', active: true },
   { id: 'emp-5', name: 'Michael', canCloseAlone: false, canMiniRotate: false, level: 'Semi Senior', active: true },
   { id: 'emp-6', name: 'Guillermo', canCloseAlone: false, canMiniRotate: false, level: 'Semi Senior', active: true }
 ];
@@ -102,12 +103,19 @@ const defaultState = {
   historySeedVersion: ''
 };
 
+function normalizeEmployees(employees) {
+  return (Array.isArray(employees) && employees.length ? employees : defaultEmployees).map(emp => ({
+    ...emp,
+    level: SENIOR_EMPLOYEE_IDS.has(emp.id) ? 'Senior' : emp.level
+  }));
+}
+
 function normalizeState(parsed) {
   const loadedState = {
     ...defaultState,
     ...(parsed || {}),
     settings: { ...defaultSettings, ...(parsed?.settings || {}) },
-    employees: Array.isArray(parsed?.employees) ? parsed.employees : defaultEmployees,
+    employees: normalizeEmployees(parsed?.employees),
     templates: { ...defaultState.templates, ...(parsed?.templates || {}) },
     rotations: parsed?.rotations || {},
     schedules: Array.isArray(parsed?.schedules) ? parsed.schedules : [],
@@ -252,7 +260,7 @@ function applyHistoricalSeed(state) {
 
   return {
     ...state,
-    employees: Array.isArray(state.employees) && state.employees.length ? state.employees : defaultEmployees,
+    employees: normalizeEmployees(state.employees),
     rotations: {
       ...state.rotations,
       ...buildHistoricalRotations()
@@ -807,11 +815,11 @@ export default function SecuenciaCierre() {
   }
 
   function saveEmployeeDrafts() {
-    const normalized = employeeDrafts.map(emp => ({
+    const normalized = normalizeEmployees(employeeDrafts.map(emp => ({
       ...emp,
       name: emp.name.trim(),
       canMiniRotate: emp.canCloseAlone ? Boolean(emp.canMiniRotate) : false
-    }));
+    })));
     if (normalized.some(emp => !emp.name)) {
       setEmployeeDraftError('Todos los empleados deben tener nombre.');
       return;
