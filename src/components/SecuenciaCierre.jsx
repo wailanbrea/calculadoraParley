@@ -404,13 +404,14 @@ function departureTimeForEmployee(employeeId, shift, employees = defaultEmployee
   if (employeeId === shift.closerId) return 'Cierra';
 
   const employee = employees.find(emp => emp.id === employeeId);
-  if (employee?.level === 'Senior') return '10:00 PM';
-
   const orderIndex = shift.order.indexOf(employeeId);
   if (shift.day === 'Domingo') {
+    if (employee?.level === 'Senior') return '8:00 PM';
     if (orderIndex === 0) return '8:00 PM';
     if (orderIndex === 1) return '9:00 PM';
   }
+
+  if (employee?.level === 'Senior') return '10:00 PM';
 
   if (!canEmployeeMiniRotate(employeeId, employees)) {
     return orderIndex <= 0 ? '10:00 PM' : '11:00 PM';
