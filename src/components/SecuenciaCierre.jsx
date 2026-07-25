@@ -303,10 +303,6 @@ function formatTime12(value) {
   return `${hour}:${minute.padStart(2, '0')} ${suffix}`;
 }
 
-function fixedShiftTimeLabel() {
-  return `${formatTime12(FIXED_START_TIME)} - ${formatTime12(FIXED_END_TIME)}`;
-}
-
 function buildManualShiftPatch(order, employees = defaultEmployees, settings = defaultSettings, reason = 'Secuencia editada manualmente') {
   const closingPool = settings.sequenceMode === 'triple' ? [] : order.slice(-2);
   const miniOrder = canMiniRotateGroup(closingPool, employees) ? closingPool : [];
@@ -1173,7 +1169,6 @@ export default function SecuenciaCierre() {
                   return (
                     <div className="closing-calendar-event">
                       <div className="closing-calendar-day">{props.day}</div>
-                      <div className="closing-calendar-time">{fixedShiftTimeLabel()}</div>
                       {(props.order || []).map(employeeId => (
                         <div
                           key={employeeId}
@@ -1203,7 +1198,6 @@ export default function SecuenciaCierre() {
             ) : (
               <div style={{ display: 'grid', gap: '1rem' }}>
                 <div><strong>{selectedShift.day}</strong> · {selectedShift.date}</div>
-                <div>Horario: {fixedShiftTimeLabel()}</div>
                 <div>
                   <div className="form-label">Orden de Personal</div>
                   <div className="closing-detail-list">
@@ -1390,10 +1384,6 @@ export default function SecuenciaCierre() {
           </div>
           <div className="glass-panel">
             <h3 style={{ marginBottom: '1rem' }}>Configuracion</h3>
-            <div className="result-card" style={{ textAlign: 'left', marginBottom: '1rem' }}>
-              <div className="result-card-title">Horario fijo</div>
-              <div className="result-card-value" style={{ fontSize: '1.25rem', color: 'var(--primary-hover)' }}>{fixedShiftTimeLabel()}</div>
-            </div>
             <div className="form-group">
               <label className="form-label">Tipo de secuencia</label>
               <label className="filter-btn" style={{ justifyContent: 'flex-start' }}>
