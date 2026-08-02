@@ -274,18 +274,31 @@ function applyHistoricalSeed(state) {
   };
 }
 
+function parseLocalDate(dateIso) {
+  const [year, month, day] = String(dateIso || '').split('-').map(Number);
+  if (!year || !month || !day) return new Date(dateIso);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+}
+
+function formatLocalIsoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function nextIsoDate(dateIso, offsetDays) {
-  const base = dateIso ? new Date(`${dateIso}T12:00:00`) : new Date();
+  const base = dateIso ? parseLocalDate(dateIso) : new Date();
   base.setDate(base.getDate() + offsetDays);
-  return base.toISOString().slice(0, 10);
+  return formatLocalIsoDate(base);
 }
 
 function weekStartIso(dateIso) {
-  const base = new Date(`${dateIso}T12:00:00`);
+  const base = parseLocalDate(dateIso);
   const day = base.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   base.setDate(base.getDate() + diff);
-  return base.toISOString().slice(0, 10);
+  return formatLocalIsoDate(base);
 }
 
 function getNextWeekendStart() {
@@ -294,11 +307,20 @@ function getNextWeekendStart() {
   const fridayIndex = 5;
   const diff = (fridayIndex - currentDay + 7) % 7 || 7;
   today.setDate(today.getDate() + diff);
-  return today.toISOString().slice(0, 10);
+  return formatLocalIsoDate(today);
+}
+
+function fridayOnOrBefore(dateIso) {
+  if (!dateIso) return '';
+  const date = parseLocalDate(dateIso);
+  if (Number.isNaN(date.getTime())) return dateIso;
+  const daysSinceFriday = (date.getDay() - 5 + 7) % 7;
+  date.setDate(date.getDate() - daysSinceFriday);
+  return formatLocalIsoDate(date);
 }
 
 function dayNameFromDate(dateIso) {
-  const dayIndex = new Date(`${dateIso}T12:00:00`).getDay();
+  const dayIndex = parseLocalDate(dateIso).getDay();
   return ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'][dayIndex];
 }
 
@@ -635,6 +657,7 @@ export default function SecuenciaCierre() {
 
   const nameMap = useMemo(() => employeeNameMap(state.employees), [state.employees]);
   const activeEmployees = state.employees.filter(emp => emp.active);
+  const generationStart = fridayOnOrBefore(weekStart);
 
   const selectedShift = state.schedules.find(shift => shift.id === selectedShiftId) || null;
   const calendarEvents = state.schedules.map(shift => ({
@@ -656,7 +679,7 @@ export default function SecuenciaCierre() {
   const weekendPreview = (() => {
     let rotations = { ...state.rotations };
     return GENERATION_DAYS.map((day, index) => {
-      const date = nextIsoDate(weekStart, index);
+      const date = nextIsoDate(generationStart, index);
       const employeeIds = weekendSelection[day] || [];
       const miniCandidate = closingPoolForMini(employeeIds, rotations, state.settings);
       const result = calculateShift(employeeIds, rotations, state.settings, state.employees);
@@ -755,7 +778,7 @@ export default function SecuenciaCierre() {
         ...prev,
         rotations,
         schedules: [...otherSchedules, ...shifts].sort((a, b) => a.date.localeCompare(b.date)),
-        logs: [buildLog('weekend.generated', { weekStart, shifts }), ...prev.logs]
+        logs: [buildLog('weekend.generated', { weekStart: generationStart, shifts }), ...prev.logs]
       };
     });
     setActiveTab('calendario');
@@ -1109,7 +1132,10 @@ export default function SecuenciaCierre() {
             </div>
             <div className="form-group">
               <label className="form-label">Viernes de inicio</label>
-              <input className="form-input" type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)} />
+              <input className="form-input" type="date" value={generationStart} onChange={e => setWeekStart(fridayOnOrBefore(e.target.value))} />
+              <div style={{ marginTop: '0.45rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                Si eliges otro dia, se ajustara al viernes anterior para mantener correcta toda la semana.
+              </div>
             </div>
             {GENERATION_DAYS.map(day => (
               <div key={day} style={{ marginTop: '1.25rem' }}>
