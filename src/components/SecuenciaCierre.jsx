@@ -901,6 +901,14 @@ export default function SecuenciaCierre() {
     });
   }
 
+  function removeEditEmployee(index) {
+    setEditOrder(prev => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, i) => i !== index);
+    });
+    setEditError('');
+  }
+
   function validateEditOrder() {
     if (!editOrder.length) return 'La secuencia no puede quedar vacia.';
     if (new Set(editOrder).size !== editOrder.length) return 'No repitas empleados en la misma secuencia.';
@@ -1288,13 +1296,22 @@ export default function SecuenciaCierre() {
                   ) : editShiftId === selectedShift.id ? (
                     <div style={{ display: 'grid', gap: '0.75rem' }}>
                       {editOrder.map((employeeId, index) => (
-                        <div key={`${employeeId}-${index}`} style={{ display: 'grid', gridTemplateColumns: '42px 1fr 40px 40px', gap: '0.5rem', alignItems: 'center' }}>
+                        <div key={`${employeeId}-${index}`} style={{ display: 'grid', gridTemplateColumns: '42px 1fr 40px 40px 90px', gap: '0.5rem', alignItems: 'center' }}>
                           <strong>#{index + 1}</strong>
                           <select className="form-input" value={employeeId} onChange={e => changeEditOrder(index, e.target.value)}>
                             {selectedShift.employeeIds.map(id => <option key={id} value={id}>{nameMap[id] || id}</option>)}
                           </select>
                           <button type="button" className="btn btn-secondary" onClick={() => moveEditOrder(index, -1)} style={{ padding: '0.45rem' }}>↑</button>
                           <button type="button" className="btn btn-secondary" onClick={() => moveEditOrder(index, 1)} style={{ padding: '0.45rem' }}>↓</button>
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={() => removeEditEmployee(index)}
+                            disabled={editOrder.length <= 1}
+                            style={{ padding: '0.45rem 0.65rem', fontSize: '0.82rem' }}
+                          >
+                            Eliminar
+                          </button>
                         </div>
                       ))}
                       {editError && <div className="badge badge-error">{editError}</div>}
