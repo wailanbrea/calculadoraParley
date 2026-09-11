@@ -2,17 +2,8 @@
 (function () {
   "use strict";
 
-  // Marcar en el DOM que la extensión está activa
-  document.documentElement.setAttribute('data-bsolutions-sync-installed', 'true');
-  window.sessionStorage.setItem('__BSOLUTIONS_PARLEY_EXT__', '1.0.0');
-
-  // Notificar al componente React que la extensión está lista
-  window.dispatchEvent(new CustomEvent('bsolutions_sync_extension_ready', {
-    detail: { version: '1.0.0', status: 'ready' }
-  }));
-
-  // Escuchar peticiones desde la aplicación web
-  window.addEventListener('message', async (event) => {
+  // Responder activamente solo a los pings en tiempo real
+  window.addEventListener('message', (event) => {
     if (event.source !== window || !event.data) return;
 
     if (event.data.type === 'CALCPARLEY_CHECK_EXTENSION') {
@@ -52,6 +43,12 @@
     }
   });
 
-  // Saludo en consola para verificar funcionamiento
-  console.log('⚡ [BSolutions Sync] Extensión conectada con CalculadoraParley v1.0.0');
+  // Notificar al cargar
+  window.postMessage({
+    type: 'CALCPARLEY_EXTENSION_PONG',
+    version: '1.0.0',
+    installed: true
+  }, '*');
+
+  console.log('⚡ [BSolutions Sync] Extensión conectada activamente con CalculadoraParley');
 })();

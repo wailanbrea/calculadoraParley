@@ -271,20 +271,13 @@ export default function HCEComparador({ config }) {
     loadData();
     const interval = setInterval(() => loadData(true), 25000);
 
-    // 1. Revisar si la extensión ya marcó el DOM o sessionStorage
-    if (document.documentElement.getAttribute('data-bsolutions-sync-installed') === 'true' ||
-        window.sessionStorage.getItem('__BSOLUTIONS_PARLEY_EXT__')) {
-      setHasExtension(true);
-    }
+    // Limpiar restos de versiones anteriores en sessionStorage/DOM
+    try {
+      window.sessionStorage.removeItem('__BSOLUTIONS_PARLEY_EXT__');
+      document.documentElement.removeAttribute('data-bsolutions-sync-installed');
+    } catch(e) {}
 
-    // 2. Escuchar evento de la extensión lista
-    const handleExtReady = () => setHasExtension(true);
-    window.addEventListener('bsolutions_sync_extension_ready', handleExtReady);
-
-    // 3. Ping para detectar extensión
-    window.postMessage({ type: 'CALCPARLEY_CHECK_EXTENSION' }, '*');
-
-    // 4. Escuchar respuestas de la extensión
+    // Escuchar respuestas de la extensión en tiempo real
     const handleMessage = (e) => {
       if (e.data?.type === 'CALCPARLEY_EXTENSION_PONG') {
         setHasExtension(true);
@@ -301,9 +294,18 @@ export default function HCEComparador({ config }) {
     };
     window.addEventListener('message', handleMessage);
 
+    // Enviar ping en vivo (si la extensión está en Chrome responderá de inmediato)
+    setHasExtension(false);
+    window.postMessage({ type: 'CALCPARLEY_CHECK_EXTENSION' }, '*');
+
+    // Reintentar ping a los 500ms
+    const pingTimer = setTimeout(() => {
+      window.postMessage({ type: 'CALCPARLEY_CHECK_EXTENSION' }, '*');
+    }, 500);
+
     return () => {
       clearInterval(interval);
-      window.removeEventListener('bsolutions_sync_extension_ready', handleExtReady);
+      clearTimeout(pingTimer);
       window.removeEventListener('message', handleMessage);
     };
   }, []);
