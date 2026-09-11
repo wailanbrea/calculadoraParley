@@ -2,99 +2,99 @@
 (function () {
   "use strict";
 
-  function parseHce(text, title) {
+  function parseFlexibleBetcris(text) {
     const clean = (text || '').replace(/\u00a0/g, ' ');
-    const hceMatch = clean.match(/hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/i);
+    const games = [];
 
-    if (!hceMatch) return null;
+    // Patrón 1: Bloque con equipos y Total Hits+Carreras+Errores (con o sin dos puntos)
+    const pattern = /([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+?)\s*(?::|\n|\r|\|)?\s*(?:Total\s*(?:de\s*)?)?hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/gi;
 
-    const total = parseFloat(hceMatch[1]);
-    const overOdds = parseInt(hceMatch[2], 10);
-    const underOdds = parseInt(hceMatch[4], 10);
+    let m;
+    while ((m = pattern.exec(clean)) !== null) {
+      let away = m[1].replace(/^[0-9\s\-]+/, '').trim();
+      let home = m[2].replace(/^[0-9\s\-]+/, '').replace(/[\r\n]+.*$/, '').trim();
+      games.push({
+        away,
+        home,
+        total: parseFloat(m[3]),
+        line: String(m[3]),
+        over_odds: parseInt(m[4], 10),
+        under_odds: parseInt(m[6], 10),
+        over: String(m[4]),
+        under: String(m[6])
+      });
+    }
 
-    let away = '';
-    let home = '';
-
-    const teamsMatch = clean.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total de Hits/i)
-      || (title && title.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i));
-
-    if (teamsMatch) {
-      away = teamsMatch[1].replace(/^[0-9\s\-]+/, '').trim();
-      home = teamsMatch[2].replace(/^[0-9\s\-]+/, '').trim();
-    } else {
-      const parts = (document.title || '').split(/vs\.?|@|-/i);
-      if (parts.length >= 2) {
-        away = parts[0].trim();
-        home = parts[1].replace(/\|.*$/, '').trim();
+    // Patrón 2: Mercado individual en pantalla con búsqueda de equipos en encabezado
+    if (games.length === 0) {
+      const hceMatch = clean.match(/hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/i);
+      if (hceMatch) {
+        let away = '', home = '';
+        const tm = clean.match(/([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+?)(?:\s*:|\n|\r|\||\s+Total)/i)
+          || (document.title && document.title.match(/([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i));
+        if (tm) {
+          away = tm[1].replace(/^[0-9\s\-]+/, '').trim();
+          home = tm[2].replace(/^[0-9\s\-]+/, '').replace(/[\r\n]+.*$/, '').trim();
+        }
+        if (away && home) {
+          games.push({
+            away,
+            home,
+            total: parseFloat(hceMatch[1]),
+            line: String(hceMatch[1]),
+            over_odds: parseInt(hceMatch[2], 10),
+            under_odds: parseInt(hceMatch[4], 10),
+            over: String(hceMatch[2]),
+            under: String(hceMatch[4])
+          });
+        }
       }
     }
 
-    if (!away || !home) return null;
-
-    return {
-      away,
-      home,
-      total,
-      line: String(total),
-      over_odds: overOdds,
-      under_odds: underOdds,
-      over: String(overOdds),
-      under: String(underOdds),
-      raw_over: `Ov ${total} (${overOdds})`,
-      raw_under: `Un ${total} (${underOdds})`,
-      scraped_at: new Date().toISOString()
-    };
+    return games;
   }
 
   const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
   async function crawlAllGames(onProgress) {
+    const rawText = document.body.innerText || '';
     const results = [];
 
-    // Primero revisar si la página actual ya tiene el mercado
-    const current = parseHce(document.body.innerText, document.title);
-    if (current) results.push(current);
+    // 1. Primero revisar si la página actual ya tiene el mercado
+    const current = parseFlexibleBetcris(rawText);
+    if (current.length > 0) return current;
 
-    // Buscar enlaces o tarjetas de partidos
-    const gameAnchors = Array.from(document.querySelectorAll('a[href*="/game/"]'));
-    const uniqueGames = [];
-    const seenHrefs = new Set();
+    // 2. Buscar tarjetas de partidos
+    const gameCards = Array.from(document.querySelectorAll(
+      '.schedule__game, [class*="schedule__game"], .schedule__game-details, a[href*="/game/"], [class*="game-item"]'
+    ));
 
-    for (const a of gameAnchors) {
-      const href = a.getAttribute('href');
-      if (href && !seenHrefs.has(href)) {
-        seenHrefs.add(href);
-        uniqueGames.push(a);
-      }
-    }
+    if (gameCards.length > 0) {
+      for (let i = 0; i < Math.min(gameCards.length, 20); i++) {
+        const card = gameCards[i];
+        if (onProgress) onProgress(i + 1, gameCards.length);
+        try {
+          const clickTarget = card.querySelector(
+            '.schedule__game-more-markets, [class*="more-markets"], .schedule__team-name, button, a'
+          ) || card;
 
-    if (uniqueGames.length === 0 && results.length > 0) {
-      return results;
-    }
+          clickTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          clickTarget.click();
+          await delay(650);
 
-    for (let i = 0; i < uniqueGames.length; i++) {
-      const el = uniqueGames[i];
-      if (onProgress) onProgress(i + 1, uniqueGames.length);
-
-      try {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.click();
-
-        let captured = null;
-        for (let attempt = 0; attempt < 8; attempt++) {
-          await delay(350);
-          captured = parseHce(document.body.innerText, document.title);
-          if (captured) break;
+          const parsed = parseFlexibleBetcris(document.body.innerText);
+          if (parsed && parsed.length > 0) {
+            for (const g of parsed) {
+              if (!results.some(r => r.away === g.away && r.home === g.home)) {
+                results.push(g);
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[BSolutions Sync] Error accediendo al partido', err);
         }
-
-        if (captured) {
-          const already = results.find(r => r.away === captured.away && r.home === captured.home);
-          if (!already) results.push(captured);
-        }
-      } catch (err) {
-        console.warn('[BSolutions Sync] Error accediendo al partido', err);
+        await delay(200);
       }
-      await delay(250);
     }
 
     return results;
@@ -134,44 +134,39 @@
         transition: transform 0.2s, box-shadow 0.2s; border: 1px solid rgba(255,255,255,0.2);
       ">
         <span style="font-size: 16px;">⚡</span>
-        <span id="bsolutions-btn-label">Sincronizar HCE con Calculadora</span>
+        <span id="bsolutions-btn-label">Sincronizar HCE</span>
       </div>
     `;
 
-    btn.addEventListener('mouseenter', () => { btn.firstElementChild.style.transform = 'scale(1.04)'; });
-    btn.addEventListener('mouseleave', () => { btn.firstElementChild.style.transform = 'scale(1)'; });
-
     btn.addEventListener('click', async () => {
       const label = document.getElementById('bsolutions-btn-label');
-      label.innerText = 'Escaneando partidos...';
+      label.innerText = 'Escaneando...';
       try {
         const games = await crawlAllGames((c, t) => {
           label.innerText = `Escaneando [${c}/${t}]...`;
         });
         if (games.length > 0) {
           label.innerText = `Enviando ${games.length} líneas...`;
-          const res = await fetch('https://calcparley.bsolutions.dev/api.php?action=save_hce_betcris', {
+          await fetch('https://calcparley.bsolutions.dev/api.php?action=save_hce_betcris', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ games, append: true })
           });
-          const json = await res.json();
           label.innerText = `✅ ¡${games.length} sincronizados!`;
         } else {
-          label.innerText = '⚠️ No se encontraron HCE';
+          label.innerText = '⚠️ Abre el partido';
         }
       } catch (e) {
-        label.innerText = '❌ Error de conexión';
+        label.innerText = '❌ Error de red';
       }
       setTimeout(() => {
-        if (label) label.innerText = 'Sincronizar HCE con Calculadora';
+        if (label) label.innerText = 'Sincronizar HCE';
       }, 5000);
     });
 
     document.body.appendChild(btn);
   }
 
-  // Si la página ya cargó, inyectar el widget flotante
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(injectFloatingWidget, 1500);
   } else {

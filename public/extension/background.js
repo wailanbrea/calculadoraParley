@@ -107,18 +107,20 @@ async function scrapeBetonlineDOM() {
 
 // Injected function for Betcris
 async function scrapeBetcrisDOM() {
-  function parseRawBetcris(text) {
+  function parseFlexibleBetcris(text) {
     const clean = (text || '').replace(/\u00a0/g, ' ');
     const games = [];
 
-    // Patrón 1: Bloque completo con partidos y momios
-    const pattern = /([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total de Hits[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/gi;
+    // Patrón 1: Bloque con equipos y Total Hits+Carreras+Errores (con o sin dos puntos)
+    const pattern = /([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+?)\s*(?::|\n|\r|\|)?\s*(?:Total\s*(?:de\s*)?)?hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/gi;
 
     let m;
     while ((m = pattern.exec(clean)) !== null) {
+      let away = m[1].replace(/^[0-9\s\-]+/, '').trim();
+      let home = m[2].replace(/^[0-9\s\-]+/, '').replace(/[\r\n]+.*$/, '').trim();
       games.push({
-        away: m[1].replace(/^[0-9\s\-]+/, '').trim(),
-        home: m[2].replace(/^[0-9\s\-]+/, '').trim(),
+        away,
+        home,
         total: parseFloat(m[3]),
         line: String(m[3]),
         over_odds: parseInt(m[4], 10),
@@ -128,16 +130,16 @@ async function scrapeBetcrisDOM() {
       });
     }
 
-    // Patrón 2: Partido individual en pantalla
+    // Patrón 2: Mercado individual en pantalla con búsqueda de equipos en encabezado
     if (games.length === 0) {
       const hceMatch = clean.match(/hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/i);
       if (hceMatch) {
         let away = '', home = '';
-        const tm = clean.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total/i)
-          || (document.title && document.title.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i));
+        const tm = clean.match(/([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+?)(?:\s*:|\n|\r|\||\s+Total)/i)
+          || (document.title && document.title.match(/([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i));
         if (tm) {
           away = tm[1].replace(/^[0-9\s\-]+/, '').trim();
-          home = tm[2].replace(/^[0-9\s\-]+/, '').trim();
+          home = tm[2].replace(/^[0-9\s\-]+/, '').replace(/[\r\n]+.*$/, '').trim();
         }
         if (away && home) {
           games.push({
@@ -161,7 +163,7 @@ async function scrapeBetcrisDOM() {
   const rawText = document.body.innerText || '';
 
   // 1. Verificar si en el texto de la pantalla ya está visible el bloque de HCE
-  const direct = parseRawBetcris(rawText);
+  const direct = parseFlexibleBetcris(rawText);
   if (direct.length > 0) {
     return {
       status: 'success',
@@ -171,27 +173,25 @@ async function scrapeBetcrisDOM() {
     };
   }
 
-  // 2. Si estamos en una lista de partidos, intentar recorrer los enlaces a partidos
-  const gameAnchors = Array.from(document.querySelectorAll('a[href*="/game/"]'));
-  const uniqueAnchors = [];
-  const seenHrefs = new Set();
+  // 2. Buscar elementos de partidos en la vista flat o categoría
+  const gameCards = Array.from(document.querySelectorAll(
+    '.schedule__game, [class*="schedule__game"], .schedule__game-details, a[href*="/game/"], [class*="game-item"], [class*="event-item"]'
+  ));
 
-  for (const a of gameAnchors) {
-    const href = a.getAttribute('href');
-    if (href && !seenHrefs.has(href)) {
-      seenHrefs.add(href);
-      uniqueAnchors.push(a);
-    }
-  }
-
-  if (uniqueAnchors.length > 0) {
+  if (gameCards.length > 0) {
     const results = [];
-    for (let i = 0; i < Math.min(uniqueAnchors.length, 15); i++) {
-      const el = uniqueAnchors[i];
+    for (let i = 0; i < Math.min(gameCards.length, 20); i++) {
+      const card = gameCards[i];
       try {
-        el.click();
-        await sleep(500);
-        const parsed = parseRawBetcris(document.body.innerText);
+        const clickTarget = card.querySelector(
+          '.schedule__game-more-markets, [class*="more-markets"], .schedule__team-name, button, a'
+        ) || card;
+
+        clickTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        clickTarget.click();
+        await sleep(650);
+
+        const parsed = parseFlexibleBetcris(document.body.innerText);
         if (parsed && parsed.length > 0) {
           for (const g of parsed) {
             if (!results.some(r => r.away === g.away && r.home === g.home)) {
@@ -200,22 +200,22 @@ async function scrapeBetcrisDOM() {
           }
         }
       } catch (e) {}
-      await sleep(250);
+      await sleep(200);
     }
 
     if (results.length > 0) {
-      return { status: 'success', url: window.location.href, games: results, method: 'crawled' };
+      return { status: 'success', url: window.location.href, games: results, method: 'flat_crawler' };
     }
   }
 
-  // 3. Si no se encontró nada, reportar diagnóstico
+  // 3. Si no se encontró nada, reportar diagnóstico detallado
   return {
     status: 'no_hce_found',
     url: window.location.href,
     title: document.title,
-    hasHitsKeyword: rawText.includes('Hits') || rawText.includes('hits'),
-    gameAnchorsCount: gameAnchors.length,
-    textLength: rawText.length,
+    gameCardsFound: gameCards.length,
+    hasHitsKeyword: rawText.toLowerCase().includes('hits') || rawText.toLowerCase().includes('carreras'),
+    textPreview: rawText.replace(/\s+/g, ' ').slice(0, 200),
     games: []
   };
 }

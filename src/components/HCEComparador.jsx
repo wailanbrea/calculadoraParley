@@ -118,47 +118,47 @@ export function parseRawBetcris(text) {
   const clean = (text || '').replace(/\u00a0/g, ' ');
   const games = [];
 
-  const pattern = /([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total de Hits[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/gi;
+  // Patrón 1: Bloque con equipos y Total Hits+Carreras+Errores (con o sin dos puntos)
+  const pattern = /([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+?)\s*(?::|\n|\r|\|)?\s*(?:Total\s*(?:de\s*)?)?hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/gi;
 
   let m;
   while ((m = pattern.exec(clean)) !== null) {
+    let away = m[1].replace(/^[0-9\s\-]+/, '').trim();
+    let home = m[2].replace(/^[0-9\s\-]+/, '').replace(/[\r\n]+.*$/, '').trim();
     games.push({
-      away: m[1].replace(/^[0-9\s\-]+/, '').trim(),
-      home: m[2].replace(/^[0-9\s\-]+/, '').trim(),
+      away,
+      home,
       total: parseFloat(m[3]),
+      line: String(m[3]),
       over_odds: parseInt(m[4], 10),
-      under_odds: parseInt(m[6], 10)
+      under_odds: parseInt(m[6], 10),
+      over: String(m[4]),
+      under: String(m[6])
     });
   }
 
   if (games.length === 0) {
-    let away = '', home = '';
-    const tm = clean.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total/i)
-      || clean.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i);
-    if (tm) {
-      away = tm[1].replace(/^[0-9\s\-]+/, '').trim();
-      home = tm[2].replace(/^[0-9\s\-]+/, '').trim();
-    }
-
-    let overTotal = null, overOdds = null;
-    const om = clean.match(/(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\\s\S]{0,30}?([+-]?[0-9]{3,4})/i)
-      || clean.match(/(?:Ov|Over)[\s\S]{0,20}?([+-]?[0-9]{3,4})/i);
-    if (om) {
-      if (om[2]) { overTotal = parseFloat(om[1]); overOdds = parseInt(om[2], 10); }
-      else if (om[1]) { overOdds = parseInt(om[1], 10); }
-    }
-
-    let underTotal = null, underOdds = null;
-    const um = clean.match(/(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\\s\S]{0,30}?([+-]?[0-9]{3,4})/i)
-      || clean.match(/(?:Un|Under)[\s\S]{0,20}?([+-]?[0-9]{3,4})/i);
-    if (um) {
-      if (um[2]) { underTotal = parseFloat(um[1]); underOdds = parseInt(um[2], 10); }
-      else if (um[1]) { underOdds = parseInt(um[1], 10); }
-    }
-
-    const total = overTotal ?? underTotal;
-    if (total !== null) {
-      games.push({ away, home, total, over_odds: overOdds, under_odds: underOdds });
+    const hceMatch = clean.match(/hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/i);
+    if (hceMatch) {
+      let away = '', home = '';
+      const tm = clean.match(/([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+?)(?:\s*:|\n|\r|\||\s+Total)/i)
+        || clean.match(/([a-zA-Z0-9\s.]+?)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i);
+      if (tm) {
+        away = tm[1].replace(/^[0-9\s\-]+/, '').trim();
+        home = tm[2].replace(/^[0-9\s\-]+/, '').replace(/[\r\n]+.*$/, '').trim();
+      }
+      if (away && home) {
+        games.push({
+          away,
+          home,
+          total: parseFloat(hceMatch[1]),
+          line: String(hceMatch[1]),
+          over_odds: parseInt(hceMatch[2], 10),
+          under_odds: parseInt(hceMatch[4], 10),
+          over: String(hceMatch[2]),
+          under: String(hceMatch[4])
+        });
+      }
     }
   }
 
