@@ -4,11 +4,15 @@ $allowed_origins = [
     'http://172.20.0.251:8080',
     'https://calcparley.bsolutions.dev',
     'https://www.mlb.com',
-    'https://mlb.com'
+    'https://mlb.com',
+    'https://www.betonline.ag',
+    'https://betonline.ag',
+    'https://be.betcris.do',
+    'https://betcris.do'
 ];
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
-if (in_array($origin, $allowed_origins)) {
-    header("Access-Control-Allow-Origin: " . $origin);
+if (in_array($origin, $allowed_origins) || preg_match('/^(https?:\/\/(localhost|127\.0\.0\.1|.*\.betonline\.ag|.*\.betcris\.do))(:[0-9]+)?$/', $origin)) {
+    header("Access-Control-Allow-Origin: " . ($origin ?: '*'));
 } else {
     // Por defecto, o si es local/vacío
     header("Access-Control-Allow-Origin: https://calcparley.bsolutions.dev");
@@ -30,6 +34,9 @@ $configFile = dirname(__DIR__) . '/server_config.json';
 $feedFile = dirname(__DIR__) . '/server_feed.json';
 $basesFile = dirname(__DIR__) . '/server_bases.json';
 $closingSequenceFile = dirname(__DIR__) . '/server_closing_sequence.json';
+$hceFile = dirname(__DIR__) . '/server_hce.json';
+$hceBetonlineFile = dirname(__DIR__) . '/server_hce_betonline.json';
+$hceBetcrisFile = dirname(__DIR__) . '/server_hce_betcris.json';
 $tokenFile = dirname(__DIR__) . '/import_token.txt';
 
 // Si el archivo de config no existe, lo inicializamos
@@ -91,6 +98,13 @@ function validateToken($expectedToken) {
         if (strcasecmp($name, 'X-CalcParley-Import-Token') === 0) {
             $token = trim($value);
             break;
+        }
+    }
+    if (empty($token)) {
+        if (!empty($_GET['token'])) {
+            $token = trim($_GET['token']);
+        } elseif (!empty($_POST['token'])) {
+            $token = trim($_POST['token']);
         }
     }
     $acceptedTokens = [$expectedToken];
@@ -1316,6 +1330,209 @@ if ($action === 'get_mlb_comparison') {
     }
 
     echo json_encode(array_values($rows));
+    exit;
+}
+
+// --------------------------------------------------------------------------
+// Endpoints HCE (Hits + Carreras + Errores / R+H+E)
+// --------------------------------------------------------------------------
+
+// Acción: get_hce
+if ($action === 'get_hce') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+        exit;
+    }
+
+    $betonline = [];
+    $lastBetonlineSync = null;
+    if (file_exists($hceBetonlineFile)) {
+        clearstatcache(true, $hceBetonlineFile);
+        $content = file_get_contents($hceBetonlineFile);
+        $decoded = json_decode($content, true);
+        if (is_array($decoded)) {
+            $betonline = isset($decoded['games']) ? $decoded['games'] : $decoded;
+            $lastBetonlineSync = isset($decoded['updated_at']) ? $decoded['updated_at'] : date('c', filemtime($hceBetonlineFile));
+        }
+    }
+
+    $betcris = [];
+    $lastBetcrisSync = null;
+    if (file_exists($hceBetcrisFile)) {
+        clearstatcache(true, $hceBetcrisFile);
+        $content = file_get_contents($hceBetcrisFile);
+        $decoded = json_decode($content, true);
+        if (is_array($decoded)) {
+            $betcris = isset($decoded['games']) ? $decoded['games'] : $decoded;
+            $lastBetcrisSync = isset($decoded['updated_at']) ? $decoded['updated_at'] : date('c', filemtime($hceBetcrisFile));
+        }
+    }
+
+    $manual = [];
+    if (file_exists($hceFile)) {
+        clearstatcache(true, $hceFile);
+        $content = file_get_contents($hceFile);
+        $decoded = json_decode($content, true);
+        if (is_array($decoded)) {
+            $manual = isset($decoded['overrides']) ? $decoded['overrides'] : [];
+        }
+    }
+
+    echo json_encode([
+        "status" => "success",
+        "betonline" => $betonline,
+        "betcris" => $betcris,
+        "manual" => $manual,
+        "last_betonline_sync" => $lastBetonlineSync,
+        "last_betcris_sync" => $lastBetcrisSync,
+        "server_time" => date('c')
+    ]);
+    exit;
+}
+
+// Acción: save_hce_betonline
+if ($action === 'save_hce_betonline') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+        exit;
+    }
+
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+
+    if ($data === null) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "JSON inválido"]);
+        exit;
+    }
+
+    $games = isset($data['games']) && is_array($data['games']) ? $data['games'] : (is_array($data) ? $data : []);
+    $payload = [
+        "updated_at" => date('c'),
+        "source" => "betonline",
+        "games" => $games
+    ];
+
+    file_put_contents($hceBetonlineFile, json_encode($payload, JSON_PRETTY_PRINT), LOCK_EX);
+    clearstatcache(true, $hceBetonlineFile);
+
+    echo json_encode([
+        "status" => "success",
+        "message" => "Líneas de BetOnline guardadas",
+        "count" => count($games),
+        "updated_at" => $payload['updated_at']
+    ]);
+    exit;
+}
+
+// Acción: save_hce_betcris
+if ($action === 'save_hce_betcris') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+        exit;
+    }
+
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+
+    if ($data === null) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "JSON inválido"]);
+        exit;
+    }
+
+    $newGames = isset($data['games']) && is_array($data['games']) ? $data['games'] : (is_array($data) ? $data : []);
+    $append = isset($data['append']) && $data['append'] === true;
+
+    $existingGames = [];
+    if ($append && file_exists($hceBetcrisFile)) {
+        $c = file_get_contents($hceBetcrisFile);
+        $dec = json_decode($c, true);
+        if (isset($dec['games']) && is_array($dec['games'])) {
+            $existingGames = $dec['games'];
+        }
+    }
+
+    // Si append, combinamos por identificador de partido (home vs away)
+    if ($append && !empty($existingGames)) {
+        $mergedMap = [];
+        foreach ($existingGames as $g) {
+            $key = strtolower(trim(($g['away'] ?? '') . '_vs_' . ($g['home'] ?? '')));
+            if ($key !== '_vs_') $mergedMap[$key] = $g;
+        }
+        foreach ($newGames as $g) {
+            $key = strtolower(trim(($g['away'] ?? '') . '_vs_' . ($g['home'] ?? '')));
+            if ($key !== '_vs_') $mergedMap[$key] = $g;
+        }
+        $finalGames = array_values($mergedMap);
+    } else {
+        $finalGames = $newGames;
+    }
+
+    $payload = [
+        "updated_at" => date('c'),
+        "source" => "betcris",
+        "games" => $finalGames
+    ];
+
+    file_put_contents($hceBetcrisFile, json_encode($payload, JSON_PRETTY_PRINT), LOCK_EX);
+    clearstatcache(true, $hceBetcrisFile);
+
+    echo json_encode([
+        "status" => "success",
+        "message" => "Líneas de Betcris guardadas",
+        "count" => count($finalGames),
+        "updated_at" => $payload['updated_at']
+    ]);
+    exit;
+}
+
+// Acción: save_hce_manual
+if ($action === 'save_hce_manual') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+        exit;
+    }
+
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+
+    $payload = [
+        "updated_at" => date('c'),
+        "overrides" => $data['overrides'] ?? $data ?? []
+    ];
+
+    file_put_contents($hceFile, json_encode($payload, JSON_PRETTY_PRINT), LOCK_EX);
+    clearstatcache(true, $hceFile);
+
+    echo json_encode([
+        "status" => "success",
+        "message" => "Configuración manual de HCE guardada",
+        "updated_at" => $payload['updated_at']
+    ]);
+    exit;
+}
+
+// Acción: clear_hce
+if ($action === 'clear_hce') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+        exit;
+    }
+
+    if (file_exists($hceBetonlineFile)) unlink($hceBetonlineFile);
+    if (file_exists($hceBetcrisFile)) unlink($hceBetcrisFile);
+    if (file_exists($hceFile)) unlink($hceFile);
+
+    echo json_encode([
+        "status" => "success",
+        "message" => "Datos de HCE reseteados correctamente"
+    ]);
     exit;
 }
 

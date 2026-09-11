@@ -16,9 +16,15 @@ dist-ssr
 server_bases.json
 server_feed.json
 server_closing_sequence.json
+server_hce*.json
+cache_cmp_*.json
 import_token.txt
 cache_ls_*.json
 .playwright-mcp/
+.playwright-cli/
+scratch_*.txt
+crawler/test_scrape.js
+output/
 
 # Marcadores en vivo generados por el crawler en el VPS (se generan solos cada 2 min,
 # ya no se transportan por Git)

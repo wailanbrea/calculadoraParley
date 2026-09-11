@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import MLBLineups from './MLBLineups';
 import BasesAlcanzadas from './BasesAlcanzadas';
+import HCEComparador from './HCEComparador';
 
-// Módulo MLB: reúne el predictor de lineups + bases alcanzadas (nuevo) y el
-// seguimiento de bases en vivo que ya existía, en pestañas.
+// Módulo MLB: reúne el predictor de lineups, seguimiento de bases y comparador HCE (R+H+E)
 export default function MLBModulo({ config }) {
   const [tab, setTab] = useState('lineups');
 
@@ -23,8 +23,15 @@ export default function MLBModulo({ config }) {
       <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '14px' }}>
         {btn('lineups', '⚾ Lineups & Predicción')}
         {btn('bases', '📊 Seguimiento de bases')}
+        {btn('hce', '🔥 HCE (R+H+E)')}
       </div>
-      {tab === 'lineups' ? <MLBLineups /> : <BasesAlcanzadas config={config} />}
+      {tab === 'lineups' ? (
+        <MLBLineups />
+      ) : tab === 'bases' ? (
+        <BasesAlcanzadas config={config} />
+      ) : (
+        <HCEComparador config={config} />
+      )}
     </div>
   );
 }
