@@ -284,11 +284,19 @@ export default function HCEComparador({ config }) {
       }
       if (e.data?.type === 'CALCPARLEY_SYNC_RESULT') {
         setSyncingWithExt(false);
-        if (e.data.success) {
-          notify(`🎉 ¡Sincronizado! BetOnline: ${e.data.betonlineCount || 0} partidos, Betcris: ${e.data.betcrisCount || 0} partidos.`);
+        const bol = e.data.betonlineCount || 0;
+        const cris = e.data.betcrisCount || 0;
+        if (bol > 0 && cris > 0) {
+          notify(`🎉 ¡Sincronizado! BetOnline: ${bol} partidos, Betcris: ${cris} partidos.`);
+          loadData();
+        } else if (bol > 0) {
+          notify(`✅ BetOnline: ${bol} partidos. 💡 Betcris: ${e.data.crisNote || 'Entra al partido o sección de béisbol en Betcris'}`, 'info');
+          loadData();
+        } else if (cris > 0) {
+          notify(`✅ Betcris: ${cris} partidos. 💡 BetOnline: ${e.data.bolNote || 'Verifica la pestaña de BetOnline'}`, 'info');
           loadData();
         } else {
-          notify('Error de sincronización: ' + (e.data.error || 'Desconocido'), 'error');
+          notify(e.data.crisNote || e.data.error || 'No se detectaron líneas en ninguna casa. Asegúrate de tener abiertas las pestañas de BetOnline y Betcris.', 'error');
         }
       }
     };

@@ -60,41 +60,119 @@
     const rawText = document.body.innerText || '';
     const results = [];
 
-    // 1. Primero revisar si la página actual ya tiene el mercado
+    // 1. Primero revisar si la página actual ya tiene el mercado en texto
     const current = parseFlexibleBetcris(rawText);
     if (current.length > 0) return current;
 
-    // 2. Buscar tarjetas de partidos
-    const gameCards = Array.from(document.querySelectorAll(
-      '.schedule__game, [class*="schedule__game"], .schedule__game-details, a[href*="/game/"], [class*="game-item"]'
-    ));
+    // 2. Extraer mediante la API interna de Betcris con la sesión activa
+    function checkGameForHce(game, parentGame) {
+      const desc = ((game.description || '') + ' ' + (game.periodDescription || '')).toLowerCase();
+      const isHce = desc.includes('hits') || desc.includes('carreras') || desc.includes('hce') || desc.includes('errores');
 
-    if (gameCards.length > 0) {
-      for (let i = 0; i < Math.min(gameCards.length, 20); i++) {
-        const card = gameCards[i];
-        if (onProgress) onProgress(i + 1, gameCards.length);
-        try {
-          const clickTarget = card.querySelector(
-            '.schedule__game-more-markets, [class*="more-markets"], .schedule__team-name, button, a'
-          ) || card;
+      if (isHce) {
+        const away = (game.contenders?.[0]?.name || parentGame?.contenders?.[0]?.name || '').trim();
+        const home = (game.contenders?.[1]?.name || parentGame?.contenders?.[1]?.name || '').trim();
 
-          clickTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          clickTarget.click();
-          await delay(650);
+        let total = null, overOdds = null, underOdds = null;
+        const drvs = game.lines?.drvs || [];
+        for (const d of drvs) {
+          if (d.tot) {
+            total = d.tot.vp ?? d.tot.hp ?? d.tot.line ?? null;
+            overOdds = d.tot.v ?? d.tot.ov ?? null;
+            underOdds = d.tot.h ?? d.tot.un ?? null;
+            break;
+          }
+        }
 
-          const parsed = parseFlexibleBetcris(document.body.innerText);
-          if (parsed && parsed.length > 0) {
-            for (const g of parsed) {
-              if (!results.some(r => r.away === g.away && r.home === g.home)) {
-                results.push(g);
+        if (away && home && total !== null) {
+          return {
+            away, home, total: parseFloat(total), line: String(total),
+            over_odds: parseInt(overOdds, 10), under_odds: parseInt(underOdds, 10),
+            over: String(overOdds), under: String(underOdds)
+          };
+        }
+      }
+      return null;
+    }
+
+    const catMatch = window.location.href.match(/(?:flat|seclvlcat|category)\/([A-Fa-f0-9\-]{36})/i);
+    const gameMatch = window.location.href.match(/game\/([A-Fa-f0-9\-]{36})/i);
+
+    if (gameMatch) {
+      try {
+        const gRes = await fetch('/gateway/BetslipProxy.aspx/scheduleGetSingleGameView', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ o: { BORequestData: { BOParameters: { BORt: {}, gameUuid: gameMatch[1] } } } })
+        });
+        if (gRes.ok) {
+          const gData = await gRes.json();
+          const subGames = gData.games || gData.Data?.games || (Array.isArray(gData) ? gData : []);
+          for (const sg of subGames) {
+            const hce = checkGameForHce(sg);
+            if (hce) results.push(hce);
+          }
+          if (results.length > 0) return results;
+        }
+      } catch(e) {}
+    }
+
+    if (catMatch) {
+      try {
+        const cRes = await fetch('/gateway/BetslipProxy.aspx/scheduleGetCategoryContent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ o: { BORequestData: { BOParameters: { BORt: {}, Category: catMatch[1] } } } })
+        });
+
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          const groups = cData.groups || (cData.Data && cData.Data.groups) || [];
+          const mainGames = [];
+
+          for (const grp of groups) {
+            for (const item of (grp.games || [])) {
+              const hce = checkGameForHce(item);
+              if (hce) results.push(hce);
+              if (item.gameUUID && (!item.parentUUID || item.gameUUID === item.parentUUID)) {
+                mainGames.push(item);
               }
             }
           }
-        } catch (err) {
-          console.warn('[BSolutions Sync] Error accediendo al partido', err);
+
+          if (results.length === 0 && mainGames.length > 0) {
+            const promises = mainGames.slice(0, 15).map(async (mg) => {
+              try {
+                const sRes = await fetch('/gateway/BetslipProxy.aspx/scheduleGetSingleGameView', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ o: { BORequestData: { BOParameters: { BORt: {}, gameUuid: mg.gameUUID } } } })
+                });
+                if (!sRes.ok) return null;
+                const sData = await sRes.json();
+                const subGames = sData.games || sData.Data?.games || (Array.isArray(sData) ? sData : []);
+                for (const sg of subGames) {
+                  const found = checkGameForHce(sg, mg);
+                  if (found) return found;
+                }
+              } catch(e) {}
+              return null;
+            });
+
+            const subResults = await Promise.all(promises);
+            for (const r of subResults) {
+              if (r && !results.some(x => x.away === r.away && x.home === r.home)) {
+                results.push(r);
+              }
+            }
+          }
+
+          if (results.length > 0) return results;
         }
-        await delay(200);
-      }
+      } catch(e) {}
     }
 
     return results;

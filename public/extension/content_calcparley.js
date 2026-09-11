@@ -9,7 +9,7 @@
     if (event.data.type === 'CALCPARLEY_CHECK_EXTENSION') {
       window.postMessage({
         type: 'CALCPARLEY_EXTENSION_PONG',
-        version: '1.0.0',
+        version: '1.0.2',
         installed: true
       }, '*');
     }
@@ -46,7 +46,7 @@
   // Notificar al cargar
   window.postMessage({
     type: 'CALCPARLEY_EXTENSION_PONG',
-    version: '1.0.0',
+    version: '1.0.2',
     installed: true
   }, '*');
 

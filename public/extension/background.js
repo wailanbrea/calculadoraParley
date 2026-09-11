@@ -1,4 +1,4 @@
-// Service Worker (Manifest V3) - BSolutions Parley Sync v1.0.1
+// Service Worker (Manifest V3) - BSolutions Parley Sync v1.0.2
 const API_BASE = "https://calcparley.bsolutions.dev/api.php";
 
 function delay(ms) {
@@ -31,6 +31,21 @@ function waitForTabLoad(tabId, timeoutMs = 12000) {
   });
 }
 
+function isBetonlineRheUrl(url) {
+  if (!url) return false;
+  try {
+    const u = decodeURIComponent(url).toLowerCase();
+    return u.includes('betonline.ag') && (
+      u.includes('r+h+e') || 
+      u.includes('r%2bh%2be') || 
+      u.includes('r-h-e') ||
+      (u.includes('baseball') && u.includes('sportsbook'))
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 // Injected function for BetOnline
 async function scrapeBetonlineDOM() {
   const MLB_TEAMS = [
@@ -40,12 +55,13 @@ async function scrapeBetonlineDOM() {
     'mariners', 'cardinals', 'rays', 'rangers', 'blue jays', 'nationals'
   ];
 
-  // Esperar activamente a que los bloques de partidos aparezcan en el DOM
   let links = [];
-  for (let attempt = 0; attempt < 25; attempt++) {
-    links = Array.from(document.querySelectorAll('a')).map(a => a.innerText.trim()).filter(t => t.includes('Total') && t.includes('O '));
+  for (let attempt = 0; attempt < 30; attempt++) {
+    links = Array.from(document.querySelectorAll('a'))
+      .map(a => a.innerText.trim())
+      .filter(t => t.includes('Total') && (t.includes('O ') || t.includes('Over') || /O\s*\d+/i.test(t)));
     if (links.length > 0) break;
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 400));
   }
 
   const games = [];
@@ -159,10 +175,8 @@ async function scrapeBetcrisDOM() {
     return games;
   }
 
-  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-  const rawText = document.body.innerText || '';
-
-  // 1. Verificar si en el texto de la pantalla ya está visible el bloque de HCE
+  // 1. Estrategia Directa: Si el texto actual en pantalla ya muestra el mercado
+  const rawText = document.body ? document.body.innerText : '';
   const direct = parseFlexibleBetcris(rawText);
   if (direct.length > 0) {
     return {
@@ -173,49 +187,147 @@ async function scrapeBetcrisDOM() {
     };
   }
 
-  // 2. Buscar elementos de partidos en la vista flat o categoría
+  // 2. Estrategia API Interna de Betcris (Ejecutada con la sesión activa del usuario)
+  function checkGameForHce(game, parentGame) {
+    const desc = ((game.description || '') + ' ' + (game.periodDescription || '')).toLowerCase();
+    const isHce = desc.includes('hits') || desc.includes('carreras') || desc.includes('hce') || desc.includes('errores');
+
+    if (isHce) {
+      const away = (game.contenders?.[0]?.name || parentGame?.contenders?.[0]?.name || '').trim();
+      const home = (game.contenders?.[1]?.name || parentGame?.contenders?.[1]?.name || '').trim();
+
+      let total = null, overOdds = null, underOdds = null;
+      const drvs = game.lines?.drvs || [];
+      for (const d of drvs) {
+        if (d.tot) {
+          total = d.tot.vp ?? d.tot.hp ?? d.tot.line ?? null;
+          overOdds = d.tot.v ?? d.tot.ov ?? null;
+          underOdds = d.tot.h ?? d.tot.un ?? null;
+          break;
+        }
+      }
+
+      if (away && home && total !== null) {
+        return {
+          away,
+          home,
+          total: parseFloat(total),
+          line: String(total),
+          over_odds: parseInt(overOdds, 10),
+          under_odds: parseInt(underOdds, 10),
+          over: String(overOdds),
+          under: String(underOdds)
+        };
+      }
+    }
+    return null;
+  }
+
+  const catMatch = window.location.href.match(/(?:flat|seclvlcat|category)\/([A-Fa-f0-9\-]{36})/i);
+  const gameMatch = window.location.href.match(/game\/([A-Fa-f0-9\-]{36})/i);
+
+  if (gameMatch) {
+    try {
+      const gRes = await fetch('/gateway/BetslipProxy.aspx/scheduleGetSingleGameView', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          o: { BORequestData: { BOParameters: { BORt: {}, gameUuid: gameMatch[1] } } }
+        })
+      });
+      if (gRes.ok) {
+        const gData = await gRes.json();
+        const subGames = gData.games || gData.Data?.games || (Array.isArray(gData) ? gData : []);
+        const foundGames = [];
+        for (const sg of subGames) {
+          const hce = checkGameForHce(sg);
+          if (hce) foundGames.push(hce);
+        }
+        if (foundGames.length > 0) {
+          return { status: 'success', url: window.location.href, games: foundGames, method: 'betcris_single_api' };
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (catMatch) {
+    try {
+      const cRes = await fetch('/gateway/BetslipProxy.aspx/scheduleGetCategoryContent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          o: { BORequestData: { BOParameters: { BORt: {}, Category: catMatch[1] } } }
+        })
+      });
+
+      if (cRes.ok) {
+        const cData = await cRes.json();
+        const groups = cData.groups || (cData.Data && cData.Data.groups) || [];
+        const apiGames = [];
+        const mainGames = [];
+
+        for (const grp of groups) {
+          for (const item of (grp.games || [])) {
+            const hce = checkGameForHce(item);
+            if (hce) apiGames.push(hce);
+            if (item.gameUUID && (!item.parentUUID || item.gameUUID === item.parentUUID)) {
+              mainGames.push(item);
+            }
+          }
+        }
+
+        if (apiGames.length === 0 && mainGames.length > 0) {
+          const promises = mainGames.slice(0, 15).map(async (mg) => {
+            try {
+              const sRes = await fetch('/gateway/BetslipProxy.aspx/scheduleGetSingleGameView', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  o: { BORequestData: { BOParameters: { BORt: {}, gameUuid: mg.gameUUID } } }
+                })
+              });
+              if (!sRes.ok) return null;
+              const sData = await sRes.json();
+              const subGames = sData.games || sData.Data?.games || (Array.isArray(sData) ? sData : []);
+              for (const sg of subGames) {
+                const found = checkGameForHce(sg, mg);
+                if (found) return found;
+              }
+            } catch(e) {}
+            return null;
+          });
+
+          const results = await Promise.all(promises);
+          for (const r of results) {
+            if (r && !apiGames.some(x => x.away === r.away && x.home === r.home)) {
+              apiGames.push(r);
+            }
+          }
+        }
+
+        if (apiGames.length > 0) {
+          return { status: 'success', url: window.location.href, games: apiGames, method: 'betcris_category_api' };
+        }
+      }
+    } catch(e) {
+      console.warn('[BSolutions Sync] Betcris API fetch error:', e);
+    }
+  }
+
+  // 3. Diagnóstico si no se encontró nada
   const gameCards = Array.from(document.querySelectorAll(
     '.schedule__game, [class*="schedule__game"], .schedule__game-details, a[href*="/game/"], [class*="game-item"], [class*="event-item"]'
   ));
 
-  if (gameCards.length > 0) {
-    const results = [];
-    for (let i = 0; i < Math.min(gameCards.length, 20); i++) {
-      const card = gameCards[i];
-      try {
-        const clickTarget = card.querySelector(
-          '.schedule__game-more-markets, [class*="more-markets"], .schedule__team-name, button, a'
-        ) || card;
-
-        clickTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        clickTarget.click();
-        await sleep(650);
-
-        const parsed = parseFlexibleBetcris(document.body.innerText);
-        if (parsed && parsed.length > 0) {
-          for (const g of parsed) {
-            if (!results.some(r => r.away === g.away && r.home === g.home)) {
-              results.push(g);
-            }
-          }
-        }
-      } catch (e) {}
-      await sleep(200);
-    }
-
-    if (results.length > 0) {
-      return { status: 'success', url: window.location.href, games: results, method: 'flat_crawler' };
-    }
-  }
-
-  // 3. Si no se encontró nada, reportar diagnóstico detallado
   return {
     status: 'no_hce_found',
     url: window.location.href,
     title: document.title,
     gameCardsFound: gameCards.length,
     hasHitsKeyword: rawText.toLowerCase().includes('hits') || rawText.toLowerCase().includes('carreras'),
-    textPreview: rawText.replace(/\s+/g, ' ').slice(0, 200),
     games: []
   };
 }
@@ -225,25 +337,24 @@ async function syncBetonline(targetApi) {
   const apiUrl = targetApi ? `${targetApi}?action=save_hce_betonline` : `${API_BASE}?action=save_hce_betonline`;
   
   const allTabs = await chrome.tabs.query({});
-  let bolTab = allTabs.find(t => t.url && t.url.includes('betonline.ag/sportsbook/baseball/r+h+e'));
+  let bolTab = allTabs.find(t => isBetonlineRheUrl(t.url));
   let createdTab = false;
 
   if (!bolTab) {
-    // Si tienen una pestaña de betonline pero en otra URL, la navegamos
     const anyBol = allTabs.find(t => t.url && t.url.includes('betonline.ag'));
     if (anyBol) {
       bolTab = anyBol;
-      await chrome.tabs.update(bolTab.id, { url: "https://www.betonline.ag/sportsbook/baseball/r+h+e" });
+      await chrome.tabs.update(bolTab.id, { url: "https://www.betonline.ag/sportsbook/baseball/r+h+e", active: true });
       await waitForTabLoad(bolTab.id);
-      await delay(3500);
+      await delay(4000);
     } else {
       bolTab = await chrome.tabs.create({
         url: "https://www.betonline.ag/sportsbook/baseball/r+h+e",
-        active: false
+        active: true
       });
       createdTab = true;
       await waitForTabLoad(bolTab.id);
-      await delay(3500);
+      await delay(4000);
     }
   }
 
@@ -266,15 +377,13 @@ async function syncBetonline(targetApi) {
         try { await chrome.tabs.remove(bolTab.id); } catch(e) {}
       }
       return { success: true, count: games.length, details: res };
+    } else {
+      return { success: false, count: 0, message: `BetOnline detectado (${bolTab.url}), pero la página tardó en cargar las líneas. Vuelve a intentarlo.` };
     }
   } catch (e) {
     console.error('[BSolutions Sync] Error ejecutando script en BetOnline:', e);
+    return { success: false, count: 0, error: e.message };
   }
-
-  if (createdTab) {
-    try { await chrome.tabs.remove(bolTab.id); } catch(e) {}
-  }
-  return { success: false, count: 0 };
 }
 
 // 2. Sincronizar Betcris
@@ -312,7 +421,7 @@ async function syncBetcris(targetApi) {
       return {
         success: false,
         count: 0,
-        message: `Pestaña Betcris detectada en (${res?.url || crisTab.url}). No se vio el mercado "Total de Hits+Carreras+Errores". Entra al partido en Betcris.`
+        message: `Pestaña Betcris detectada en (${res?.url || crisTab.url}). No se detectó el mercado HCE. Entra a un partido de MLB en Betcris.`
       };
     }
   } catch (e) {
@@ -333,7 +442,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           success: bolRes.count > 0 || crisRes.count > 0,
           betonlineCount: bolRes.count,
           betcrisCount: crisRes.count,
-          crisNote: crisRes.message || null
+          crisNote: crisRes.message || null,
+          bolNote: bolRes.message || null
         });
       } catch (err) {
         sendResponse({
