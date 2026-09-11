@@ -1,16 +1,40 @@
-# React + Vite
+﻿# Calculadora de Parley & Comparador HCE (MLB) - BSolutions
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma integral de cálculo de parleys y comparador de líneas de apuestas deportivas en tiempo real entre **BetOnline** y **Betcris**.
 
-Currently, two official plugins are available:
+Desplegado en: [https://calcparley.bsolutions.dev](https://calcparley.bsolutions.dev)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ⚡ Módulo de Sincronización Automática HCE (MLB)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Permite extraer y comparar en tiempo real las líneas de **Hits + Carreras + Errores (HCE / R+H+E)** de las Grandes Ligas de Béisbol entre BetOnline y Betcris con 1 solo clic.
 
-## Expanding the ESLint configuration
+Para detalles completos de arquitectura, ingeniería inversa de Betcris (Angular SPA), endpoints internos (`/gateway/BetslipProxy.aspx/`), selectores DOM y guía técnica para desarrolladores e IAs, consulta:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+👉 **[HCE_SYNC_ARCHITECTURE.md](./HCE_SYNC_ARCHITECTURE.md)**
+
+---
+
+## 🚀 Despliegue y Comandos
+
+### Desarrollo Local
+```bash
+npm install
+npm run dev
+```
+
+### Compilar para Producción
+```bash
+npm run build
+```
+
+### Empaquetar Extensión de Chrome
+```powershell
+Compress-Archive -Path "public\extension\*" -DestinationPath "public\extension.zip" -Force
+```
+
+### Despliegue en Servidor VPS
+```bash
+ssh bsolutions-vps "cd /d C:\xampp\htdocs\calcparley && git pull origin main && npm run build"
+```
