@@ -175,10 +175,12 @@ export default function HCEComparador({ config }) {
   const [copiedId, setCopiedId] = useState(null);
   const [notification, setNotification] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [importTab, setImportTab] = useState('paste'); // 'paste' | 'scripts'
+  const [importTab, setImportTab] = useState('extension'); // 'extension' | 'paste' | 'scripts'
   const [pasteHouse, setPasteHouse] = useState('betonline'); // 'betonline' | 'betcris'
   const [pastedText, setPastedText] = useState('');
   const [importing, setImporting] = useState(false);
+  const [hasExtension, setHasExtension] = useState(false);
+  const [syncingWithExt, setSyncingWithExt] = useState(false);
 
   const notify = (msg, type = 'success') => {
     setNotification({ msg, type });
@@ -268,8 +270,63 @@ export default function HCEComparador({ config }) {
   useEffect(() => {
     loadData();
     const interval = setInterval(() => loadData(true), 25000);
-    return () => clearInterval(interval);
+
+    // 1. Revisar si la extensión ya marcó el DOM o sessionStorage
+    if (document.documentElement.getAttribute('data-bsolutions-sync-installed') === 'true' ||
+        window.sessionStorage.getItem('__BSOLUTIONS_PARLEY_EXT__')) {
+      setHasExtension(true);
+    }
+
+    // 2. Escuchar evento de la extensión lista
+    const handleExtReady = () => setHasExtension(true);
+    window.addEventListener('bsolutions_sync_extension_ready', handleExtReady);
+
+    // 3. Ping para detectar extensión
+    window.postMessage({ type: 'CALCPARLEY_CHECK_EXTENSION' }, '*');
+
+    // 4. Escuchar respuestas de la extensión
+    const handleMessage = (e) => {
+      if (e.data?.type === 'CALCPARLEY_EXTENSION_PONG') {
+        setHasExtension(true);
+      }
+      if (e.data?.type === 'CALCPARLEY_SYNC_RESULT') {
+        setSyncingWithExt(false);
+        if (e.data.success) {
+          notify(`🎉 ¡Sincronizado! BetOnline: ${e.data.betonlineCount || 0} partidos, Betcris: ${e.data.betcrisCount || 0} partidos.`);
+          loadData();
+        } else {
+          notify('Error de sincronización: ' + (e.data.error || 'Desconocido'), 'error');
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('bsolutions_sync_extension_ready', handleExtReady);
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
+
+  const handleTriggerExtensionSync = () => {
+    setSyncingWithExt(true);
+    notify('⏳ Sincronizando BetOnline y Betcris en segundo plano...', 'info');
+    window.postMessage({
+      type: 'CALCPARLEY_TRIGGER_SYNC',
+      targetApi: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') + '/api.php'
+    }, '*');
+
+    // Timeout de seguridad de 25s
+    setTimeout(() => {
+      setSyncingWithExt(prev => {
+        if (prev) {
+          notify('La sincronización tardó demasiado. Asegúrate de tener Betcris abierto.', 'error');
+          return false;
+        }
+        return false;
+      });
+    }, 25000);
+  };
 
   // Emparejamiento inteligente de partidos entre BetOnline y Betcris
   const matchedGames = useMemo(() => {
@@ -710,17 +767,45 @@ export default function HCEComparador({ config }) {
             {loading ? 'Cargando...' : 'Actualizar'}
           </button>
 
+          {hasExtension ? (
+            <button
+              onClick={handleTriggerExtensionSync}
+              disabled={syncingWithExt}
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #0284c7 100%)', border: 'none', color: '#fff',
+                padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.84rem',
+                fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px',
+                boxShadow: '0 2px 10px rgba(16, 185, 129, 0.4)'
+              }}
+            >
+              <span style={{ display: 'inline-block', transform: syncingWithExt ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s' }}>⚡</span>
+              {syncingWithExt ? 'Sincronizando BetOnline y Betcris...' : 'Sincronizar Casas (1 Clic)'}
+            </button>
+          ) : (
+            <button
+              onClick={() => { setImportTab('extension'); setShowImportModal(true); }}
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: '#fff',
+                padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem',
+                fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+              }}
+            >
+              <span>⚡</span>
+              Sincronizar (1 Clic)
+            </button>
+          )}
+
           <button
             onClick={() => { setImportTab('paste'); setShowImportModal(true); }}
             style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: '#fff',
-              padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem',
-              fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px',
-              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+              background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)', color: '#cbd5e1',
+              padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem',
+              fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px'
             }}
           >
-            <span>📥</span>
-            Cargar Líneas (Pegar o Sincronizar)
+            <span>📋</span>
+            Pegar Texto
           </button>
 
           <button
@@ -1053,19 +1138,32 @@ export default function HCEComparador({ config }) {
             </div>
 
             {/* Modal Tabs */}
-            <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setImportTab('extension')}
+                style={{
+                  padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                  background: importTab === 'extension' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#1e293b',
+                  color: importTab === 'extension' ? '#fff' : '#94a3b8',
+                  border: '1px solid ' + (importTab === 'extension' ? '#34d399' : 'rgba(255,255,255,0.08)'),
+                  display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                <span>⚡</span>
+                1 Clic Automático (Extensión)
+              </button>
               <button
                 onClick={() => setImportTab('paste')}
                 style={{
                   padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
-                  background: importTab === 'paste' ? '#10b981' : '#1e293b',
+                  background: importTab === 'paste' ? '#3b82f6' : '#1e293b',
                   color: importTab === 'paste' ? '#fff' : '#94a3b8',
-                  border: '1px solid ' + (importTab === 'paste' ? '#34d399' : 'rgba(255,255,255,0.08)'),
+                  border: '1px solid ' + (importTab === 'paste' ? '#60a5fa' : 'rgba(255,255,255,0.08)'),
                   display: 'flex', alignItems: 'center', gap: '6px'
                 }}
               >
                 <span>📋</span>
-                Pegar Texto Copiado (Directo)
+                Pegar Texto Copiado
               </button>
               <button
                 onClick={() => setImportTab('scripts')}
@@ -1077,10 +1175,103 @@ export default function HCEComparador({ config }) {
                   display: 'flex', alignItems: 'center', gap: '6px'
                 }}
               >
-                <span>⚡</span>
-                Extractores Automáticos (Scripts)
+                <span>💻</span>
+                Scripts Manuales
               </button>
             </div>
+
+            {/* Tab: Extensión 1-Clic */}
+            {importTab === 'extension' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {hasExtension ? (
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)',
+                    borderRadius: '12px', padding: '18px', textAlign: 'center'
+                  }}>
+                    <span style={{ fontSize: '2rem', display: 'block', marginBottom: '6px' }}>✅</span>
+                    <h4 style={{ margin: '0 0 6px', color: '#34d399', fontSize: '1.1rem' }}>
+                      ¡Extensión BSolutions Parley Sync Conectada!
+                    </h4>
+                    <p style={{ margin: '0 auto 16px', fontSize: '0.85rem', color: '#cbd5e1', maxWidth: '460px' }}>
+                      Asegúrate de tener abierta tu pestaña de Betcris (donde tienes tu sesión iniciada). La extensión extraerá automáticamente las líneas de BetOnline y Betcris y las cargará aquí.
+                    </p>
+                    <button
+                      onClick={handleTriggerExtensionSync}
+                      disabled={syncingWithExt}
+                      style={{
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        border: 'none', color: '#fff', padding: '12px 24px', borderRadius: '10px',
+                        fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', display: 'inline-flex',
+                        alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+                      }}
+                    >
+                      <span style={{ display: 'inline-block', transform: syncingWithExt ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s' }}>⚡</span>
+                      {syncingWithExt ? 'Sincronizando casas en segundo plano...' : 'Sincronizar Líneas Ahora con 1 Clic'}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{
+                      background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)',
+                      borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#60a5fa', fontSize: '0.95rem' }}>
+                          ⚡ Extensión BSolutions Parley Sync para Chrome
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '3px' }}>
+                          Diseñada para usuarios sin conocimientos técnicos. Sincroniza ambas casas con 1 solo clic.
+                        </div>
+                      </div>
+                      <a
+                        href="./extension.zip"
+                        download="BSolutions_Parley_Sync.zip"
+                        style={{
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff',
+                          padding: '10px 18px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700,
+                          fontSize: '0.86rem', display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+                        }}
+                      >
+                        <span>📥</span>
+                        Descargar Extensión (.zip)
+                      </a>
+                    </div>
+
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: '#f8fafc' }}>
+                      Pasos sencillos para instalarla (Solo se hace 1 vez):
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                      <div style={{ background: '#1e293b', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.84rem', marginBottom: '4px' }}>1. Descomprimir</div>
+                        <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>
+                          Descarga el archivo <code>.zip</code> de arriba y dale clic derecho ➔ <strong>Extraer todo</strong> en una carpeta de tu PC.
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#1e293b', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.84rem', marginBottom: '4px' }}>2. Modo desarrollador</div>
+                        <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>
+                          En Chrome abre <code>chrome://extensions</code> y activa el interruptor de <strong>Modo de desarrollador</strong> arriba a la derecha.
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#1e293b', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.84rem', marginBottom: '4px' }}>3. Cargar carpeta</div>
+                        <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>
+                          Haz clic en el botón <strong>Cargar descomprimida</strong> y selecciona la carpeta que acabas de extraer.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', textAlign: 'center', marginTop: '4px' }}>
+                      💡 En cuanto la cargues en Chrome, esta pantalla la reconocerá en tiempo real y el botón cambiará a <strong>Sincronizar con 1 Clic</strong>.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Tab 1: Pegar Texto Copiado */}
             {importTab === 'paste' && (

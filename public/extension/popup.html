@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>BSolutions Parley Sync</title>
+  <style>
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      box-sizing: border-box;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .logo {
+      font-size: 24px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+    h1 {
+      font-size: 15px;
+      margin: 0;
+      font-weight: 700;
+    }
+    .version {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e293b;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .badge-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .badge-warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .btn-sync {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      transition: opacity 0.2s;
+    }
+    .btn-sync:hover { opacity: 0.92; }
+    .btn-sync:disabled { opacity: 0.5; cursor: not-allowed; }
+    .log-box {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #94a3b8;
+      background: #020617;
+      padding: 8px 10px;
+      border-radius: 6px;
+      min-height: 24px;
+      word-break: break-word;
+    }
+    .footer {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 11px;
+    }
+    .footer a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">⚾</div>
+    <div>
+      <h1>BSolutions Parley Sync</h1>
+      <div class="version">Sincronizador 1-Clic v1.0.0</div>
+    </div>
+  </div>
+
+  <div class="status-list">
+    <div class="status-item">
+      <span>BetOnline (R+H+E):</span>
+      <span id="status-bol" class="badge badge-ok">Listo</span>
+    </div>
+    <div class="status-item">
+      <span>Betcris (Sesión):</span>
+      <span id="status-cris" class="badge badge-warn">Verificando...</span>
+    </div>
+  </div>
+
+  <button id="btn-sync" class="btn-sync">
+    <span>⚡</span>
+    <span id="btn-text">Sincronizar Líneas Ahora</span>
+  </button>
+
+  <div id="log-box" class="log-box">Listo para sincronizar.</div>
+
+  <div class="footer">
+    <a href="https://calcparley.bsolutions.dev" target="_blank">Abrir CalculadoraParley ↗</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
