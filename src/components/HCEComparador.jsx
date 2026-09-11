@@ -341,39 +341,133 @@ export default function HCEComparador({ config }) {
 })();`;
   };
 
-  // Código del bookmarklet / userscript para Betcris
+  // Código del bookmarklet / userscript para Betcris con escaneo automático
   const getBetcrisBookmarklet = () => {
     const targetUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') + '/api.php?action=save_hce_betcris';
     return `javascript:(async function(){
   try {
-    const fullText = document.body.innerText || '';
-    const hceRegex = /([a-zA-Z0-9\\s.]+)\\s+vs\\s+([a-zA-Z0-9\\s.]+):\\s*Total de Hits\\+Carreras\\+Errores[\\s\\S]*?Ov\\s*([0-9]+(?:\\.[0-9]+)?)[\\s\\S]*?([+-]?[0-9]{3,4})[\\s\\S]*?Un\\s*([0-9]+(?:\\.[0-9]+)?)[\\s\\S]*?([+-]?[0-9]{3,4})/gi;
-    const games = [];
-    let match;
-    while ((match = hceRegex.exec(fullText)) !== null) {
-      games.push({
-        away: match[1].trim(),
-        home: match[2].trim(),
-        total: parseFloat(match[3]),
-        over_odds: parseInt(match[4], 10),
-        under_odds: parseInt(match[6], 10),
-        raw_over: 'Ov ' + match[3] + ' (' + match[4] + ')',
-        raw_under: 'Un ' + match[5] + ' (' + match[6] + ')'
-      });
+    const targetUrl = '${targetUrl}';
+
+    function parseHce(text, fallbackTitle = '') {
+      if (!text) return null;
+      const clean = text.replace(/\\u00a0/g, ' ').replace(/\\s+/g, ' ').trim();
+      if (!/hits?\\s*[\\+,y]\\s*carreras?\\s*[\\+,y]\\s*errores?/i.test(clean) && !/total\\s*de\\s*(?:hits|hce|r\\+h\\+e)/i.test(clean)) return null;
+
+      let away = '', home = '';
+      const tm = clean.match(/([a-zA-Z0-9\\s.]+)\\s+(?:vs\\.?|@|-)\\s+([a-zA-Z0-9\\s.]+)\\s*:\\s*Total/i)
+        || fallbackTitle.match(/([a-zA-Z0-9\\s.]+)\\s+(?:vs\\.?|@|-)\\s+([a-zA-Z0-9\\s.]+)/i)
+        || clean.match(/([a-zA-Z0-9\\s.]+)\\s+(?:vs\\.?|@|-)\\s+([a-zA-Z0-9\\s.]+)/i);
+      if (tm) {
+        away = tm[1].replace(/^[0-9\\s\\-]+/, '').trim();
+        home = tm[2].replace(/^[0-9\\s\\-]+/, '').trim();
+      }
+
+      let overTotal = null, overOdds = null;
+      const om = clean.match(/(?:Ov|Over)[\\s\\S]{0,40}?([0-9]{1,2}(?:\\.[0-9]+)?)[\\s\\S]{0,30}?([+-]?[0-9]{3,4})/i)
+        || clean.match(/(?:Ov|Over)[\\s\\S]{0,20}?([+-]?[0-9]{3,4})/i);
+      if (om) {
+        if (om[2]) { overTotal = parseFloat(om[1]); overOdds = parseInt(om[2], 10); }
+        else if (om[1]) { overOdds = parseInt(om[1], 10); }
+      }
+
+      let underTotal = null, underOdds = null;
+      const um = clean.match(/(?:Un|Under)[\\s\\S]{0,40}?([0-9]{1,2}(?:\\.[0-9]+)?)[\\s\\S]{0,30}?([+-]?[0-9]{3,4})/i)
+        || clean.match(/(?:Un|Under)[\\s\\S]{0,20}?([+-]?[0-9]{3,4})/i);
+      if (um) {
+        if (um[2]) { underTotal = parseFloat(um[1]); underOdds = parseInt(um[2], 10); }
+        else if (um[1]) { underOdds = parseInt(um[1], 10); }
+      }
+
+      const total = overTotal ?? underTotal;
+      if (total !== null && (overOdds !== null || underOdds !== null)) {
+        return {
+          away: away || 'Visitante',
+          home: home || 'Local',
+          total,
+          over_odds: overOdds,
+          under_odds: underOdds,
+          raw_over: 'Ov ' + total + ' (' + overOdds + ')',
+          raw_under: 'Un ' + total + ' (' + underOdds + ')',
+          title: away + ' vs ' + home + ': Total de Hits+Carreras+Errores'
+        };
+      }
+      return null;
     }
-    if (games.length === 0) {
-      alert('No se detectó el bloque de "Total de Hits+Carreras+Errores" en la pantalla actual. Abre el partido en Betcris y vuelve a hacer clic.');
+
+    // 1. Si ya está visible el mercado en la vista actual
+    const current = parseHce(document.body.innerText, document.title);
+    if (current) {
+      await fetch(targetUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ games: [current], append: true })
+      });
+      alert('✅ Sincronizado partido actual: ' + current.away + ' vs ' + current.home + ' (Total: ' + current.total + ')');
       return;
     }
-    const res = await fetch('${targetUrl}', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ games, append: true })
+
+    // 2. Si estamos en la categoría, buscar todos los partidos y recorrerlos automáticamente
+    const links = Array.from(document.querySelectorAll('a[href*=\"/game/\"]'));
+    const seen = new Set();
+    const gameUrls = [];
+    links.forEach(a => {
+      const m = (a.getAttribute('href') || a.href).match(/\\/game\\/([a-f0-9\\-]+)/i);
+      if (m && !seen.has(m[1])) {
+        seen.add(m[1]);
+        gameUrls.push({ id: m[1], element: a, text: a.innerText.trim().replace(/\\s+/g, ' ') });
+      }
     });
-    const data = await res.json();
-    alert('✅ ' + games.length + ' línea(s) de Betcris HCE sincronizada(s) con éxito!');
+
+    if (gameUrls.length === 0) {
+      alert('No se detectaron partidos ni mercados de HCE en la pantalla actual. Asegúrate de estar en la categoría de Béisbol / MLB.');
+      return;
+    }
+
+    // Widget flotante de progreso durante el escaneo
+    let banner = document.getElementById('cp-scanner-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'cp-scanner-banner';
+      banner.style = 'position:fixed;top:20px;right:20px;z-index:9999999;background:#0f172a;color:#fff;border:2px solid #0284c7;border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.7);font-family:sans-serif;min-width:300px;';
+      document.body.appendChild(banner);
+    }
+    banner.innerHTML = '<div style=\"font-weight:bold;color:#38bdf8;margin-bottom:6px;\">🔄 Escaneando automáticamente ' + gameUrls.length + ' partidos...</div><div id=\"cp-scan-status\" style=\"font-size:12px;color:#cbd5e1;\">Iniciando...</div>';
+
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+    const results = [];
+
+    for (let i = 0; i < gameUrls.length; i++) {
+      const g = gameUrls[i];
+      const statusEl = document.getElementById('cp-scan-status');
+      if (statusEl) statusEl.innerText = 'Analizando [' + (i+1) + '/' + gameUrls.length + ']: ' + (g.text || 'Partido ' + (i+1));
+
+      g.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      g.element.click();
+
+      let captured = null;
+      for (let w = 0; w < 10; w++) {
+        await delay(350);
+        captured = parseHce(document.body.innerText, document.title);
+        if (captured) break;
+      }
+
+      if (captured) {
+        results.push(captured);
+        await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ games: [captured], append: true })
+        });
+        if (statusEl) statusEl.innerText = '✅ Capturado [' + (i+1) + '/' + gameUrls.length + ']: ' + captured.away + ' vs ' + captured.home + ' (' + captured.total + ')';
+      }
+      await delay(400);
+    }
+
+    banner.innerHTML = '<div style=\"font-weight:bold;color:#10b981;font-size:14px;margin-bottom:4px;\">🎉 ¡Escaneo completado!</div><div style=\"font-size:12px;color:#cbd5e1;\">✅ ' + results.length + ' partidos sincronizados automáticamente con CalculadoraParley.</div>';
+    setTimeout(() => { if (banner) banner.remove(); }, 6000);
+
   } catch (err) {
-    alert('❌ Error al extraer/sincronizar Betcris: ' + err.message);
+    alert('❌ Error durante el escaneo de Betcris: ' + err.message);
   }
 })();`;
   };
