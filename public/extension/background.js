@@ -189,6 +189,7 @@ async function scrapeBetcrisDOM() {
 
   // 2. Extractor de objetos de partido / mercado de Betcris
   function checkGameForHce(game, parentGame) {
+    if (!game) return null;
     const desc = ((game.description || '') + ' ' + (game.periodDescription || '') + ' ' + (game.tntHeader || '')).toLowerCase();
     const isHce = desc.includes('hits') || desc.includes('carreras') || desc.includes('hce') || desc.includes('errores');
 
@@ -197,7 +198,8 @@ async function scrapeBetcrisDOM() {
       let home = (game.contenders?.[1]?.name || parentGame?.contenders?.[1]?.name || '').trim();
 
       if (!away || !home) {
-        const tm = (game.description || '').match(/([^\r\n:]{2,35}?)\s+(?:vs\.?|@|-)\s+([^\r\n:]{2,35}?)\s*:/i);
+        const tm = (game.description || '').match(/([^\r\n:]{2,35}?)\s+(?:vs\.?|@|-)\s+([^\r\n:]{2,35}?)\s*:/i)
+          || (game.description || '').match(/([^\r\n:]{2,35}?)\s+(?:vs\.?|@|-)\s+([^\r\n:]{2,35}?)/i);
         if (tm) {
           away = tm[1].trim();
           home = tm[2].trim();
@@ -205,9 +207,10 @@ async function scrapeBetcrisDOM() {
       }
 
       let total = null, overOdds = null, underOdds = null;
-      const drvs = game.lines?.drvs || [];
-      for (const d of drvs) {
-        if (d.tot) {
+      const drvs = game.lines?.drvs || game.drvs || [];
+      const drvsList = Array.isArray(drvs) ? drvs : Object.values(drvs);
+      for (const d of drvsList) {
+        if (d?.tot) {
           total = d.tot.vp ?? d.tot.hp ?? d.tot.line ?? null;
           overOdds = d.tot.v ?? d.tot.ov ?? null;
           underOdds = d.tot.h ?? d.tot.un ?? null;
@@ -231,8 +234,9 @@ async function scrapeBetcrisDOM() {
     return null;
   }
 
-  // 3. Recopilar todos los UUIDs de partidos a escanear
+  // 3. Recopilar exhaustivamente todos los UUIDs de partidos
   const gameUuids = new Set();
+  const uuidRegex = /^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$/;
 
   // A. Desde la URL actual si es un partido
   const singleGameMatch = window.location.href.match(/game\/([A-Fa-f0-9\-]{36})/i);
@@ -240,20 +244,88 @@ async function scrapeBetcrisDOM() {
     gameUuids.add(singleGameMatch[1].toUpperCase());
   }
 
-  // B. Desde todos los enlaces y elementos en el DOM actual
-  document.querySelectorAll('a[href*="/game/"], [data-game-uuid], [class*="game"]').forEach(el => {
-    const href = el.getAttribute('href') || el.href || el.getAttribute('data-game-uuid') || '';
-    const m = href.match(/game\/([A-Fa-f0-9\-]{36})/i);
+  // B. Desde elementos <pt-schedule-game> en el DOM
+  document.querySelectorAll('pt-schedule-game').forEach(el => {
+    const id = el.id || el.getAttribute('id') || '';
+    if (id && uuidRegex.test(id)) {
+      gameUuids.add(id.toUpperCase());
+    }
+    try {
+      if (window.ng?.getComponent) {
+        const comp = window.ng.getComponent(el);
+        if (comp?.uuid) gameUuids.add(comp.uuid.toUpperCase());
+        if (comp?.game?.uuid) gameUuids.add(comp.game.uuid.toUpperCase());
+        if (comp?.game?.gameUUID) gameUuids.add(comp.game.gameUUID.toUpperCase());
+      }
+    } catch(e) {}
+  });
+
+  // C. Desde cualquier elemento en el DOM cuyo ID sea un UUID
+  document.querySelectorAll('[id]').forEach(el => {
+    if (el.id && uuidRegex.test(el.id)) {
+      gameUuids.add(el.id.toUpperCase());
+    }
+  });
+
+  // D. Desde cualquier enlace, data-game-uuid o atributo similar
+  document.querySelectorAll('a[href*="game"], [data-game-uuid], [data-uuid]').forEach(el => {
+    const href = el.getAttribute('href') || el.href || el.getAttribute('data-game-uuid') || el.getAttribute('data-uuid') || '';
+    const m = href.match(/([A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12})/i);
     if (m) gameUuids.add(m[1].toUpperCase());
   });
 
-  // C. Desde el contenido de categoría si estamos en una lista
-  const catMatch = window.location.href.match(/(?:flat|seclvlcat|category)\/([A-Fa-f0-9\-]{36})/i);
+  // E. Escanear todo el HTML en busca de IDs de partidos
+  if (document.body) {
+    const allMatches = document.body.innerHTML.match(/[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}/g);
+    if (allMatches) {
+      for (const m of allMatches) {
+        // Ignorar UUIDs conocidos de deportes para evitar falsos positivos
+        const upper = m.toUpperCase();
+        if (upper !== 'D6B7F0DA-465C-4883-9B4D-092F7FB99F92') {
+          gameUuids.add(upper);
+        }
+      }
+    }
+  }
+
+  // F. Headers requeridos por Betcris
+  const reqHeaders = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'rtqname': sessionStorage.getItem('RT_QUEUE') || '',
+    'x-version': '0.0.0'
+  };
+
+  // G. Si estamos en una liga (/seclvlcat/) o categoría (/category/)
+  const leagueMatch = window.location.href.match(/seclvlcat\/([A-Fa-f0-9\-]{36})/i);
+  if (leagueMatch) {
+    try {
+      const lRes = await fetch('/gateway/BetslipProxy.aspx/scheduleGetLeagueView', {
+        method: 'POST',
+        headers: reqHeaders,
+        credentials: 'include',
+        body: JSON.stringify({
+          o: { BORequestData: { BOParameters: { BORt: {}, leagueUUID: leagueMatch[1] } } }
+        })
+      });
+      if (lRes.ok) {
+        const lData = await lRes.json();
+        const games = lData.Games || lData.Data?.Games || lData.d?.Games || [];
+        const list = Array.isArray(games) ? games : Object.values(games);
+        for (const item of list) {
+          if (item?.gameUUID) gameUuids.add(item.gameUUID.toUpperCase());
+          if (item?.uuid) gameUuids.add(item.uuid.toUpperCase());
+        }
+      }
+    } catch(e) {}
+  }
+
+  const catMatch = window.location.href.match(/(?:flat|category)\/([A-Fa-f0-9\-]{36})/i);
   if (catMatch) {
     try {
       const cRes = await fetch('/gateway/BetslipProxy.aspx/scheduleGetCategoryContent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: reqHeaders,
         credentials: 'include',
         body: JSON.stringify({
           o: { BORequestData: { BOParameters: { BORt: {}, Category: catMatch[1] } } }
@@ -261,12 +333,11 @@ async function scrapeBetcrisDOM() {
       });
       if (cRes.ok) {
         const cData = await cRes.json();
-        const groups = cData.groups || (cData.Data && cData.Data.groups) || [];
+        const groups = cData.groups || cData.Data?.groups || cData.d?.groups || [];
         for (const grp of groups) {
           for (const item of (grp.games || [])) {
-            if (item.gameUUID) {
-              gameUuids.add(item.gameUUID.toUpperCase());
-            }
+            if (item?.gameUUID) gameUuids.add(item.gameUUID.toUpperCase());
+            if (item?.uuid) gameUuids.add(item.uuid.toUpperCase());
           }
         }
       }
@@ -283,14 +354,15 @@ async function scrapeBetcrisDOM() {
       try {
         const res1 = await fetch('/gateway/BetslipProxy.aspx/scheduleGetGamesByUUID', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          headers: reqHeaders,
           credentials: 'include',
           body: JSON.stringify({ o: { BORequestData: { BOParameters: { BORt: {}, ParentUUID: uuid } } } })
         });
         if (res1.ok) {
           const data1 = await res1.json();
-          const subGames = data1.games || data1.Data?.games || (Array.isArray(data1) ? data1 : []);
-          for (const sg of subGames) {
+          const subGames = data1.games || data1.Data?.games || data1.d?.games || (Array.isArray(data1) ? data1 : []);
+          const list = Array.isArray(subGames) ? subGames : Object.values(subGames);
+          for (const sg of list) {
             const hce = checkGameForHce(sg);
             if (hce) return hce;
           }
@@ -301,14 +373,15 @@ async function scrapeBetcrisDOM() {
       try {
         const res2 = await fetch('/gateway/BetslipProxy.aspx/scheduleGetSingleGameView', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          headers: reqHeaders,
           credentials: 'include',
           body: JSON.stringify({ o: { BORequestData: { BOParameters: { BORt: {}, gameUuid: uuid } } } })
         });
         if (res2.ok) {
           const data2 = await res2.json();
-          const subGames = data2.games || data2.Data?.games || (Array.isArray(data2) ? data2 : []);
-          for (const sg of subGames) {
+          const subGames = data2.games || data2.Data?.games || data2.d?.games || (Array.isArray(data2) ? data2 : []);
+          const list = Array.isArray(subGames) ? subGames : Object.values(subGames);
+          for (const sg of list) {
             const hce = checkGameForHce(sg);
             if (hce) return hce;
           }
@@ -433,10 +506,13 @@ async function syncBetcris(targetApi) {
       });
       return { success: true, count: games.length, details: res };
     } else {
+      const uuids = res?.uuidsFound || 0;
       return {
         success: false,
         count: 0,
-        message: `Pestaña Betcris detectada en (${res?.url || crisTab.url}). No se detectó el mercado HCE. Entra a un partido de MLB en Betcris.`
+        message: uuids > 0
+          ? `Betcris: Se detectaron ${uuids} partidos pero ninguno tiene la línea HCE disponible aún.`
+          : `Pestaña Betcris detectada en (${res?.url || crisTab.url}). No se detectaron partidos. Si entraste a un juego, haz clic en Props.`
       };
     }
   } catch (e) {
