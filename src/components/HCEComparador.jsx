@@ -71,6 +71,100 @@ function formatOdds(val) {
   return num > 0 ? `+${num}` : `${num}`;
 }
 
+export function parseRawBetonline(text) {
+  const lines = (text || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const games = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const rotMatch = lines[i].match(/^([0-9]{3,4})\s*-\s*(.+)$/);
+    if (rotMatch && i + 1 < lines.length) {
+      const nextRot = lines[i + 1].match(/^([0-9]{3,4})\s*-\s*(.+)$/);
+      if (nextRot) {
+        const away = rotMatch[2].trim();
+        const home = nextRot[2].trim();
+
+        const chunk = lines.slice(i, i + 14).join(' ');
+        const overMatch = chunk.match(/(?:Total\s*)?O(?:v)?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:\(([+-]?[0-9]+)\)|([+-]?[0-9]{3,4}))/i);
+        const underMatch = chunk.match(/(?:Total\s*)?U(?:n)?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:\(([+-]?[0-9]+)\)|([+-]?[0-9]{3,4}))/i);
+
+        if (overMatch) {
+          const total = parseFloat(overMatch[1]);
+          const overOdds = parseInt(overMatch[2] || overMatch[3], 10);
+          const underOdds = underMatch ? parseInt(underMatch[2] || underMatch[3], 10) : null;
+          games.push({ away, home, total, over_odds: overOdds, under_odds: underOdds, time: lines[Math.max(0, i - 1)] });
+        }
+      }
+    }
+  }
+
+  if (games.length === 0) {
+    const blockRegex = /(?:[0-9]{3,4}\s*-\s*)?([A-Za-z\s]+)\s+(?:vs\.?|@|-)\s+(?:[0-9]{3,4}\s*-\s*)?([A-Za-z\s]+)[\s\S]*?(?:Total\s*)?O(?:v)?\s*([0-9]+(?:\.[0-9]+)?)\s*\(([+-]?[0-9]+)\)[\s\S]*?U(?:n)?\s*([0-9]+(?:\.[0-9]+)?)\s*\(([+-]?[0-9]+)\)/gi;
+    let m;
+    while ((m = blockRegex.exec(text)) !== null) {
+      games.push({
+        away: m[1].trim(),
+        home: m[2].trim(),
+        total: parseFloat(m[3]),
+        over_odds: parseInt(m[4], 10),
+        under_odds: parseInt(m[6], 10)
+      });
+    }
+  }
+
+  return games;
+}
+
+export function parseRawBetcris(text) {
+  const clean = (text || '').replace(/\u00a0/g, ' ');
+  const games = [];
+
+  const pattern = /([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total de Hits[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/gi;
+
+  let m;
+  while ((m = pattern.exec(clean)) !== null) {
+    games.push({
+      away: m[1].replace(/^[0-9\s\-]+/, '').trim(),
+      home: m[2].replace(/^[0-9\s\-]+/, '').trim(),
+      total: parseFloat(m[3]),
+      over_odds: parseInt(m[4], 10),
+      under_odds: parseInt(m[6], 10)
+    });
+  }
+
+  if (games.length === 0) {
+    let away = '', home = '';
+    const tm = clean.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total/i)
+      || clean.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i);
+    if (tm) {
+      away = tm[1].replace(/^[0-9\s\-]+/, '').trim();
+      home = tm[2].replace(/^[0-9\s\-]+/, '').trim();
+    }
+
+    let overTotal = null, overOdds = null;
+    const om = clean.match(/(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\\s\S]{0,30}?([+-]?[0-9]{3,4})/i)
+      || clean.match(/(?:Ov|Over)[\s\S]{0,20}?([+-]?[0-9]{3,4})/i);
+    if (om) {
+      if (om[2]) { overTotal = parseFloat(om[1]); overOdds = parseInt(om[2], 10); }
+      else if (om[1]) { overOdds = parseInt(om[1], 10); }
+    }
+
+    let underTotal = null, underOdds = null;
+    const um = clean.match(/(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\\s\S]{0,30}?([+-]?[0-9]{3,4})/i)
+      || clean.match(/(?:Un|Under)[\s\S]{0,20}?([+-]?[0-9]{3,4})/i);
+    if (um) {
+      if (um[2]) { underTotal = parseFloat(um[1]); underOdds = parseInt(um[2], 10); }
+      else if (um[1]) { underOdds = parseInt(um[1], 10); }
+    }
+
+    const total = overTotal ?? underTotal;
+    if (total !== null) {
+      games.push({ away, home, total, over_odds: overOdds, under_odds: underOdds });
+    }
+  }
+
+  return games;
+}
+
 export default function HCEComparador({ config }) {
   const [data, setData] = useState({ betonline: [], betcris: [], manual: [] });
   const [loading, setLoading] = useState(false);
@@ -80,11 +174,72 @@ export default function HCEComparador({ config }) {
   const [selectedFilter, setSelectedFilter] = useState('all'); // all, diff, match
   const [copiedId, setCopiedId] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [showHelperModal, setShowHelperModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importTab, setImportTab] = useState('paste'); // 'paste' | 'scripts'
+  const [pasteHouse, setPasteHouse] = useState('betonline'); // 'betonline' | 'betcris'
+  const [pastedText, setPastedText] = useState('');
+  const [importing, setImporting] = useState(false);
 
   const notify = (msg, type = 'success') => {
     setNotification({ msg, type });
     setTimeout(() => setNotification(null), 3500);
+  };
+
+  const handleImportPastedText = async () => {
+    if (!pastedText.trim()) {
+      notify('Por favor pega el texto antes de procesar', 'error');
+      return;
+    }
+    setImporting(true);
+    try {
+      if (pasteHouse === 'betonline') {
+        const games = parseRawBetonline(pastedText);
+        if (games.length === 0) {
+          notify('No se detectaron líneas de BetOnline en el texto pegado', 'error');
+          setImporting(false);
+          return;
+        }
+        const res = await fetch('./api.php?action=save_hce_betonline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ games })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          notify(`✅ ${games.length} líneas de BetOnline importadas con éxito!`);
+          setPastedText('');
+          setShowImportModal(false);
+          loadData();
+        } else {
+          notify('Error: ' + (json.message || 'Desconocido'), 'error');
+        }
+      } else {
+        const games = parseRawBetcris(pastedText);
+        if (games.length === 0) {
+          notify('No se detectaron líneas de Betcris (Hits+Carreras+Errores) en el texto pegado', 'error');
+          setImporting(false);
+          return;
+        }
+        const res = await fetch('./api.php?action=save_hce_betcris', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ games, append: true })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          notify(`✅ ${games.length} línea(s) de Betcris importadas con éxito!`);
+          setPastedText('');
+          setShowImportModal(false);
+          loadData();
+        } else {
+          notify('Error: ' + (json.message || 'Desconocido'), 'error');
+        }
+      }
+    } catch (e) {
+      notify('Error al procesar: ' + e.message, 'error');
+    } finally {
+      setImporting(false);
+    }
   };
 
   const loadData = async (silent = false) => {
@@ -134,11 +289,11 @@ export default function HCEComparador({ config }) {
         home: homeTeam,
         time: g.time || 'Hoy',
         betonline: {
-          total: g.total !== undefined ? Number(g.total) : null,
-          overOdds: g.over_odds !== undefined ? Number(g.over_odds) : null,
-          underOdds: g.under_odds !== undefined ? Number(g.under_odds) : null,
-          rawOver: g.raw_over,
-          rawUnder: g.raw_under
+          total: (g.total !== undefined && g.total !== null) ? Number(g.total) : ((g.line !== undefined && g.line !== null) ? Number(g.line) : null),
+          overOdds: (g.over_odds !== undefined && g.over_odds !== null) ? Number(g.over_odds) : ((g.over !== undefined && g.over !== null) ? Number(g.over) : null),
+          underOdds: (g.under_odds !== undefined && g.under_odds !== null) ? Number(g.under_odds) : ((g.under !== undefined && g.under !== null) ? Number(g.under) : null),
+          rawOver: g.raw_over || (g.over ? `Ov ${g.line || g.total} (${g.over})` : null),
+          rawUnder: g.raw_under || (g.under ? `Un ${g.line || g.total} (${g.under})` : null)
         },
         betcris: null,
         manual: null
@@ -152,11 +307,11 @@ export default function HCEComparador({ config }) {
       const key = getMatchKey(awayTeam.code, homeTeam.code);
 
       const crisData = {
-        total: g.total !== undefined ? Number(g.total) : null,
-        overOdds: g.over_odds !== undefined ? Number(g.over_odds) : null,
-        underOdds: g.under_odds !== undefined ? Number(g.under_odds) : null,
-        rawOver: g.raw_over,
-        rawUnder: g.raw_under,
+        total: (g.total !== undefined && g.total !== null) ? Number(g.total) : ((g.line !== undefined && g.line !== null) ? Number(g.line) : null),
+        overOdds: (g.over_odds !== undefined && g.over_odds !== null) ? Number(g.over_odds) : ((g.over !== undefined && g.over !== null) ? Number(g.over) : null),
+        underOdds: (g.under_odds !== undefined && g.under_odds !== null) ? Number(g.under_odds) : ((g.under !== undefined && g.under !== null) ? Number(g.under) : null),
+        rawOver: g.raw_over || (g.over ? `Ov ${g.line || g.total} (${g.over})` : null),
+        rawUnder: g.raw_under || (g.under ? `Un ${g.line || g.total} (${g.under})` : null),
         title: g.title
       };
 
@@ -556,15 +711,16 @@ export default function HCEComparador({ config }) {
           </button>
 
           <button
-            onClick={() => setShowHelperModal(true)}
+            onClick={() => { setImportTab('paste'); setShowImportModal(true); }}
             style={{
-              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', border: 'none', color: '#fff',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: '#fff',
               padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem',
-              fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px'
+              fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px',
+              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
             }}
           >
-            <span>⚡</span>
-            Sincronizar Casas (Extractores)
+            <span>📥</span>
+            Cargar Líneas (Pegar o Sincronizar)
           </button>
 
           <button
@@ -683,15 +839,37 @@ export default function HCEComparador({ config }) {
           <tbody>
             {filteredGames.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
                   {stats.total === 0 ? (
                     <div>
-                      <p style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '8px' }}>
-                        No hay líneas de HCE sincronizadas todavía.
+                      <p style={{ fontSize: '1.05rem', fontWeight: 600, color: '#f8fafc', marginBottom: '6px' }}>
+                        No hay líneas de HCE cargadas todavía
                       </p>
-                      <p style={{ fontSize: '0.82rem' }}>
-                        Haz clic en <strong>"Sincronizar Casas (Extractores)"</strong> para enviar las líneas desde BetOnline y Betcris.
+                      <p style={{ fontSize: '0.84rem', color: '#94a3b8', marginBottom: '18px', maxWidth: '520px', margin: '0 auto 18px' }}>
+                        Puedes cargar las líneas pegando el texto copiado de BetOnline / Betcris (Ctrl+A, Ctrl+C), o ejecutando los extractores automáticos en sus pestañas.
                       </p>
+                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => { setImportTab('paste'); setShowImportModal(true); }}
+                          style={{
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff',
+                            border: 'none', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer',
+                            fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px'
+                          }}
+                        >
+                          📋 Pegar Texto Copiado (Fácil y Rápido)
+                        </button>
+                        <button
+                          onClick={() => { setImportTab('scripts'); setShowImportModal(true); }}
+                          style={{
+                            background: '#1e293b', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)',
+                            padding: '10px 18px', borderRadius: '8px', cursor: 'pointer',
+                            fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px'
+                          }}
+                        >
+                          ⚡ Ver Extractores de Sincronización
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     'No se encontraron partidos con el filtro actual.'
@@ -846,97 +1024,213 @@ export default function HCEComparador({ config }) {
         </table>
       </div>
 
-      {/* Helper Modal con extractores para BetOnline y Betcris */}
-      {showHelperModal && (
+      {/* Modal de Importación: Pegar Texto o Usar Scripts */}
+      {showImportModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          background: 'rgba(0,0,0,0.75)', zIndex: 10000,
+          background: 'rgba(0,0,0,0.8)', zIndex: 10000,
           display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px'
         }}>
           <div style={{
             background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px',
             maxWidth: '680px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '24px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', gap: '18px'
+            boxShadow: '0 20px 50px rgba(0,0,0,0.8)', display: 'flex', flexDirection: 'column', gap: '16px'
           }}>
+            {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1.4rem' }}>⚡</span>
+                <span style={{ fontSize: '1.4rem' }}>📥</span>
                 <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#f8fafc' }}>
-                  Extractores Rápidos de Líneas HCE
+                  Cargar Líneas HCE (Hits + Carreras + Errores)
                 </h3>
               </div>
               <button
-                onClick={() => setShowHelperModal(false)}
+                onClick={() => setShowImportModal(false)}
                 style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.3rem', cursor: 'pointer' }}
               >
                 ✕
               </button>
             </div>
 
-            <p style={{ fontSize: '0.84rem', color: '#94a3b8', margin: 0 }}>
-              Usa estos extractores directamente en las pestañas que tienes abiertas de BetOnline y Betcris. Con 1 clic envían las líneas de HCE a este comparador.
-            </p>
-
-            {/* Casa 1: BetOnline */}
-            <div style={{ background: '#1e293b', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '10px', padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6' }}></span>
-                  <strong style={{ color: '#93c5fd' }}>1. BetOnline (R+H+E)</strong>
-                </div>
-                <a
-                  href="https://www.betonline.ag/sportsbook/baseball/r+h+e"
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: '#38bdf8', fontSize: '0.78rem', textDecoration: 'none' }}
-                >
-                  Abrir BetOnline ↗
-                </a>
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '12px' }}>
-                En la página de BetOnline R+H+E, copia este extractor y pégalo en la consola (F12) o guárdalo como marcador (Bookmarklet):
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => copyToClipboard(getBetonlineBookmarklet(), 'BetOnline Bookmarklet')}
-                  style={{
-                    background: '#2563eb', border: 'none', color: '#fff', padding: '8px 14px',
-                    borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600
-                  }}
-                >
-                  📋 Copiar Extractor BetOnline
-                </button>
-              </div>
-            </div>
-
-            {/* Casa 2: Betcris */}
-            <div style={{ background: '#1e293b', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '10px', padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }}></span>
-                  <strong style={{ color: '#6ee7b7' }}>2. Betcris (Total de Hits+Carreras+Errores)</strong>
-                </div>
-                <span style={{ color: '#34d399', fontSize: '0.78rem' }}>Ya logueado</span>
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '12px' }}>
-                En la página de Betcris donde se encuentra el mercado <em>"Total de Hits+Carreras+Errores"</em>, ejecuta este script. Cada vez que cambias de partido o lo ejecutas, se acumula automáticamente en la lista:
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => copyToClipboard(getBetcrisBookmarklet(), 'Betcris Bookmarklet')}
-                  style={{
-                    background: '#059669', border: 'none', color: '#fff', padding: '8px 14px',
-                    borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600
-                  }}
-                >
-                  📋 Copiar Extractor Betcris
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+            {/* Modal Tabs */}
+            <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '10px' }}>
               <button
-                onClick={() => setShowHelperModal(false)}
+                onClick={() => setImportTab('paste')}
+                style={{
+                  padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                  background: importTab === 'paste' ? '#10b981' : '#1e293b',
+                  color: importTab === 'paste' ? '#fff' : '#94a3b8',
+                  border: '1px solid ' + (importTab === 'paste' ? '#34d399' : 'rgba(255,255,255,0.08)'),
+                  display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                <span>📋</span>
+                Pegar Texto Copiado (Directo)
+              </button>
+              <button
+                onClick={() => setImportTab('scripts')}
+                style={{
+                  padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                  background: importTab === 'scripts' ? '#0284c7' : '#1e293b',
+                  color: importTab === 'scripts' ? '#fff' : '#94a3b8',
+                  border: '1px solid ' + (importTab === 'scripts' ? '#38bdf8' : 'rgba(255,255,255,0.08)'),
+                  display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                <span>⚡</span>
+                Extractores Automáticos (Scripts)
+              </button>
+            </div>
+
+            {/* Tab 1: Pegar Texto Copiado */}
+            {importTab === 'paste' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+                  Selecciona la casa de apuestas, copia el texto de su pantalla (o presiona <strong>Ctrl+A</strong> y <strong>Ctrl+C</strong>) y pégalo abajo:
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    onClick={() => setPasteHouse('betonline')}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.86rem', fontWeight: 700,
+                      background: pasteHouse === 'betonline' ? 'rgba(59, 130, 246, 0.2)' : '#1e293b',
+                      color: pasteHouse === 'betonline' ? '#60a5fa' : '#94a3b8',
+                      border: '2px solid ' + (pasteHouse === 'betonline' ? '#3b82f6' : 'rgba(255,255,255,0.06)')
+                    }}
+                  >
+                    🔵 1. BetOnline (R+H+E)
+                  </button>
+
+                  <button
+                    onClick={() => setPasteHouse('betcris')}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.86rem', fontWeight: 700,
+                      background: pasteHouse === 'betcris' ? 'rgba(16, 185, 129, 0.2)' : '#1e293b',
+                      color: pasteHouse === 'betcris' ? '#34d399' : '#94a3b8',
+                      border: '2px solid ' + (pasteHouse === 'betcris' ? '#10b981' : 'rgba(255,255,255,0.06)')
+                    }}
+                  >
+                    🟢 2. Betcris (Hits+Carreras+Errores)
+                  </button>
+                </div>
+
+                <div style={{ background: '#1e293b', padding: '10px 14px', borderRadius: '8px', fontSize: '0.8rem', color: '#cbd5e1' }}>
+                  {pasteHouse === 'betonline' ? (
+                    <div>
+                      💡 <strong>Para BetOnline:</strong> En la pestaña de BetOnline (<a href="https://www.betonline.ag/sportsbook/baseball/r+h+e" target="_blank" rel="noreferrer" style={{ color: '#38bdf8' }}>abrir aquí ↗</a>), presiona <code>Ctrl+A</code> (seleccionar todo), luego <code>Ctrl+C</code> (copiar), y pégalo aquí. Detecta automáticamente los partidos, totales y momios.
+                    </div>
+                  ) : (
+                    <div>
+                      💡 <strong>Para Betcris:</strong> En la pestaña de Betcris donde ves el partido o la lista con <em>Total de Hits+Carreras+Errores</em>, copia el texto con el mouse y pégalo aquí. Extrae el partido, la línea Over/Under y los momios al instante.
+                    </div>
+                  )}
+                </div>
+
+                <textarea
+                  rows={6}
+                  value={pastedText}
+                  onChange={(e) => setPastedText(e.target.value)}
+                  placeholder={
+                    pasteHouse === 'betonline'
+                      ? 'Pega aquí el texto copiado de BetOnline...\nEjemplo:\n1951 - Pittsburgh Pirates\n1952 - Chicago Cubs\nTotal O 25.5 (-105)\nU 25.5 (-125)'
+                      : 'Pega aquí el texto copiado de Betcris...\nEjemplo:\nPirates vs Cubs: Total de Hits+Carreras+Errores\nOv 25.5 -103\nUn 25.5 -127'
+                  }
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: '8px',
+                    background: '#020617', border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#f8fafc', fontSize: '0.82rem', fontFamily: 'monospace',
+                    boxSizing: 'border-box', resize: 'vertical'
+                  }}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    onClick={() => setPastedText('')}
+                    style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.8rem' }}
+                  >
+                    Borrar texto
+                  </button>
+
+                  <button
+                    onClick={handleImportPastedText}
+                    disabled={importing || !pastedText.trim()}
+                    style={{
+                      background: pasteHouse === 'betonline'
+                        ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
+                        : 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      color: '#fff', border: 'none', padding: '10px 22px', borderRadius: '8px',
+                      cursor: 'pointer', fontSize: '0.88rem', fontWeight: 700,
+                      opacity: (!pastedText.trim() || importing) ? 0.6 : 1,
+                      display: 'flex', alignItems: 'center', gap: '8px'
+                    }}
+                  >
+                    <span>⚡</span>
+                    {importing ? 'Procesando...' : `Procesar e Importar ${pasteHouse === 'betonline' ? 'BetOnline' : 'Betcris'}`}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Extractores Automáticos (Scripts) */}
+            {importTab === 'scripts' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '8px', padding: '12px', fontSize: '0.82rem', color: '#fde68a' }}>
+                  ℹ️ <strong>Importante:</strong> Estos extractores se ejecutan <strong>dentro de las pestañas de BetOnline y Betcris</strong> (en la consola F12 o como marcadores), y envían los datos hacia este comparador automáticamente.
+                </div>
+
+                {/* Casa 1: BetOnline */}
+                <div style={{ background: '#1e293b', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '10px', padding: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <strong style={{ color: '#93c5fd', fontSize: '0.9rem' }}>1. BetOnline (R+H+E)</strong>
+                    <a
+                      href="https://www.betonline.ag/sportsbook/baseball/r+h+e"
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: '#38bdf8', fontSize: '0.78rem', textDecoration: 'none' }}
+                    >
+                      Abrir BetOnline ↗
+                    </a>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '10px' }}>
+                    Copia este extractor y pégalo en la consola (F12) de BetOnline para extraer todos los partidos a la vez:
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(getBetonlineBookmarklet(), 'BetOnline Extractor')}
+                    style={{
+                      background: '#2563eb', border: 'none', color: '#fff', padding: '8px 14px',
+                      borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600
+                    }}
+                  >
+                    📋 Copiar Extractor BetOnline
+                  </button>
+                </div>
+
+                {/* Casa 2: Betcris */}
+                <div style={{ background: '#1e293b', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '10px', padding: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <strong style={{ color: '#6ee7b7', fontSize: '0.9rem' }}>2. Betcris (Auto-Scanner Automático)</strong>
+                    <span style={{ color: '#34d399', fontSize: '0.78rem' }}>Recorre partidos solo</span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '10px' }}>
+                    En Betcris (donde están listados los partidos de MLB), ejecuta este script. Recorre automáticamente cada partido y sincroniza las líneas de HCE:
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(getBetcrisBookmarklet(), 'Betcris Extractor')}
+                    style={{
+                      background: '#059669', border: 'none', color: '#fff', padding: '8px 14px',
+                      borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600
+                    }}
+                  >
+                    📋 Copiar Extractor Betcris
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
+              <button
+                onClick={() => setShowImportModal(false)}
                 style={{
                   background: '#334155', border: 'none', color: '#f8fafc', padding: '8px 16px',
                   borderRadius: '6px', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600
