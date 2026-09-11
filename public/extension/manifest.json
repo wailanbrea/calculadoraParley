@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BSolutions Parley Sync",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sincronizador automático de líneas MLB (HCE / R+H+E) para CalculadoraParley desde BetOnline y Betcris.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -23,11 +23,7 @@
     "scripting"
   ],
   "host_permissions": [
-    "https://*.betonline.ag/*",
-    "https://*.betcris.do/*",
-    "https://calcparley.bsolutions.dev/*",
-    "http://localhost/*",
-    "http://127.0.0.1/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
@@ -44,16 +40,9 @@
     },
     {
       "matches": [
-        "https://*.betcris.do/*"
+        "<all_urls>"
       ],
       "js": ["content_betcris.js"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://*.betonline.ag/*"
-      ],
-      "js": ["content_betonline.js"],
       "run_at": "document_idle"
     }
   ]

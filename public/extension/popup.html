@@ -5,7 +5,7 @@
   <title>BSolutions Parley Sync</title>
   <style>
     body {
-      width: 320px;
+      width: 340px;
       margin: 0;
       padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -34,7 +34,7 @@
     }
     .version {
       font-size: 11px;
-      color: #94a3b8;
+      color: #38bdf8;
     }
     .status-list {
       display: flex;
@@ -44,12 +44,24 @@
     }
     .status-item {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      gap: 3px;
       background: #1e293b;
       padding: 8px 12px;
       border-radius: 6px;
       font-size: 12px;
+    }
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .tab-url {
+      font-size: 10px;
+      color: #64748b;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .badge {
       font-size: 11px;
@@ -81,12 +93,14 @@
     .log-box {
       margin-top: 12px;
       font-size: 11px;
-      color: #94a3b8;
+      color: #cbd5e1;
       background: #020617;
-      padding: 8px 10px;
+      padding: 10px 12px;
       border-radius: 6px;
-      min-height: 24px;
+      min-height: 30px;
       word-break: break-word;
+      line-height: 1.4;
+      border: 1px solid rgba(255,255,255,0.06);
     }
     .footer {
       margin-top: 14px;
@@ -104,18 +118,24 @@
     <div class="logo">⚾</div>
     <div>
       <h1>BSolutions Parley Sync</h1>
-      <div class="version">Sincronizador 1-Clic v1.0.0</div>
+      <div class="version">v1.0.1 (Auto-Navegación Activa)</div>
     </div>
   </div>
 
   <div class="status-list">
     <div class="status-item">
-      <span>BetOnline (R+H+E):</span>
-      <span id="status-bol" class="badge badge-ok">Listo</span>
+      <div class="status-header">
+        <span>BetOnline (R+H+E):</span>
+        <span id="status-bol" class="badge badge-ok">Listo</span>
+      </div>
+      <div id="url-bol" class="tab-url">https://www.betonline.ag/sportsbook/baseball/r+h+e</div>
     </div>
     <div class="status-item">
-      <span>Betcris (Sesión):</span>
-      <span id="status-cris" class="badge badge-warn">Verificando...</span>
+      <div class="status-header">
+        <span>Betcris (Sesión):</span>
+        <span id="status-cris" class="badge badge-warn">Buscando...</span>
+      </div>
+      <div id="url-cris" class="tab-url">Verificando pestañas abiertas...</div>
     </div>
   </div>
 

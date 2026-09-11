@@ -1,4 +1,4 @@
-// Service Worker (Manifest V3) - BSolutions Parley Sync
+// Service Worker (Manifest V3) - BSolutions Parley Sync v1.0.1
 const API_BASE = "https://calcparley.bsolutions.dev/api.php";
 
 function delay(ms) {
@@ -40,9 +40,9 @@ async function scrapeBetonlineDOM() {
     'mariners', 'cardinals', 'rays', 'rangers', 'blue jays', 'nationals'
   ];
 
-  // Poll up to 15 seconds for games to hydrate
+  // Esperar activamente a que los bloques de partidos aparezcan en el DOM
   let links = [];
-  for (let attempt = 0; attempt < 30; attempt++) {
+  for (let attempt = 0; attempt < 25; attempt++) {
     links = Array.from(document.querySelectorAll('a')).map(a => a.innerText.trim()).filter(t => t.includes('Total') && t.includes('O '));
     if (links.length > 0) break;
     await new Promise(r => setTimeout(r, 500));
@@ -97,65 +97,81 @@ async function scrapeBetonlineDOM() {
     }
   }
 
-  return games;
+  return {
+    url: window.location.href,
+    title: document.title,
+    linksFound: links.length,
+    games: games
+  };
 }
 
 // Injected function for Betcris
 async function scrapeBetcrisDOM() {
-  function parseSingleHce(text, title) {
+  function parseRawBetcris(text) {
     const clean = (text || '').replace(/\u00a0/g, ' ');
-    const hceMatch = clean.match(/hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/i);
+    const games = [];
 
-    if (!hceMatch) return null;
+    // Patrón 1: Bloque completo con partidos y momios
+    const pattern = /([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total de Hits[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/gi;
 
-    const total = parseFloat(hceMatch[1]);
-    const overOdds = parseInt(hceMatch[2], 10);
-    const underOdds = parseInt(hceMatch[4], 10);
+    let m;
+    while ((m = pattern.exec(clean)) !== null) {
+      games.push({
+        away: m[1].replace(/^[0-9\s\-]+/, '').trim(),
+        home: m[2].replace(/^[0-9\s\-]+/, '').trim(),
+        total: parseFloat(m[3]),
+        line: String(m[3]),
+        over_odds: parseInt(m[4], 10),
+        under_odds: parseInt(m[6], 10),
+        over: String(m[4]),
+        under: String(m[6])
+      });
+    }
 
-    let away = '';
-    let home = '';
-
-    const teamsMatch = clean.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total de Hits/i)
-      || (title && title.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i));
-
-    if (teamsMatch) {
-      away = teamsMatch[1].replace(/^[0-9\s\-]+/, '').trim();
-      home = teamsMatch[2].replace(/^[0-9\s\-]+/, '').trim();
-    } else {
-      const parts = (document.title || '').split(/vs\.?|@|-/i);
-      if (parts.length >= 2) {
-        away = parts[0].trim();
-        home = parts[1].replace(/\|.*$/, '').trim();
+    // Patrón 2: Partido individual en pantalla
+    if (games.length === 0) {
+      const hceMatch = clean.match(/hits?\s*[\+,y]\s*carreras?\s*[\+,y]\s*errores?[\s\S]*?(?:Ov|Over)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})[\s\S]*?(?:Un|Under)[\s\S]{0,40}?([0-9]{1,2}(?:\.[0-9]+)?)[\s\S]{0,30}?([+-]?[0-9]{3,4})/i);
+      if (hceMatch) {
+        let away = '', home = '';
+        const tm = clean.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)\s*:\s*Total/i)
+          || (document.title && document.title.match(/([a-zA-Z0-9\s.]+)\s+(?:vs\.?|@|-)\s+([a-zA-Z0-9\s.]+)/i));
+        if (tm) {
+          away = tm[1].replace(/^[0-9\s\-]+/, '').trim();
+          home = tm[2].replace(/^[0-9\s\-]+/, '').trim();
+        }
+        if (away && home) {
+          games.push({
+            away,
+            home,
+            total: parseFloat(hceMatch[1]),
+            line: String(hceMatch[1]),
+            over_odds: parseInt(hceMatch[2], 10),
+            under_odds: parseInt(hceMatch[4], 10),
+            over: String(hceMatch[2]),
+            under: String(hceMatch[4])
+          });
+        }
       }
     }
 
-    if (!away || !home) return null;
-
-    return {
-      away,
-      home,
-      total,
-      line: String(total),
-      over_odds: overOdds,
-      under_odds: underOdds,
-      over: String(overOdds),
-      under: String(underOdds),
-      raw_over: `Ov ${total} (${overOdds})`,
-      raw_under: `Un ${total} (${underOdds})`,
-      scraped_at: new Date().toISOString()
-    };
+    return games;
   }
 
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-  const results = [];
+  const rawText = document.body.innerText || '';
 
-  // 1. Revisar si la pantalla actual ya contiene el mercado HCE
-  const current = parseSingleHce(document.body.innerText, document.title);
-  if (current) {
-    results.push(current);
+  // 1. Verificar si en el texto de la pantalla ya está visible el bloque de HCE
+  const direct = parseRawBetcris(rawText);
+  if (direct.length > 0) {
+    return {
+      status: 'success',
+      url: window.location.href,
+      games: direct,
+      method: 'direct_screen'
+    };
   }
 
-  // 2. Buscar enlaces a partidos en la categoría actual
+  // 2. Si estamos en una lista de partidos, intentar recorrer los enlaces a partidos
   const gameAnchors = Array.from(document.querySelectorAll('a[href*="/game/"]'));
   const uniqueAnchors = [];
   const seenHrefs = new Set();
@@ -168,58 +184,67 @@ async function scrapeBetcrisDOM() {
     }
   }
 
-  // Si no hay partidos y estamos en la home, avisar que navegue
-  if (uniqueAnchors.length === 0 && results.length === 0) {
-    // Si no está en baseball, redirigir automáticamente a la categoría MLB de Betcris
-    if (!window.location.href.includes('AB8B6AA7-2297-44FF-874E-E0F967F11F69')) {
-      window.location.href = 'https://be.betcris.do/sportsbook/category/sport/D6B7F0DA-465C-4883-9B4D-092F7FB99F92/seclvlcat/AB8B6AA7-2297-44FF-874E-E0F967F11F69';
-      return { status: 'redirected', message: 'Navegando a la sección MLB de Betcris... Vuelve a hacer clic en Sincronizar en unos segundos.' };
+  if (uniqueAnchors.length > 0) {
+    const results = [];
+    for (let i = 0; i < Math.min(uniqueAnchors.length, 15); i++) {
+      const el = uniqueAnchors[i];
+      try {
+        el.click();
+        await sleep(500);
+        const parsed = parseRawBetcris(document.body.innerText);
+        if (parsed && parsed.length > 0) {
+          for (const g of parsed) {
+            if (!results.some(r => r.away === g.away && r.home === g.home)) {
+              results.push(g);
+            }
+          }
+        }
+      } catch (e) {}
+      await sleep(250);
     }
-    return { status: 'empty', message: 'No se encontraron partidos de MLB en la vista actual de Betcris.' };
+
+    if (results.length > 0) {
+      return { status: 'success', url: window.location.href, games: results, method: 'crawled' };
+    }
   }
 
-  // 3. Recorrer los partidos encontrados
-  for (let i = 0; i < uniqueAnchors.length; i++) {
-    const el = uniqueAnchors[i];
-    try {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.click();
-
-      let captured = null;
-      for (let attempt = 0; attempt < 8; attempt++) {
-        await sleep(350);
-        captured = parseSingleHce(document.body.innerText, document.title);
-        if (captured) break;
-      }
-
-      if (captured) {
-        const already = results.find(r => r.away === captured.away && r.home === captured.home);
-        if (!already) results.push(captured);
-      }
-    } catch (e) {
-      console.warn('Error al hacer clic en partido:', e);
-    }
-    await sleep(250);
-  }
-
-  return { status: 'success', games: results };
+  // 3. Si no se encontró nada, reportar diagnóstico
+  return {
+    status: 'no_hce_found',
+    url: window.location.href,
+    title: document.title,
+    hasHitsKeyword: rawText.includes('Hits') || rawText.includes('hits'),
+    gameAnchorsCount: gameAnchors.length,
+    textLength: rawText.length,
+    games: []
+  };
 }
 
 // 1. Sincronizar BetOnline
 async function syncBetonline(targetApi) {
   const apiUrl = targetApi ? `${targetApi}?action=save_hce_betonline` : `${API_BASE}?action=save_hce_betonline`;
   
-  const tabs = await chrome.tabs.query({ url: "*://*.betonline.ag/*" });
-  let bolTab = tabs[0];
+  const allTabs = await chrome.tabs.query({});
+  let bolTab = allTabs.find(t => t.url && t.url.includes('betonline.ag/sportsbook/baseball/r+h+e'));
   let createdTab = false;
 
   if (!bolTab) {
-    bolTab = await chrome.tabs.create({
-      url: "https://www.betonline.ag/sportsbook/baseball/r+h+e",
-      active: false
-    });
-    createdTab = true;
-    await waitForTabLoad(bolTab.id);
+    // Si tienen una pestaña de betonline pero en otra URL, la navegamos
+    const anyBol = allTabs.find(t => t.url && t.url.includes('betonline.ag'));
+    if (anyBol) {
+      bolTab = anyBol;
+      await chrome.tabs.update(bolTab.id, { url: "https://www.betonline.ag/sportsbook/baseball/r+h+e" });
+      await waitForTabLoad(bolTab.id);
+      await delay(3500);
+    } else {
+      bolTab = await chrome.tabs.create({
+        url: "https://www.betonline.ag/sportsbook/baseball/r+h+e",
+        active: false
+      });
+      createdTab = true;
+      await waitForTabLoad(bolTab.id);
+      await delay(3500);
+    }
   }
 
   try {
@@ -228,7 +253,9 @@ async function syncBetonline(targetApi) {
       func: scrapeBetonlineDOM
     });
 
-    const games = results[0]?.result || [];
+    const res = results[0]?.result;
+    const games = res?.games || [];
+
     if (games.length > 0) {
       await fetch(apiUrl, {
         method: 'POST',
@@ -238,7 +265,7 @@ async function syncBetonline(targetApi) {
       if (createdTab) {
         try { await chrome.tabs.remove(bolTab.id); } catch(e) {}
       }
-      return { success: true, count: games.length };
+      return { success: true, count: games.length, details: res };
     }
   } catch (e) {
     console.error('[BSolutions Sync] Error ejecutando script en BetOnline:', e);
@@ -254,16 +281,16 @@ async function syncBetonline(targetApi) {
 async function syncBetcris(targetApi) {
   const apiUrl = targetApi ? `${targetApi}?action=save_hce_betcris` : `${API_BASE}?action=save_hce_betcris`;
 
-  const tabs = await chrome.tabs.query({ url: "*://*.betcris.do/*" });
-  if (tabs.length === 0) {
+  const allTabs = await chrome.tabs.query({});
+  const crisTab = allTabs.find(t => t.url && (t.url.includes('betcris') || (t.title && t.title.toLowerCase().includes('betcris'))));
+
+  if (!crisTab) {
     return {
       success: false,
       count: 0,
-      message: "No se encontró pestaña de Betcris abierta. Abre tu sesión en https://be.betcris.do"
+      message: "No se detectó pestaña de Betcris abierta. Abre tu sesión en https://be.betcris.do"
     };
   }
-
-  const crisTab = tabs[0];
 
   try {
     const results = await chrome.scripting.executeScript({
@@ -272,20 +299,21 @@ async function syncBetcris(targetApi) {
     });
 
     const res = results[0]?.result;
-    if (res && res.status === 'redirected') {
-      return { success: false, count: 0, message: res.message };
-    }
+    const games = res?.games || [];
 
-    const games = (res && res.games) ? res.games : (Array.isArray(res) ? res : []);
     if (games.length > 0) {
       await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ games, append: true })
       });
-      return { success: true, count: games.length };
+      return { success: true, count: games.length, details: res };
     } else {
-      return { success: false, count: 0, message: res?.message || 'Abre el partido o categoría MLB en Betcris.' };
+      return {
+        success: false,
+        count: 0,
+        message: `Pestaña Betcris detectada en (${res?.url || crisTab.url}). No se vio el mercado "Total de Hits+Carreras+Errores". Entra al partido en Betcris.`
+      };
     }
   } catch (e) {
     console.error('[BSolutions Sync] Error ejecutando script en Betcris:', e);
@@ -319,12 +347,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.action === 'CHECK_STATUS') {
     (async () => {
-      const crisTabs = await chrome.tabs.query({ url: "*://*.betcris.do/*" });
-      const bolTabs = await chrome.tabs.query({ url: "*://*.betonline.ag/*" });
+      const allTabs = await chrome.tabs.query({});
+      const crisTab = allTabs.find(t => t.url && t.url.includes('betcris'));
+      const bolTab = allTabs.find(t => t.url && t.url.includes('betonline'));
       sendResponse({
-        crisOpen: crisTabs.length > 0,
-        bolOpen: bolTabs.length > 0,
-        crisUrl: crisTabs[0]?.url || null
+        crisOpen: !!crisTab,
+        bolOpen: !!bolTab,
+        crisUrl: crisTab?.url || null,
+        bolUrl: bolTab?.url || null
       });
     })();
     return true;

@@ -1,7 +1,9 @@
-// Script para popup.html
+// Script para popup.html v1.0.1
 document.addEventListener('DOMContentLoaded', async () => {
   const statusCris = document.getElementById('status-cris');
   const statusBol = document.getElementById('status-bol');
+  const urlCris = document.getElementById('url-cris');
+  const urlBol = document.getElementById('url-bol');
   const btnSync = document.getElementById('btn-sync');
   const btnText = document.getElementById('btn-text');
   const logBox = document.getElementById('log-box');
@@ -9,21 +11,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Comprobar estado de pestañas
   chrome.runtime.sendMessage({ action: 'CHECK_STATUS' }, (res) => {
     if (res && res.crisOpen) {
-      statusCris.textContent = 'Pestaña Abierta';
+      statusCris.textContent = 'Pestaña Detectada';
       statusCris.className = 'badge badge-ok';
-      logBox.innerHTML = 'Pestaña de Betcris detectada. Listo para sincronizar.';
+      urlCris.textContent = res.crisUrl || 'be.betcris.do';
+      logBox.innerHTML = 'Pestaña de Betcris lista. Haz clic en el botón verde.';
     } else {
-      statusCris.textContent = 'No detectada';
+      statusCris.textContent = 'No abierta';
       statusCris.className = 'badge badge-warn';
+      urlCris.textContent = 'Abre tu sesión en https://be.betcris.do';
       logBox.innerHTML = '⚠️ Abre tu pestaña de <b>Betcris</b> con tu sesión iniciada.';
     }
 
     if (res && res.bolOpen) {
       statusBol.textContent = 'Pestaña Abierta';
       statusBol.className = 'badge badge-ok';
+      urlBol.textContent = res.bolUrl || 'betonline.ag';
     } else {
       statusBol.textContent = 'Se abrirá de fondo';
       statusBol.className = 'badge badge-ok';
+      urlBol.textContent = 'Auto-apertura en segundo plano';
     }
   });
 
@@ -37,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnText.textContent = 'Sincronizar Líneas Ahora';
 
       if (!response) {
-        logBox.innerHTML = '❌ Sin respuesta de la extensión. Recarga la página.';
+        logBox.innerHTML = '❌ Sin respuesta del background worker.';
         return;
       }
 
@@ -46,18 +52,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (bolCount > 0 || crisCount > 0) {
         logBox.innerHTML = `
-          <div style="color: #34d399; font-weight: bold; margin-bottom: 4px;">✅ ¡Líneas sincronizadas!</div>
+          <div style="color: #34d399; font-weight: bold; margin-bottom: 4px;">🎉 ¡Líneas Sincronizadas!</div>
           <div>• BetOnline (R+H+E): <b>${bolCount}</b> partidos</div>
-          <div>• Betcris (Hits+Carreras+Errores): <b>${crisCount}</b> partidos</div>
+          <div>• Betcris (HCE): <b>${crisCount}</b> partidos</div>
         `;
         if (response.crisNote) {
-          logBox.innerHTML += `<div style="color: #fbbf24; margin-top: 6px;">💡 ${response.crisNote}</div>`;
+          logBox.innerHTML += `<div style="color: #fbbf24; margin-top: 6px; font-size: 10px;">💡 ${response.crisNote}</div>`;
         }
       } else {
         logBox.innerHTML = `
-          <div style="color: #f87171; font-weight: bold; margin-bottom: 4px;">⚠️ No se detectaron líneas</div>
-          <div style="font-size: 11px; color: #cbd5e1;">
-            ${response.crisNote || 'Abre tu pestaña de Betcris y asegúrate de entrar al juego o a la lista de béisbol MLB.'}
+          <div style="color: #f87171; font-weight: bold; margin-bottom: 4px;">⚠️ 0 líneas encontradas</div>
+          <div style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">
+            ${response.crisNote || 'Abre el partido en Betcris o asegúrate de que la pestaña de BetOnline esté cargada.'}
           </div>
         `;
       }
